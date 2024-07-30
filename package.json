@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "devstart": "nodemon ./bin/www",
-    "debug": "DEBUG=hostel-api:* npm devstart",
+    "debug": "DEBUG=hostel-api:* npm run devstart",
     "test": "jest --watch"
   },
   "dependencies": {
