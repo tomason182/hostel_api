@@ -4,9 +4,34 @@ const app = require("../src/app");
 // User routes test
 describe("Create a new user", () => {
   test("Should response status 200 when route is correct", async () => {
-    const response = await request(app).post("/api/v1/users");
+    const response = await request(app).post("/api/v1/users").send({
+      username: "myemail@email.com",
+      password: "hasApo123Werfull$%pass",
+      first_name: "myName",
+      last_name: "myLastname",
+    });
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(200);
+  });
+  test("Should throw error if body don't contain necessary values", async () => {
+    const response = await request(app).post("/api/v1/users").send({
+      username: "myemail@email.com",
+      password: "notGoodPass",
+      first_name: "myName",
+      last_name: "myLastname",
+    });
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.status).toEqual(400);
+  });
+  test("Should throw error if password contain white spaces", async () => {
+    const response = await request(app).post("/api/v1/users").send({
+      username: "myemail@email.com",
+      password: "hasApo123Werfull $%pass",
+      first_name: "myName",
+      last_name: "myLastname",
+    });
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.status).toEqual(400);
   });
 });
 
