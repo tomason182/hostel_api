@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { MongoClient, MongoErrorLabel } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
 
 // Create mongo client instance
