@@ -33,6 +33,17 @@ describe("Create a new user", () => {
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(400);
   });
+  test("Should throw error if body contain invalid field", async () => {
+    const response = await request(app).post("/api/v1/users").send({
+      username: "myemail@email.com",
+      password: "hasApo123Werfull $%pass",
+      first_name: "myName",
+      last_name: "myLastname",
+      harmful_field: "hacked",
+    });
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.status).toEqual(400);
+  });
 });
 
 describe("Authenticate a user", () => {
