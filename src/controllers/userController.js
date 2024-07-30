@@ -1,12 +1,14 @@
 const { checkSchema, validationResult } = require("express-validator");
-const { userRegisterSchema } = require("../schemas/userSchemas");
+const { userRegisterSchema, sanitizeBody } = require("../schemas/userSchemas");
 
 // @desc    Create a new User
 // @route   POST /api/v1/users
 // @access  Public
 exports.user_create = [
+  sanitizeBody,
   checkSchema(userRegisterSchema),
   (req, res, next) => {
+    console.log(req.body);
     try {
       const errors = validationResult(req);
 

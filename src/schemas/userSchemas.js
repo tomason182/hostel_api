@@ -64,4 +64,23 @@ const userRegisterSchema = {
   },
 };
 
-module.exports = { userRegisterSchema };
+// Middleware to sanitize body
+const sanitizeBody = function (req, res, next) {
+  const allowedFields = [
+    "username",
+    "password",
+    "first_name",
+    "last_name",
+    "phoneNumber",
+  ];
+  Object.keys(req.body).forEach((key) => {
+    if (!allowedFields.includes(key)) {
+      delete req.body[key];
+      res.status(400);
+      throw new Error("not a valid body field");
+    }
+  });
+  next();
+};
+
+module.exports = { userRegisterSchema, sanitizeBody };
