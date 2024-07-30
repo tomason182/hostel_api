@@ -51,4 +51,4 @@ const userRegisterSchema = {
   },
 };
 
-module.exports = userRegisterSchema;
+module.exports = { userRegisterSchema };
