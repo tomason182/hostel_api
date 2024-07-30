@@ -5,6 +5,12 @@ const uri = process.env.MONGO_URI;
 // Create mongo client instance
 const client = new MongoClient(uri);
 
+// Database information
+const dbname = process.env_DB_NAME;
+const collection_names = ["users", "properties", "access_control"];
+
+const usersCollection = client.db(dbname).collection(collection_names[0]);
+
 const connectToDatabase = async () => {
   try {
     await client.connect();
@@ -15,4 +21,4 @@ const connectToDatabase = async () => {
   }
 };
 
-module.exports = connectToDatabase;
+module.exports = { connectToDatabase, usersCollection };

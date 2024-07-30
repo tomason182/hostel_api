@@ -1,5 +1,6 @@
 const { checkSchema, validationResult } = require("express-validator");
 const { userRegisterSchema, sanitizeBody } = require("../schemas/userSchemas");
+const { connectToDatabase, usersCollection } = require("../database/db_config");
 
 // @desc    Create a new User
 // @route   POST /api/v1/users
@@ -7,14 +8,18 @@ const { userRegisterSchema, sanitizeBody } = require("../schemas/userSchemas");
 exports.user_create = [
   sanitizeBody,
   checkSchema(userRegisterSchema),
-  (req, res, next) => {
+  async (req, res, next) => {
     console.log(req.body);
     try {
       const errors = validationResult(req);
-
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
+
+      const user = {}; // need to add the user information retrieved from the body
+
+      await connectToDatabase();
+      let result = await usersCollection.insertOne(user);
 
       return res.status(200).json({ msg: "Create user" });
     } catch (err) {
