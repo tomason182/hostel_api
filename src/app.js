@@ -4,6 +4,9 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 
+// Require Errors middleware
+const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
+
 // Require routes
 const userRoutes = require("./routes/v1/userRoutes");
 
@@ -18,4 +21,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Use routes
 app.use("/api/v1/users", userRoutes);
 
+// Use Error middleware
+app.use(notFound);
+app.use(errorHandler);
 module.exports = app;
