@@ -1,9 +1,25 @@
+const { checkSchema, validationResult } = require("express-validator");
+const { userRegisterSchema } = require("../schemas/userSchemas");
+
 // @desc    Create a new User
 // @route   POST /api/v1/users
 // @access  Public
-exports.user_create = (req, res, next) => {
-  res.status(200).json({ msg: "Create user" });
-};
+exports.user_create = [
+  checkSchema(userRegisterSchema),
+  (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      return res.status(200).json({ msg: "Create user" });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
 
 // @desc    Authenticate a user
 // @route   POST /api/v1/users/auth
