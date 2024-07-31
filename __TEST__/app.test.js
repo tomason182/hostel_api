@@ -1,5 +1,18 @@
+const {
+  connectToDatabase,
+  usersCollection,
+  closeConn,
+} = require("../src/database/db_config");
 const request = require("supertest");
 const app = require("../src/app");
+
+beforeAll(async () => {});
+
+beforeEach(async () => {
+  await connectToDatabase();
+  await usersCollection.deleteMany({});
+  await closeConn();
+});
 
 // User routes test
 describe("Create a new user", () => {
@@ -7,8 +20,8 @@ describe("Create a new user", () => {
     const response = await request(app).post("/api/v1/users").send({
       username: "myemail@email.com",
       password: "hasApo123Werfull$%pass",
-      first_name: "myName",
-      last_name: "myLastname",
+      firstName: "myName",
+      lastName: "myLastname",
     });
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(200);
@@ -17,8 +30,8 @@ describe("Create a new user", () => {
     const response = await request(app).post("/api/v1/users").send({
       username: "myemail@email.com",
       password: "notGoodPass",
-      first_name: "myName",
-      last_name: "myLastname",
+      firstName: "myName",
+      lastName: "myLastname",
     });
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(400);
@@ -27,8 +40,8 @@ describe("Create a new user", () => {
     const response = await request(app).post("/api/v1/users").send({
       username: "myemail@email.com",
       password: "hasApo123Werfull $%pass",
-      first_name: "myName",
-      last_name: "myLastname",
+      firstName: "myName",
+      lastName: "myLastname",
     });
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(400);
@@ -37,8 +50,8 @@ describe("Create a new user", () => {
     const response = await request(app).post("/api/v1/users").send({
       username: "myemail@email.com",
       password: "hasApo123Werfull $%pass",
-      first_name: "myName",
-      last_name: "myLastname",
+      firstName: "myName",
+      lastName: "myLastname",
       harmful_field: "hacked",
     });
     expect(response.headers["content-type"]).toMatch(/json/);

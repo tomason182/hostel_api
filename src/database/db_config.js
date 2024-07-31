@@ -6,7 +6,7 @@ const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 
 // Database name
-const dbname = process.env.DB_NAME;
+const dbname = process.env.NODE_ENV === "test" ? "test" : process.env.DB_NAME;
 // Data collections
 const usersCollection = client.db(dbname).collection("users");
 
@@ -20,6 +20,9 @@ const connectToDatabase = async () => {
   }
 };
 
-const closeConn = async () => await client.close();
+const closeConn = async () => {
+  await client.close();
+  console.log("connection Close");
+};
 
 module.exports = { connectToDatabase, usersCollection, closeConn };
