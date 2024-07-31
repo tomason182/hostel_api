@@ -58,10 +58,28 @@ describe.skip("Create a new user", () => {
 });
 
 describe("Authenticate a user", () => {
-  test("Should response status 200 when route is correct", async () => {
-    const response = await request(app).post("/api/v1/users/auth");
+  const mockUser = {
+    username: "test@mail.com",
+    password: "aVeryGoodP@$$word123",
+    firstName: "test",
+    lastName: "auth",
+  };
+
+  test("Expect set cookie if user log successfully", async () => {
+    await usersCollection.insertOne(mockUser);
+    const response = await request(app).post("/api/v1/users/auth").send({
+      username: mockUser.username,
+      password: mockUser.password,
+    });
     expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.headers["set-cookie"].toBeDefined());
     expect(response.status).toEqual(200);
+
+    const cookies = response.headers["set-cookie"];
+    const jwtCookie = cookies.find((cookie) => cookie.startsWith("jwt="));
+
+    expect(jwtCookie).toBeDefined();
+    expect(jwtCookie).toMatch(/Path=\//);
   });
 });
 
