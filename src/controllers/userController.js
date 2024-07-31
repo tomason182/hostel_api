@@ -109,7 +109,16 @@ exports.user_auth = [
 // @route   POST /api/v1/users/logout
 // @access  Private
 exports.user_logout = (req, res, next) => {
-  res.status(200).json({ msg: "Logout user" });
+  return res
+    .cookie("jwt", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      signed: true,
+      sameSite: "strict",
+      maxAge: 0,
+    })
+    .status(200)
+    .json({ msg: "User logout" });
 };
 
 // @desc    Get user profile
