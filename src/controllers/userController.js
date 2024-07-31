@@ -1,3 +1,4 @@
+require("dotenv").config();
 const {
   checkSchema,
   validationResult,
@@ -5,7 +6,9 @@ const {
 } = require("express-validator");
 const {
   userRegisterSchema,
+  userLoginSchema,
   sanitizeRegisterBody,
+  sanitizeLoginBody,
 } = require("../schemas/userSchemas");
 const {
   connectToDatabase,
@@ -13,6 +16,7 @@ const {
   closeConn,
 } = require("../config/db_config");
 const { pbkdf2Sync, randomBytes } = require("node:crypto");
+const jwt = require("jsonwebtoken");
 
 // @desc    Create a new User
 // @route   POST /api/v1/users
@@ -76,9 +80,44 @@ exports.user_create = [
 // @desc    Authenticate a user
 // @route   POST /api/v1/users/auth
 // @access  Public
-exports.user_auth = (req, res, next) => {
-  res.status(200).json({ msg: "Authenticate a user" });
-};
+exports.user_auth = [
+  sanitizeLoginBody,
+  userLoginSchema,
+  async (req, res, next) => {
+    const { username, password } = matchedData(req);
+    await connectToDatabase();
+    const user = usersCollection.findOne({ username });
+    if (user === null) {
+      res.status(401);
+      throw new Error("Invalid username or password");
+    }
+
+    const pswhash = pbkdf2Sync(
+      password,
+      user.salt,
+      100000,
+      64,
+      "sha512"
+    ).toString("hex");
+
+    if (pswhash !== user.hashedPassword) {
+      res.status(401);
+      throw new Error("Invalid username or password");
+    }
+
+    const payload = { sub: user._id };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "8hs",
+    });
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      signed: true,
+      sameSite: "strict",
+      maxAge: 3600 * 8 * 1000, // 3600 sec/hs * 8hs * 1000 milisec/sec
+    });
+  },
+];
 
 // @desc    Logout a user
 // @route   POST /api/v1/users/logout
