@@ -26,21 +26,23 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
     await connectToDatabase();
     const userId = { _id: new ObjectId(payload.sub) };
+    console.log(payload.ip);
+    console.log(req.ip);
     const options = {
       projection: { hashedPassword: 0, salt: 0 },
     };
     const user = await usersCollection.findOne(userId, options);
     if (user === null) {
-      return null, false;
+      return done(null, false);
     }
 
     // Validate request content
     if (payload.ip !== req.ip) {
-      return null, false;
+      return done(null, false);
     }
     return done(null, user);
   } catch (err) {
-    return done(error, false);
+    return done(err, false);
   } finally {
     await closeConn();
   }
