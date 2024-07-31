@@ -82,42 +82,52 @@ exports.user_create = [
 // @access  Public
 exports.user_auth = [
   sanitizeLoginBody,
-  userLoginSchema,
+  checkSchema(userLoginSchema),
   async (req, res, next) => {
-    const { username, password } = matchedData(req);
-    await connectToDatabase();
-    const user = usersCollection.findOne({ username });
-    if (user === null) {
-      res.status(401);
-      throw new Error("Invalid username or password");
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+      const { username, password } = matchedData(req);
+      await connectToDatabase();
+      const user = await usersCollection.findOne({ username });
+      if (user === null) {
+        res.status(401);
+        throw new Error("Invalid username or password");
+      }
+
+      console.log(user);
+
+      const pswhash = pbkdf2Sync(
+        password,
+        user.salt,
+        100000,
+        64,
+        "sha512"
+      ).toString("hex");
+
+      if (pswhash !== user.hashedPassword) {
+        res.status(401);
+        throw new Error("Invalid username or password");
+      }
+
+      const payload = { sub: user._id };
+      const token = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: "8h",
+      });
+      res
+        .cookie("jwt", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          signed: true,
+          sameSite: "strict",
+          maxAge: 3600 * 8 * 1000, // 3600 sec/hs * 8hs * 1000 milisec/sec
+        })
+        .json({ msg: "ok", token: token });
+    } catch (err) {
+      next(err);
     }
-
-    const pswhash = pbkdf2Sync(
-      password,
-      user.salt,
-      100000,
-      64,
-      "sha512"
-    ).toString("hex");
-
-    if (pswhash !== user.hashedPassword) {
-      res.status(401);
-      throw new Error("Invalid username or password");
-    }
-
-    const payload = { sub: user._id };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "8hs",
-    });
-    res
-      .cookie("jwt", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        signed: true,
-        sameSite: "strict",
-        maxAge: 3600 * 8 * 1000, // 3600 sec/hs * 8hs * 1000 milisec/sec
-      })
-      .json({ msg: "ok", token: token });
   },
 ];
 

@@ -1,10 +1,13 @@
 require("dotenv").config();
+
 const { ExtractJwt, Strategy } = require("passport-jwt");
 const {
   connectToDatabase,
   usersCollection,
   closeConn,
 } = require("./db_config");
+
+const { fromExtractors, fromAuthHeaderAsBearerToken } = ExtractJwt;
 
 function cookieExtractor(req) {
   let token = null;
@@ -15,7 +18,7 @@ function cookieExtractor(req) {
 }
 
 const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromExtractors([
+  jwtFromRequest: fromExtractors([
     cookieExtractor,
     fromAuthHeaderAsBearerToken(),
   ]),

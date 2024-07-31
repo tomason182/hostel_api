@@ -3,7 +3,7 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const passport = require("./config/passport");
+const passport = require("passport");
 
 // Require Errors middleware
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
@@ -13,7 +13,7 @@ const userRoutes = require("./routes/v1/userRoutes");
 
 const app = express();
 
-passport();
+require("./config/passport")(passport);
 
 app.use(logger("dev"));
 app.use(express.json());
