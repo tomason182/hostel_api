@@ -20,7 +20,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.static(path.join(__dirname, "public")));
-
 // Use routes
 app.use("/api/v1/users", userRoutes);
 

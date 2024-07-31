@@ -1,4 +1,5 @@
 const express = require("express");
+const auth = require("../../middlewares/authMiddleware");
 const router = express.Router();
 
 // Require User controller
@@ -16,7 +17,7 @@ router.post("/auth", user_controller.user_auth);
 router.post("/logout", user_controller.user_logout);
 
 // Get user profile
-router.get("/profile/:id", user_controller.user_profile_get);
+router.get("/profile/:id", auth, user_controller.user_profile_get);
 
 // Update user profile
 router.put("/profile/:id", user_controller.user_profile_put);
