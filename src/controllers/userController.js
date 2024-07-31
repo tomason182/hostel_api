@@ -8,7 +8,7 @@ const {
   connectToDatabase,
   usersCollection,
   closeConn,
-} = require("../database/db_config");
+} = require("../config/db_config");
 const { pbkdf2Sync, randomBytes } = require("node:crypto");
 
 // @desc    Create a new User
