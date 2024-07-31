@@ -15,7 +15,8 @@ const {
   usersCollection,
   closeConn,
 } = require("../config/db_config");
-const { pbkdf2Sync, randomBytes } = require("node:crypto");
+const { saltGenerator, hashGenerator } = require("../utils/hash");
+//const { pbkdf2Sync, randomBytes } = require("node:crypto");
 const jwt = require("jsonwebtoken");
 
 // @desc    Create a new User
@@ -48,14 +49,8 @@ exports.user_create = [
       }
 
       // Create salt and hash the password
-      const salt = randomBytes(32).toString("hex");
-      const hashedPassword = pbkdf2Sync(
-        password,
-        salt,
-        100000,
-        64,
-        "sha512"
-      ).toString("hex");
+      const salt = saltGenerator(32);
+      const hashedPassword = hashGenerator(password, salt);
 
       const result = await usersCollection.insertOne({
         username,
@@ -97,17 +92,9 @@ exports.user_auth = [
         throw new Error("Invalid username or password");
       }
 
-      console.log(user);
+      const passwdHash = hashGenerator(password, user.salt);
 
-      const pswhash = pbkdf2Sync(
-        password,
-        user.salt,
-        100000,
-        64,
-        "sha512"
-      ).toString("hex");
-
-      if (pswhash !== user.hashedPassword) {
+      if (passwdHash !== user.hashedPassword) {
         res.status(401);
         throw new Error("Invalid username or password");
       }
