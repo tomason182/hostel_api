@@ -97,7 +97,7 @@ const userLoginSchema = {
 };
 
 // Middleware to sanitize body
-const sanitizeBody = function (req, res, next) {
+const sanitizeRegisterBody = function (req, res, next) {
   const allowedFields = [
     "username",
     "password",
@@ -109,10 +109,27 @@ const sanitizeBody = function (req, res, next) {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
       res.status(400);
-      throw new Error("not a valid body field");
+      throw new Error("not valid body field");
     }
   });
   next();
 };
 
-module.exports = { userRegisterSchema, sanitizeBody };
+const sanitizeLoginBody = function (req, res, next) {
+  const allowedFields = ["username", "password"];
+  Object.keys(req.body).forEach((key) => {
+    if (!allowedFields.includes(key)) {
+      delete req.body[key];
+      res.status(400);
+      throw new Error("Not valid body fields");
+    }
+  });
+  next();
+};
+
+module.exports = {
+  userRegisterSchema,
+  userLoginSchema,
+  sanitizeRegisterBody,
+  sanitizeLoginBody,
+};

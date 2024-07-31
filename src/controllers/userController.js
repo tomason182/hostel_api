@@ -3,7 +3,10 @@ const {
   validationResult,
   matchedData,
 } = require("express-validator");
-const { userRegisterSchema, sanitizeBody } = require("../schemas/userSchemas");
+const {
+  userRegisterSchema,
+  sanitizeRegisterBody,
+} = require("../schemas/userSchemas");
 const {
   connectToDatabase,
   usersCollection,
@@ -15,7 +18,7 @@ const { pbkdf2Sync, randomBytes } = require("node:crypto");
 // @route   POST /api/v1/users
 // @access  Public
 exports.user_create = [
-  sanitizeBody,
+  sanitizeRegisterBody,
   checkSchema(userRegisterSchema),
   async (req, res, next) => {
     try {
