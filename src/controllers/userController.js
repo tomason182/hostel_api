@@ -1,6 +1,15 @@
-const { checkSchema, validationResult } = require("express-validator");
+const {
+  checkSchema,
+  validationResult,
+  matchedData,
+} = require("express-validator");
 const { userRegisterSchema, sanitizeBody } = require("../schemas/userSchemas");
-const { connectToDatabase, usersCollection } = require("../database/db_config");
+const {
+  connectToDatabase,
+  usersCollection,
+  closeConn,
+} = require("../database/db_config");
+const { pbkdf2Sync, randomBytes } = require("node:crypto");
 
 // @desc    Create a new User
 // @route   POST /api/v1/users
@@ -9,21 +18,53 @@ exports.user_create = [
   sanitizeBody,
   checkSchema(userRegisterSchema),
   async (req, res, next) => {
-    console.log(req.body);
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
 
-      const user = {}; // need to add the user information retrieved from the body
+      // Create the user object
+      const user = matchedData(req);
 
       await connectToDatabase();
-      let result = await usersCollection.insertOne(user);
+      // Check if user exist in the database
+      const userExist = await usersCollection.findOne({
+        username: user.username,
+      });
 
-      return res.status(200).json({ msg: "Create user" });
+      // If user exist in the db, throw an error
+      if (userExist !== null) {
+        res.status(400);
+        throw new Error("User already exist");
+      }
+
+      // Create salt and hash the password
+      const salt = randomBytes(32).toString("hex");
+      const hashedPassword = pbkdf2Sync(
+        user.password,
+        salt,
+        100000,
+        64,
+        "sha512"
+      ).toString("hex");
+
+      const result = await usersCollection.insertOne({
+        username: user.username,
+        hashedPassword: hashedPassword,
+        salt: salt,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber,
+      });
+
+      return res
+        .status(200)
+        .json({ msg: `User created id: ${result.insertedId}` });
     } catch (err) {
       next(err);
+    } finally {
+      await closeConn();
     }
   },
 ];
