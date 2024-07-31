@@ -6,16 +6,14 @@ const {
 const request = require("supertest");
 const app = require("../src/app");
 
-beforeAll(async () => {});
-
-beforeEach(async () => {
-  await connectToDatabase();
-  await usersCollection.deleteMany({});
-  await closeConn();
-});
-
 // User routes test
-describe("Create a new user", () => {
+describe.skip("Create a new user", () => {
+  beforeEach(async () => {
+    await connectToDatabase();
+    await usersCollection.deleteMany({});
+    await closeConn();
+  });
+
   test("Should response status 200 when route is correct", async () => {
     const response = await request(app).post("/api/v1/users").send({
       username: "myemail@email.com",

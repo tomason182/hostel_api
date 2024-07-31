@@ -25,12 +25,13 @@ exports.user_create = [
       }
 
       // Create the user object
-      const user = matchedData(req);
+      const { username, password, firstName, lastName, phoneNumber } =
+        matchedData(req);
 
       await connectToDatabase();
       // Check if user exist in the database
       const userExist = await usersCollection.findOne({
-        username: user.username,
+        username,
       });
 
       // If user exist in the db, throw an error
@@ -42,7 +43,7 @@ exports.user_create = [
       // Create salt and hash the password
       const salt = randomBytes(32).toString("hex");
       const hashedPassword = pbkdf2Sync(
-        user.password,
+        password,
         salt,
         100000,
         64,
@@ -50,12 +51,12 @@ exports.user_create = [
       ).toString("hex");
 
       const result = await usersCollection.insertOne({
-        username: user.username,
-        hashedPassword: hashedPassword,
-        salt: salt,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phoneNumber: user.phoneNumber,
+        username,
+        hashedPassword,
+        salt,
+        firstName,
+        lastName,
+        phoneNumber,
       });
 
       return res

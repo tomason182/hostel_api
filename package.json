@@ -6,7 +6,7 @@
     "start": "node ./bin/www",
     "devstart": "nodemon ./bin/www",
     "debug": "DEBUG=hostel-api:* npm run devstart",
-    "test": "jest --watchAll --detectOpenHandles"
+    "test": "NODE_ENV='test' && jest --watchAll --detectOpenHandles"
   },
   "dependencies": {
     "cookie-parser": "^1.4.6",
