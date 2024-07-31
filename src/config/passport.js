@@ -11,17 +11,14 @@ const { fromExtractors, fromAuthHeaderAsBearerToken } = ExtractJwt;
 
 function cookieExtractor(req) {
   let token = null;
-  if (req && req.cookies) {
+  if (req && req.signedCookies) {
     token = req.signedCookies["jwt"];
   }
   return token;
 }
 
 const jwtOptions = {
-  jwtFromRequest: fromExtractors([
-    cookieExtractor,
-    fromAuthHeaderAsBearerToken(),
-  ]),
+  jwtFromRequest: fromExtractors([cookieExtractor]),
   secretOrKey: process.env.JWT_SECRET,
 };
 
@@ -37,6 +34,10 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
       return null, false;
     }
 
+    // Validate request content
+    if (payload.ip !== req.ip) {
+      return null, false;
+    }
     return done(null, user);
   } catch (err) {
     return done(error, false);
@@ -45,4 +46,6 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   }
 });
 
-module.exports = (passport) => passport.use(jwtStrategy);
+module.exports = (passport) => {
+  passport.use(jwtStrategy);
+};
