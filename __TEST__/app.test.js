@@ -2,7 +2,7 @@ const {
   connectToDatabase,
   usersCollection,
   closeConn,
-} = require("../src/database/db_config");
+} = require("../src/config/db_config");
 const request = require("supertest");
 const app = require("../src/app");
 
