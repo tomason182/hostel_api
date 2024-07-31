@@ -16,8 +16,7 @@ const {
   closeConn,
 } = require("../config/db_config");
 const { saltGenerator, hashGenerator } = require("../utils/hash");
-//const { pbkdf2Sync, randomBytes } = require("node:crypto");
-const jwt = require("jsonwebtoken");
+const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 
 // @desc    Create a new User
 // @route   POST /api/v1/users
@@ -99,19 +98,7 @@ exports.user_auth = [
         throw new Error("Invalid username or password");
       }
 
-      const payload = { sub: user._id };
-      const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: "8h",
-      });
-      res
-        .cookie("jwt", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          signed: true,
-          sameSite: "strict",
-          maxAge: 3600 * 8 * 1000, // 3600 sec/hs * 8hs * 1000 milisec/sec
-        })
-        .json({ msg: "ok", token: token });
+      jwtTokenGenerator(res, user._id);
     } catch (err) {
       next(err);
     }
