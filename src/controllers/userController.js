@@ -109,13 +109,15 @@ exports.user_auth = [
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "8hs",
     });
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      signed: true,
-      sameSite: "strict",
-      maxAge: 3600 * 8 * 1000, // 3600 sec/hs * 8hs * 1000 milisec/sec
-    });
+    res
+      .cookie("jwt", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        signed: true,
+        sameSite: "strict",
+        maxAge: 3600 * 8 * 1000, // 3600 sec/hs * 8hs * 1000 milisec/sec
+      })
+      .json({ msg: "ok", token: token });
   },
 ];
 
