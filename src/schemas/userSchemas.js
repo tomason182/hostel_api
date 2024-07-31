@@ -28,7 +28,7 @@ const userRegisterSchema = {
     errorMessage:
       "Password should contain at least 14 characters, 4 lowercase, 2 uppercase, 2 numbers and 2 symbols ",
   },
-  first_name: {
+  firstName: {
     in: ["body"],
     trim: true,
     escape: true,
@@ -40,7 +40,7 @@ const userRegisterSchema = {
       errorMessage: "First name must contain only alphabetic characters",
     },
   },
-  last_name: {
+  lastName: {
     in: ["body"],
     trim: true,
     escape: true,
@@ -69,8 +69,8 @@ const sanitizeBody = function (req, res, next) {
   const allowedFields = [
     "username",
     "password",
-    "first_name",
-    "last_name",
+    "firstName",
+    "lastName",
     "phoneNumber",
   ];
   Object.keys(req.body).forEach((key) => {
