@@ -26,20 +26,23 @@ const jwtOptions = {
 };
 
 const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
-  await connectToDatabase();
-  const userId = { _id: new ObjectId(payload.sub) };
-  const user = await usersCollection.findOne(userId, {
-    projection: {
-      hashedPassword: 0,
-      salt: 0,
-    },
-  });
-  await closeConn();
-  if (user === null) {
-    return null, false;
-  }
+  try {
+    await connectToDatabase();
+    const userId = { _id: new ObjectId(payload.sub) };
+    const options = {
+      projection: { hashedPassword: 0, salt: 0 },
+    };
+    const user = await usersCollection.findOne(userId, options);
+    if (user === null) {
+      return null, false;
+    }
 
-  return done(null, user);
+    return done(null, user);
+  } catch (err) {
+    return done(error, false);
+  } finally {
+    await closeConn();
+  }
 });
 
 module.exports = (passport) => passport.use(jwtStrategy);
