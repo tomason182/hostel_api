@@ -4,7 +4,10 @@ const {
   closeConn,
 } = require("../src/config/db_config");
 const request = require("supertest");
+const { saltGenerator, hashGenerator } = require("../src/utils/hash");
+const { jwtTokenGenerator } = require("../src/utils/tokenGenerator");
 const app = require("../src/app");
+const { getEventListeners } = require("supertest/lib/test");
 
 // User routes test
 describe.skip("Create a new user", () => {
@@ -65,14 +68,32 @@ describe("Authenticate a user", () => {
     lastName: "auth",
   };
 
+  const salt = saltGenerator(32);
+  const hashedPassword = hashGenerator(mockUser.password, salt);
+
+  beforeEach(async () => {
+    await connectToDatabase();
+    await usersCollection.deleteMany({});
+  });
+
+  afterEach(async () => {
+    await closeConn();
+  });
+
   test("Expect set cookie if user log successfully", async () => {
-    await usersCollection.insertOne(mockUser);
+    await usersCollection.insertOne({
+      username: mockUser.username,
+      hashedPassword: hashedPassword,
+      salt: salt,
+      firstName: mockUser.firstName,
+      lastName: mockUser.lastName,
+    });
     const response = await request(app).post("/api/v1/users/auth").send({
       username: mockUser.username,
       password: mockUser.password,
     });
     expect(response.headers["content-type"]).toMatch(/json/);
-    expect(response.headers["set-cookie"].toBeDefined());
+    expect(response.headers["set-cookie"]).toBeDefined();
     expect(response.status).toEqual(200);
 
     const cookies = response.headers["set-cookie"];
@@ -80,6 +101,23 @@ describe("Authenticate a user", () => {
 
     expect(jwtCookie).toBeDefined();
     expect(jwtCookie).toMatch(/Path=\//);
+  });
+
+  test("Should return error if username or password are incorrect", async () => {
+    await usersCollection.insertOne({
+      username: mockUser.username,
+      hashedPassword: hashedPassword,
+      salt: salt,
+      firstName: mockUser.firstName,
+      lastName: mockUser.lastName,
+    });
+    const response = await request(app).post("/api/v1/users/auth").send({
+      username: "invalid@mail.com",
+      password: mockUser.password,
+    });
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.headers["set-cookie"]).not.toBeDefined();
+    expect(response.status).toEqual(401);
   });
 });
 
