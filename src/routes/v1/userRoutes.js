@@ -20,9 +20,9 @@ router.post("/logout", user_controller.user_logout);
 router.get("/profile/:id", auth, user_controller.user_profile_get);
 
 // Update user profile
-router.put("/profile/:id", user_controller.user_profile_put);
+router.put("/profile/:id", auth, user_controller.user_profile_put);
 
 // Delete user profile
-router.delete("/profile/:id", user_controller.user_profile_delete);
+router.delete("/profile/:id", auth, user_controller.user_profile_delete);
 
 module.exports = router;
