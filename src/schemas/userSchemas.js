@@ -96,6 +96,43 @@ const userLoginSchema = {
   },
 };
 
+const userUpdateSchema = {
+  firstName: {
+    in: ["body"],
+    trim: true,
+    escape: true,
+    notEmpty: {
+      bail: true,
+      errorMessage: "First name must not be empty",
+    },
+    isAlpha: {
+      errorMessage: "First name must contain only alphabetic characters",
+    },
+  },
+  lastName: {
+    in: ["body"],
+    trim: true,
+    escape: true,
+    notEmpty: {
+      bail: true,
+      errorMessage: "Last name is required",
+    },
+    isAlpha: {
+      errorMessage: "Last name must contain only alphabetic characters",
+    },
+  },
+  phoneNumber: {
+    in: ["body"],
+    optional: true,
+    trim: true,
+    escape: true,
+    isMobilePhone: {
+      options: ["any"],
+      errorMessage: "Phone number must be a valid mobile phone number",
+    },
+  },
+};
+
 // Middleware to sanitize body
 const sanitizeRegisterBody = function (req, res, next) {
   const allowedFields = [
@@ -127,9 +164,22 @@ const sanitizeLoginBody = function (req, res, next) {
   next();
 };
 
+const sanitizeUpdateBody = function (req, res, next) {
+  const allowedFields = ["firstName", "lastName", "phoneNumber", "email"];
+  Object.keys(req.body).forEach((key) => {
+    if (!allowedFields.includes(key)) {
+      delete req.body[key];
+      res.status(400);
+      throw new Error("Not valid body fields");
+    }
+  });
+};
+
 module.exports = {
   userRegisterSchema,
   userLoginSchema,
+  userUpdateSchema,
   sanitizeRegisterBody,
   sanitizeLoginBody,
+  sanitizeUpdateBody,
 };
