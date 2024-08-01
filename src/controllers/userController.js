@@ -179,9 +179,19 @@ exports.user_profile_put = [
   },
 ];
 
+// @desc    Update password
+// @route   PUT /api/v1/users/profile/change-password
+// @access  Private
+exports.user_changePasswd_put = (req, res, next) => {
+  res.status(200).json({ msg: "Change password" });
+};
+
 // @desc    Delete user profile
-// @route   DELETE /api/v1/users/profile/:id
+// @route   DELETE /api/v1/users/profile/
 // @access  Private
 exports.user_profile_delete = (req, res, next) => {
+  // Este controlador deberia eliminar cuentas creadas por el adminitrador
+  // pero tambien deberia eliminar la cuenta de administrador junto con todos los
+  // documentos asociados
   res.status(200).json({ msg: `Delete user ${req.params.id} profile` });
 };
