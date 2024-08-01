@@ -127,16 +127,9 @@ exports.user_logout = (req, res, next) => {
 };
 
 // @desc    Get user profile
-// @route   GET /api/v1/users/profile/:id
+// @route   GET /api/v1/users/profile/
 // @access  Private
 exports.user_profile_get = (req, res, next) => {
-  const userId = req.user._id.toString();
-  console.log(userId);
-  if (req.params.id !== userId) {
-    res.status(401);
-    throw new Error("Access denied");
-  }
-
   const userProfile = req.user;
   if (!userProfile) {
     res.status(400);
@@ -147,7 +140,7 @@ exports.user_profile_get = (req, res, next) => {
 };
 
 // @desc    Update user profile
-// @route   PUT /api/v1/users/profile/:id
+// @route   PUT /api/v1/users/profile/
 // @access  Private
 exports.user_profile_put = [
   sanitizeUpdateBody,
@@ -177,11 +170,9 @@ exports.user_profile_put = [
 
       const result = await usersCollection.updateOne(filter, updateUser);
 
-      return res
-        .status(200)
-        .json({
-          msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
-        });
+      return res.status(200).json({
+        msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
+      });
     } catch (err) {
       next(err);
     }

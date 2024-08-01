@@ -17,10 +17,10 @@ router.post("/auth", user_controller.user_auth);
 router.post("/logout", user_controller.user_logout);
 
 // Get user profile
-router.get("/profile/:id", auth, user_controller.user_profile_get);
+router.get("/profile/", auth, user_controller.user_profile_get);
 
 // Update user profile
-router.put("/profile/:id", auth, user_controller.user_profile_put);
+router.put("/profile/", auth, user_controller.user_profile_put);
 
 // Delete user profile
 router.delete("/profile/:id", auth, user_controller.user_profile_delete);
