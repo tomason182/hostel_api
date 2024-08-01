@@ -17,6 +17,7 @@ const {
 } = require("../config/db_config");
 const { saltGenerator, hashGenerator } = require("../utils/hash");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
+const { ObjectId } = require("mongodb");
 
 // @desc    Create a new User
 // @route   POST /api/v1/users
@@ -134,6 +135,13 @@ exports.user_logout = (req, res, next) => {
 // @route   GET /api/v1/users/profile/:id
 // @access  Private
 exports.user_profile_get = (req, res, next) => {
+  const userId = req.user._id.toString();
+  console.log(userId);
+  if (req.params.id !== userId) {
+    res.status(401);
+    throw new Error("Access denied");
+  }
+
   const userProfile = req.user;
   if (!userProfile) {
     res.status(400);
