@@ -7,7 +7,7 @@ const {
   closeConn,
 } = require("./db_config");
 
-const { fromExtractors, fromAuthHeaderAsBearerToken } = ExtractJwt;
+const { fromExtractors } = ExtractJwt;
 
 function cookieExtractor(req) {
   let token = null;
@@ -26,8 +26,6 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
     await connectToDatabase();
     const userId = { _id: new ObjectId(payload.sub) };
-    console.log(payload.ip);
-    console.log(req.ip);
     const options = {
       projection: { hashedPassword: 0, salt: 0 },
     };
@@ -36,10 +34,6 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
       return done(null, false);
     }
 
-    // Validate request content
-    if (payload.ip !== req.ip) {
-      return done(null, false);
-    }
     return done(null, user);
   } catch (err) {
     return done(err, false);

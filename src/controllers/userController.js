@@ -125,7 +125,7 @@ exports.user_logout = (req, res, next) => {
 // @route   GET /api/v1/users/profile/:id
 // @access  Private
 exports.user_profile_get = (req, res, next) => {
-  res.status(200).json({ msg: `Get user ${req.params.id} profile` });
+  res.status(200).json({ msg: `Get user profile` });
 };
 
 // @desc    Update user profile

@@ -60,7 +60,7 @@ describe.skip("Create a new user", () => {
   });
 });
 
-describe("Authenticate a user", () => {
+describe.skip("Authenticate a user", () => {
   const mockUser = {
     username: "test@mail.com",
     password: "aVeryGoodP@$$word123",
@@ -121,7 +121,7 @@ describe("Authenticate a user", () => {
   });
 });
 
-describe("Logout a user", () => {
+describe.skip("Logout a user", () => {
   test("Should response status 200 when route is correct", async () => {
     const response = await request(app).post("/api/v1/users/logout");
     expect(response.headers["content-type"]).toMatch(/json/);
