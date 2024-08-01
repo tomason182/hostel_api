@@ -1,11 +1,7 @@
 require("dotenv").config();
 const { ObjectId } = require("mongodb");
 const { ExtractJwt, Strategy } = require("passport-jwt");
-const {
-  connectToDatabase,
-  usersCollection,
-  closeConn,
-} = require("./db_config");
+const { usersCollection } = require("./db_config");
 
 const { fromExtractors } = ExtractJwt;
 
@@ -24,7 +20,6 @@ const jwtOptions = {
 
 const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
-    await connectToDatabase();
     const userId = { _id: new ObjectId(payload.sub) };
     const options = {
       projection: { hashedPassword: 0, salt: 0 },
@@ -37,8 +32,6 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
     return done(null, user);
   } catch (err) {
     return done(err, false);
-  } finally {
-    await closeConn();
   }
 });
 

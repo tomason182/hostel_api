@@ -12,11 +12,7 @@ const {
   sanitizeLoginBody,
   sanitizeUpdateBody,
 } = require("../schemas/userSchemas");
-const {
-  connectToDatabase,
-  usersCollection,
-  closeConn,
-} = require("../config/db_config");
+const { usersCollection } = require("../config/db_config");
 const { saltGenerator, hashGenerator } = require("../utils/hash");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const { ObjectId } = require("mongodb");
@@ -38,7 +34,6 @@ exports.user_create = [
       const { username, password, firstName, lastName, phoneNumber } =
         matchedData(req);
 
-      await connectToDatabase();
       // Check if user exist in the database
       const userExist = await usersCollection.findOne({
         username,
@@ -77,8 +72,6 @@ exports.user_create = [
         .json({ msg: `User created id: ${result.insertedId}` });
     } catch (err) {
       next(err);
-    } finally {
-      await closeConn();
     }
   },
 ];
@@ -96,7 +89,7 @@ exports.user_auth = [
         return res.status(400).json(errors.array());
       }
       const { username, password } = matchedData(req);
-      await connectToDatabase();
+
       const user = await usersCollection.findOne({ username });
       if (user === null) {
         res.status(401);
@@ -113,8 +106,6 @@ exports.user_auth = [
       jwtTokenGenerator(res, user._id);
     } catch (err) {
       next(err);
-    } finally {
-      await closeConn();
     }
   },
 ];
@@ -170,8 +161,6 @@ exports.user_profile_put = [
 
       const { firstName, lastName, phoneNumber, email } = matchedData(req);
 
-      await connectToDatabase();
-
       const filter = { _id: req.user._id };
 
       const updateUser = {
@@ -188,13 +177,13 @@ exports.user_profile_put = [
 
       const result = await usersCollection.updateOne(filter, updateUser);
 
-      console.log(
-        `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`
-      );
+      return res
+        .status(200)
+        .json({
+          msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
+        });
     } catch (err) {
       next(err);
-    } finally {
-      await closeConn();
     }
   },
 ];
