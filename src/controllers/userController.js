@@ -7,8 +7,10 @@ const {
 const {
   userRegisterSchema,
   userLoginSchema,
+  userUpdateSchema,
   sanitizeRegisterBody,
   sanitizeLoginBody,
+  sanitizeUpdateBody,
 } = require("../schemas/userSchemas");
 const {
   connectToDatabase,
@@ -111,6 +113,8 @@ exports.user_auth = [
       jwtTokenGenerator(res, user._id);
     } catch (err) {
       next(err);
+    } finally {
+      await closeConn();
     }
   },
 ];
@@ -154,9 +158,46 @@ exports.user_profile_get = (req, res, next) => {
 // @desc    Update user profile
 // @route   PUT /api/v1/users/profile/:id
 // @access  Private
-exports.user_profile_put = (req, res, next) => {
-  res.status(200).json({ msg: `Update user ${req.params.id} profile` });
-};
+exports.user_profile_put = [
+  sanitizeUpdateBody,
+  checkSchema(userUpdateSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const { firstName, lastName, phoneNumber, email } = matchedData(req);
+
+      await connectToDatabase();
+
+      const filter = { _id: req.user._id };
+
+      const updateUser = {
+        $set: {
+          firstName: firstName,
+          lastName: lastName,
+          contactDetails: {
+            phoneNumber: phoneNumber,
+            email: email,
+          },
+          updatedAt: new Date(),
+        },
+      };
+
+      const result = await usersCollection.updateOne(filter, updateUser);
+
+      console.log(
+        `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`
+      );
+    } catch (err) {
+      next(err);
+    } finally {
+      await closeConn();
+    }
+  },
+];
 
 // @desc    Delete user profile
 // @route   DELETE /api/v1/users/profile/:id

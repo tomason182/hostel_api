@@ -131,6 +131,13 @@ const userUpdateSchema = {
       errorMessage: "Phone number must be a valid mobile phone number",
     },
   },
+  email: {
+    in: ["body"],
+    isEmail: {
+      bail: true,
+      errorMessage: "username is not a valid email",
+    },
+  },
 };
 
 // Middleware to sanitize body
@@ -173,6 +180,7 @@ const sanitizeUpdateBody = function (req, res, next) {
       throw new Error("Not valid body fields");
     }
   });
+  next();
 };
 
 module.exports = {
