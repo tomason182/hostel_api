@@ -31,7 +31,7 @@ exports.user_create = [
         return res.status(400).json(errors.array());
       }
 
-      // Create the user object
+      // Extract req values
       const { username, password, firstName, lastName, phoneNumber } =
         matchedData(req);
 
@@ -51,14 +51,23 @@ exports.user_create = [
       const salt = saltGenerator(32);
       const hashedPassword = hashGenerator(password, salt);
 
-      const result = await usersCollection.insertOne({
-        username,
-        hashedPassword,
-        salt,
-        firstName,
-        lastName,
-        phoneNumber,
-      });
+      // Create the User object according to db structure
+
+      const User = {
+        username: username,
+        hashedPassword: hashedPassword,
+        salt: salt,
+        firstName: firstName,
+        lastName: lastName,
+        contactDetails: {
+          email: username,
+          phoneNumber: phoneNumber,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await usersCollection.insertOne(User);
 
       return res
         .status(200)
@@ -125,7 +134,13 @@ exports.user_logout = (req, res, next) => {
 // @route   GET /api/v1/users/profile/:id
 // @access  Private
 exports.user_profile_get = (req, res, next) => {
-  res.status(200).json({ msg: `Get user profile` });
+  const userProfile = req.user;
+  if (!userProfile) {
+    res.status(400);
+    throw new Error("User does not exist");
+  }
+
+  return res.status(200).json({ msg: userProfile });
 };
 
 // @desc    Update user profile
