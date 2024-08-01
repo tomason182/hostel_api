@@ -8,7 +8,7 @@ const user_controller = require("../../controllers/userController");
 /// USER ROUTES ///
 
 // Create a user
-router.post("/", auth, user_controller.user_create);
+router.post("/", user_controller.user_create);
 
 // Authenticate a user
 router.post("/auth", user_controller.user_auth);
