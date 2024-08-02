@@ -10,6 +10,7 @@ const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 
 // Require routes
 const userRoutes = require("./routes/v1/userRoutes");
+const propertyRoutes = require("./routes/v1/propertyRoutes");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.static(path.join(__dirname, "public")));
 // Use routes
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/properties", propertyRoutes);
 
 // Use Error middleware
 app.use(notFound);
