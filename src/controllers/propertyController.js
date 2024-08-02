@@ -5,6 +5,7 @@ const {
   matchedData,
 } = require("express-validator");
 const { getDb } = require("../config/db_config");
+const { ObjectId } = require("mongodb");
 
 // @desc    Create a property
 // @route   POST /api/v1/property
@@ -72,8 +73,23 @@ exports.property_create = [
 // @access  Private
 exports.property_details_get = async (req, res, next) => {
   try {
+    const propertyId = ObjectId.createFromHexString(req.params.id);
     // check that params_id are valid for the user
     const db = getDb();
+    const propertyCollection = db.collection("properties");
+    const result = await propertyCollection.findOne({ _id: propertyId });
+
+    if (result === null) {
+      res.status(400);
+      throw new Error("property not found");
+    }
+
+    if (result.createdBy.toString() !== req.user._id.toString()) {
+      res.status(401);
+      throw new Error("invalid credentials");
+    }
+
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
