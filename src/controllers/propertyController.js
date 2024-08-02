@@ -31,14 +31,12 @@ exports.property_create = [
 
       const Property = {
         property_name: propertyName,
-        address: [
-          {
-            street: street,
-            city: city,
-            postal_code: postalCode,
-            country_code: countryCode,
-          },
-        ],
+        address: {
+          street: street,
+          city: city,
+          postal_code: postalCode,
+          country_code: countryCode,
+        },
         contact_info: {
           phone_number: phoneNumber,
           email: email,
