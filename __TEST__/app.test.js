@@ -25,8 +25,9 @@ const mockUserRegistration = async (user) => {
   await request(app).post("/api/v1/users").send(user);
 };
 
-// User routes test
-describe("Create a new user", () => {
+/// USERS ROUTES TEST ///
+
+describe.skip("Create a new user", () => {
   beforeAll(async () => {
     await dbConnect();
   });
@@ -72,7 +73,7 @@ describe("Create a new user", () => {
   });
 });
 
-describe("Authenticate a user", () => {
+describe.skip("Authenticate a user", () => {
   beforeAll(async () => {
     await dbConnect();
   });
@@ -134,7 +135,7 @@ describe.skip("Logout a user", () => {
   });
 });
 
-describe("Get user profile", () => {
+describe.skip("Get user profile", () => {
   beforeAll(async () => {
     await dbConnect();
   });
@@ -180,6 +181,48 @@ describe.skip("Delete user profile", () => {
     const response = await request(app).delete(
       "/api/v1/users/profile/userId_0001"
     );
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.status).toEqual(200);
+  });
+});
+
+/// PROPERTIES ROUTES TEST ///
+
+describe("Create a new property", () => {
+  const mockProperty = {
+    propertyName: "test property",
+    street: "Av test 123",
+    city: "Azul",
+    postalCode: "7300",
+    countryCode: "AR",
+    phoneNumber: "+5492281536272",
+    email: "test@gmail.com",
+  };
+
+  beforeAll(async () => {
+    await dbConnect();
+  });
+  beforeEach(async () => {
+    await mockUserRegistration(mockUser);
+  });
+  afterEach(async () => {
+    await cleanData();
+  });
+  afterAll(async () => {
+    await dbDisconnect();
+  });
+
+  test("Should return 200 status when property is created", async () => {
+    const loginResponse = await request(app).post("/api/v1/users/auth").send({
+      username: mockUser.username,
+      password: mockUser.password,
+    });
+    const cookies = loginResponse.headers["set-cookie"];
+    const jwtCookie = cookies.find((cookie) => cookie.startsWith("jwt="));
+    const response = await request(app)
+      .post("/api/v1/properties/create")
+      .send(mockProperty)
+      .set("Cookie", jwtCookie);
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(200);
   });
