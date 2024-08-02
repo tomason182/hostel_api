@@ -12,7 +12,7 @@ exports.property_create = async (req, res, next) => {
 // @desc    get a property details
 // @route   GET /api/v1/property/:id_property
 // @access  Private
-exports.property_create = async (req, res, next) => {
+exports.property_details_get = async (req, res, next) => {
   try {
     res.status(200).json({ msg: "Get property details" });
   } catch (err) {
@@ -23,7 +23,7 @@ exports.property_create = async (req, res, next) => {
 // @desc    Update a property details
 // @route   PUT /api/v1/property/:id_property
 // @access  Private
-exports.property_create = async (req, res, next) => {
+exports.property_details_update = async (req, res, next) => {
   try {
     res.status(200).json({ msg: "Update property details" });
   } catch (err) {
@@ -34,7 +34,7 @@ exports.property_create = async (req, res, next) => {
 // @desc    Delete a property
 // @route   DELETE /api/v1/property/:id_property
 // @access  Private
-exports.property_create = async (req, res, next) => {
+exports.property_delete = async (req, res, next) => {
   try {
     res.status(200).json({ msg: "Update property details" });
   } catch (err) {
