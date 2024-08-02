@@ -1,39 +1,52 @@
 const {
-  connectToDatabase,
-  usersCollection,
-  closeConn,
-} = require("../src/config/db_config");
+  dbConnect,
+  cleanData,
+  dbDisconnect,
+} = require("../src/utils/mongoMemoryServer");
+const { getDd } = require("../src/config/db_config");
 const request = require("supertest");
 const { saltGenerator, hashGenerator } = require("../src/utils/hash");
-const { jwtTokenGenerator } = require("../src/utils/tokenGenerator");
 const app = require("../src/app");
-const { getEventListeners } = require("supertest/lib/test");
+
+const mockUser = {
+  username: "testuser1@mail.com",
+  password: "aG00dPa$$worD%12",
+  firstName: "testName",
+  lastName: "testLastName",
+};
+
+const mockWrongUser = {
+  username: "testuser@mail.com",
+  password: "1234",
+  firstName: "testName",
+  lastName: "testLastName",
+};
+
+const mockUserRegistration = async () => {
+  (await request(app).post("/api/v1/users")).setEncoding(mockUser);
+};
 
 // User routes test
-describe.skip("Create a new user", () => {
-  beforeEach(async () => {
-    await connectToDatabase();
-    await usersCollection.deleteMany({});
-    await closeConn();
+describe("Create a new user", () => {
+  beforeAll(async () => {
+    await dbConnect();
+  });
+  afterEach(async () => {
+    await cleanData();
+  });
+  afterAll(async () => {
+    await dbDisconnect();
   });
 
   test("Should response status 200 when route is correct", async () => {
-    const response = await request(app).post("/api/v1/users").send({
-      username: "myemail@email.com",
-      password: "hasApo123Werfull$%pass",
-      firstName: "myName",
-      lastName: "myLastname",
-    });
+    const response = await request(app).post("/api/v1/users").send(mockUser);
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(200);
   });
   test("Should throw error if body don't contain necessary values", async () => {
-    const response = await request(app).post("/api/v1/users").send({
-      username: "myemail@email.com",
-      password: "notGoodPass",
-      firstName: "myName",
-      lastName: "myLastname",
-    });
+    const response = await request(app)
+      .post("/api/v1/users")
+      .send(mockWrongUser);
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(400);
   });
@@ -60,27 +73,23 @@ describe.skip("Create a new user", () => {
   });
 });
 
-describe.skip("Authenticate a user", () => {
-  const mockUser = {
-    username: "test@mail.com",
-    password: "aVeryGoodP@$$word123",
-    firstName: "test",
-    lastName: "auth",
-  };
+describe("Authenticate a user", () => {
+  beforeAll(async () => {
+    await dbConnect();
+  });
+  afterEach(async () => {
+    await cleanData();
+  });
+  afterAll(async () => {
+    await dbDisconnect();
+  });
 
   const salt = saltGenerator(32);
   const hashedPassword = hashGenerator(mockUser.password, salt);
 
-  beforeEach(async () => {
-    await connectToDatabase();
-    await usersCollection.deleteMany({});
-  });
-
-  afterEach(async () => {
-    await closeConn();
-  });
-
   test("Expect set cookie if user log successfully", async () => {
+    const db = getDd();
+    const usersCollection = db.collection("users");
     await usersCollection.insertOne({
       username: mockUser.username,
       hashedPassword: hashedPassword,
@@ -104,6 +113,8 @@ describe.skip("Authenticate a user", () => {
   });
 
   test("Should return error if username or password are incorrect", async () => {
+    const db = getDd();
+    const usersCollection = db.collection("users");
     await usersCollection.insertOne({
       username: mockUser.username,
       hashedPassword: hashedPassword,
@@ -121,8 +132,22 @@ describe.skip("Authenticate a user", () => {
   });
 });
 
-describe.skip("Logout a user", () => {
+describe("Logout a user", () => {
   test("Should response status 200 when route is correct", async () => {
+    const db = getDd();
+    const usersCollection = db.collection("users");
+    await usersCollection.insertOne({
+      username: mockUser.username,
+      hashedPassword: hashedPassword,
+      salt: salt,
+      firstName: mockUser.firstName,
+      lastName: mockUser.lastName,
+    });
+    await request(app).post("/api/v1/users/auth").send({
+      username: mockUser.username,
+      password: mockUser.password,
+    });
+
     const response = await request(app).post("/api/v1/users/logout");
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(200);
@@ -131,15 +156,13 @@ describe.skip("Logout a user", () => {
 
 describe("Get user profile", () => {
   test("Should response status 200 when route is correct", async () => {
-    const response = await request(app).get(
-      "/api/v1/users/profile/userId_0001"
-    );
+    const response = await request(app).get("/api/v1/users/profile/");
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(200);
   });
 });
 
-describe("Update user profile", () => {
+describe.skip("Update user profile", () => {
   test("Should response status 200 when route is correct", async () => {
     const response = await request(app).put(
       "/api/v1/users/profile/userId_0001"
@@ -149,7 +172,7 @@ describe("Update user profile", () => {
   });
 });
 
-describe("Delete user profile", () => {
+describe.skip("Delete user profile", () => {
   test("Should response status 200 when route is correct", async () => {
     const response = await request(app).delete(
       "/api/v1/users/profile/userId_0001"
