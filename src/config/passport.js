@@ -20,7 +20,7 @@ const jwtOptions = {
 
 const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
-    const userId = { _id: new ObjectId(payload.sub) };
+    const userId = { _id: ObjectId.createFromHexString(payload.sub) };
     const options = {
       projection: { hashedPassword: 0, salt: 0 },
     };

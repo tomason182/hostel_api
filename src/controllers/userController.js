@@ -15,7 +15,6 @@ const {
 const { getDb } = require("../config/db_config");
 const { saltGenerator, hashGenerator } = require("../utils/hash");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
-const { ObjectId } = require("mongodb");
 
 // @desc    Create a new User
 // @route   POST /api/v1/users
