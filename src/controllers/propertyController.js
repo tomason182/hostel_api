@@ -4,7 +4,7 @@ const {
   validationResult,
   matchedData,
 } = require("express-validator");
-const { getDd } = require("../config/db_config");
+const { getDb } = require("../config/db_config");
 
 // @desc    Create a property
 // @route   POST /api/v1/property
@@ -46,7 +46,7 @@ exports.property_create = [
         updatedAt: new Date(),
       };
 
-      const db = getDd();
+      const db = getDb();
       const propertyCollection = db.collection("properties");
 
       const result = await propertyCollection.insertOne(Property);
@@ -72,7 +72,8 @@ exports.property_create = [
 // @access  Private
 exports.property_details_get = async (req, res, next) => {
   try {
-    res.status(200).json({ msg: "Get property details" });
+    // check that params_id are valid for the user
+    const db = getDb();
   } catch (err) {
     next(err);
   }

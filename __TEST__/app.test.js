@@ -3,7 +3,7 @@ const {
   cleanData,
   dbDisconnect,
 } = require("../src/utils/mongoMemoryServer");
-const { getDd } = require("../src/config/db_config");
+const { getDb } = require("../src/config/db_config");
 const request = require("supertest");
 const app = require("../src/app");
 
@@ -115,7 +115,7 @@ describe.skip("Authenticate a user", () => {
 
 describe.skip("Logout a user", () => {
   test("Should response status 200 when route is correct", async () => {
-    const db = getDd();
+    const db = getDb();
     const usersCollection = db.collection("users");
     await usersCollection.insertOne({
       username: mockUser.username,

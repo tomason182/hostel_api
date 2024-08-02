@@ -27,7 +27,7 @@ const setDb = (database) => {
   db = database;
 };
 
-const getDd = () => db;
+const getDb = () => db;
 
 const closeConn = async () => {
   try {
@@ -39,4 +39,4 @@ const closeConn = async () => {
   }
 };
 
-module.exports = { connectToDatabase, closeConn, setDb, getDd };
+module.exports = { connectToDatabase, closeConn, setDb, getDb };

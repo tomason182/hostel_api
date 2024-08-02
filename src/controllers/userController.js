@@ -12,7 +12,7 @@ const {
   sanitizeLoginBody,
   sanitizeUpdateBody,
 } = require("../schemas/userSchemas");
-const { getDd } = require("../config/db_config");
+const { getDb } = require("../config/db_config");
 const { saltGenerator, hashGenerator } = require("../utils/hash");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const { ObjectId } = require("mongodb");
@@ -35,7 +35,7 @@ exports.user_create = [
         matchedData(req);
 
       // Check if user exist in the database
-      const db = getDd();
+      const db = getDb();
       const usersCollection = await db.collection("users");
       const userExist = await usersCollection.findOne({
         username,
@@ -93,7 +93,7 @@ exports.user_auth = [
       const { username, password } = matchedData(req);
 
       // Get database and collection
-      const db = getDd();
+      const db = getDb();
       const usersCollection = db.collection("users");
       const user = await usersCollection.findOne({ username });
       if (user === null) {
@@ -173,7 +173,7 @@ exports.user_profile_put = [
         },
       };
 
-      const db = getDd();
+      const db = getDb();
       const usersCollection = db.collection("users");
 
       const result = await usersCollection.updateOne(filter, updateUser);
