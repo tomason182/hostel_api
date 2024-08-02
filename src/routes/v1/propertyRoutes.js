@@ -8,13 +8,13 @@ const property_controller = require("../../controllers/propertyController");
 /// PROPERTY ROUTES ///
 
 // Create a property
-router.post("/", property_controller.property_create);
+router.post("/create", auth, property_controller.property_create);
 
 // Get a property details
-router.get("/:id_property", property_controller.property_details_get);
+router.get("/:id_property", auth, property_controller.property_details_get);
 
 // Update a property details
-router.put("/:id_property", property_controller.property_details_update);
+router.put("/:id_property", auth, property_controller.property_details_update);
 
 // Delete a property
 router.delete("/:id_property", auth, property_controller.property_delete);
