@@ -188,17 +188,28 @@ describe.skip("Delete user profile", () => {
 
 /// PROPERTIES ROUTES TEST ///
 
-describe("Create a new property", () => {
-  const mockProperty = {
-    propertyName: "test property",
-    street: "Av test 123",
-    city: "Azul",
-    postalCode: "7300",
-    countryCode: "AR",
-    phoneNumber: "+5492281536272",
-    email: "test@gmail.com",
-  };
+const mockProperty = {
+  propertyName: "test property",
+  street: "Av test 123",
+  city: "Azul",
+  postalCode: "7300",
+  countryCode: "AR",
+  phoneNumber: "+5492281536272",
+  email: "test@gmail.com",
+};
 
+const makeFakeId = (length) => {
+  let result = null;
+  let counter = 0;
+  const chars = "zxcvbnmasdfghjklqwertyuiop1234567890";
+  while (counter < length) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    counter += 1;
+  }
+  return result;
+};
+
+describe("Create a new property", () => {
   beforeAll(async () => {
     await dbConnect();
   });
@@ -226,4 +237,66 @@ describe("Create a new property", () => {
     expect(response.headers["content-type"]).toMatch(/json/);
     expect(response.status).toEqual(200);
   });
+});
+
+describe("Get property details", () => {
+  beforeAll(async () => {
+    await dbConnect();
+  });
+  beforeEach(async () => {
+    await mockUserRegistration(mockUser);
+  });
+  afterEach(async () => {
+    await cleanData();
+  });
+  afterAll(async () => {
+    await dbDisconnect();
+  });
+
+  test("Should return 401 status if user is not authenticate", async () => {
+    const response = await request(app)
+      .post("/api/v1/properties/create")
+      .send(mockProperty);
+    expect(response.status).toEqual(401);
+  });
+
+  test("Should return 200 status when get property", async () => {
+    const loginResponse = await request(app).post("/api/v1/users/auth").send({
+      username: mockUser.username,
+      password: mockUser.password,
+    });
+    const cookies = loginResponse.headers["set-cookie"];
+    const jwtCookie = cookies.find((cookie) => cookie.startsWith("jwt="));
+    const propertyResponse = await request(app)
+      .post("/api/v1/properties/create")
+      .send(mockProperty)
+      .set("Cookie", jwtCookie);
+    const propertyId = propertyResponse.body.value["insertedId"];
+    const response = await request(app)
+      .get(`/api/v1/properties/${propertyId}`)
+      .set("Cookie", jwtCookie);
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.status).toEqual(200);
+  });
+
+  test("Should return 400 status when property not found", async () => {
+    const loginResponse = await request(app).post("/api/v1/users/auth").send({
+      username: mockUser.username,
+      password: mockUser.password,
+    });
+    const cookies = loginResponse.headers["set-cookie"];
+    const jwtCookie = cookies.find((cookie) => cookie.startsWith("jwt="));
+    await request(app)
+      .post("/api/v1/properties/create")
+      .send(mockProperty)
+      .set("Cookie", jwtCookie);
+    const propertyId = "66ad1fba6f3092848fe560e2";
+    const response = await request(app)
+      .get(`/api/v1/properties/${propertyId}`)
+      .set("Cookie", jwtCookie);
+    expect(response.headers["content-type"]).toMatch(/json/);
+    expect(response.status).toEqual(400);
+    expect(response.body["msg"]).toEqual("property not found");
+  });
+  test.skip("should return 401 if user credentials are invalid", async () => {});
 });
