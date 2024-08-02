@@ -85,6 +85,7 @@ exports.property_details_get = async (req, res, next) => {
     }
 
     if (result.createdBy.toString() !== req.user._id.toString()) {
+      // En realidad esta comprobación esta mal. Solo permite ver detalles de la propiedad al usuario que la creo. Habria que manejar roles.
       res.status(401);
       throw new Error("invalid credentials");
     }
@@ -98,13 +99,65 @@ exports.property_details_get = async (req, res, next) => {
 // @desc    Update a property details
 // @route   PUT /api/v1/property/:id_property
 // @access  Private
-exports.property_details_update = async (req, res, next) => {
-  try {
-    res.status(200).json({ msg: "Update property details" });
-  } catch (err) {
-    next(err);
-  }
-};
+exports.property_details_update = [
+  checkSchema(propertySchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const db = getDb();
+      const propId = ObjectId.createFromHexString(req.params.id); // Tal vez hay que validar el parametro pasado por el cliente (en todos los casos)
+      const propertyCollection = db.collection("properties");
+      const result = await propertyCollection.findOne({ _id: propId });
+
+      if (result === null) {
+        res.status(400);
+        throw new Error("Property not found");
+      }
+
+      console.log(result.createdBy);
+      console.log(req.user._id);
+
+      if (result.createdBy.toString() !== req.user._id.toString()) {
+        // En realidad esta comprobación esta mal. Solo permite actualizar la propiedad al usuario que la creo. Habria que manejar roles.
+        res.status(401);
+        throw new Error("Invalid credentials");
+      }
+
+      const data = matchedData(req);
+
+      const filter = { _id: propId };
+
+      const updateProperty = {
+        $set: {
+          property_name: data.propertyName,
+          address: {
+            street: data.street,
+            city: data.city,
+            postal_code: data.postalCode,
+            country_code: data.countryCode,
+          },
+          contact_info: {
+            phone_number: data.phoneNumber,
+            email: data.email,
+          },
+          updatedAt: new Date(),
+        },
+      };
+
+      const updatedResult = await propertyCollection.updateOne(
+        filter,
+        updateProperty
+      );
+      res.status(200).json({ msg: "Property Updated", value: updatedResult });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
 
 // @desc    Delete a property
 // @route   DELETE /api/v1/property/:id_property
