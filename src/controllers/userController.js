@@ -15,6 +15,7 @@ const {
 const { getDb } = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
+const hashGenerator = require("../utils/hash").hashGenerator;
 
 // @desc    Create a new User w/ role
 // @route   POST /api/v1/users
@@ -52,7 +53,7 @@ exports.user_create = [
         firstName,
         lastName,
         phoneNumber,
-        rol
+        role
       );
 
       const result = await usersCollection.insertOne(user);
