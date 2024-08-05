@@ -1,3 +1,5 @@
+const roles = require("../config/roles.json");
+
 class Permissions {
   constructor() {
     this.Permissions = [];
@@ -5,7 +7,7 @@ class Permissions {
 
   getPermissionByRoleName(roleName) {
     const role = roles.roles.find((role) => role.name === roleName);
-    return role ? role.Permissions : [];
+    return role ? role.permissions : [];
   }
 }
 
