@@ -3,19 +3,19 @@
     {
       "name": "admin",
       "permissions": [
-        "create_record",
-        "read_record",
-        "update_record",
-        "delete_record"
+        "create_profile",
+        "read_profile",
+        "update_profile",
+        "delete_profile"
       ]
     },
     {
       "name": "manager",
-      "permissions": ["create_record", "read_record", "update_record"]
+      "permissions": ["create_profile", "read_profile", "update_profile"]
     },
     {
       "name": "employee",
-      "permissions": ["create_record", "read_record"]
+      "permissions": ["read_profile"]
     }
   ]
 }
