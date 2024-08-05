@@ -1,25 +1,19 @@
 const { saltGenerator, hashGenerator } = require("../utils/hash");
 
 class User {
-  constructor(
-    username,
-    password,
-    firstName,
-    lastName,
-    email,
-    phoneNumber,
-    role
-  ) {
+  constructor(username, password, firstName, lastName, phoneNumber, role) {
     (this.username = username),
-      (this.salt = saltGenerator()),
+      (this.salt = saltGenerator(32)),
       (this.hashedPassword = hashGenerator(password, this.salt)),
       (this.firstName = firstName),
       (this.lastName = lastName),
       (this.role = role),
       (this.contactDetails = {
-        email: email,
+        email: username,
         phoneNumber: phoneNumber || null,
-      });
+      }),
+      (this.createdAt = new Date()),
+      (this.updatedAt = new Date());
   }
 }
 
