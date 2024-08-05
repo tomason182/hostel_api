@@ -6,7 +6,9 @@
         "create_profile",
         "read_profile",
         "update_profile",
-        "delete_profile"
+        "delete_profile",
+        "create_property",
+        "update_property"
       ]
     },
     {
