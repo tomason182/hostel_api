@@ -148,11 +148,16 @@ const userUpdateSchema = {
       errorMessage: "username is not a valid email",
     },
   },
+
   role: {
     in: ["body"],
     trim: true,
     escape: true,
-    isIn: ["admin", "manager", "employee"],
+    isIn: {
+      options: [["admin", "manager", "employee"]],
+      errorMessage:
+        "Role must be one of the following: admin, manager, employee",
+    },
   },
 };
 
