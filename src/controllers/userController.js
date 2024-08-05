@@ -16,7 +16,7 @@ const { getDb } = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 
-// @desc    Create a new User
+// @desc    Create a new User w/ role
 // @route   POST /api/v1/users
 // @access  Public
 exports.user_create = [
@@ -30,7 +30,7 @@ exports.user_create = [
       }
 
       // Extract req values
-      const { username, password, firstName, lastName, phoneNumber } =
+      const { username, password, firstName, lastName, phoneNumber, role } =
         matchedData(req);
 
       // Check if user exist in the database
@@ -51,7 +51,8 @@ exports.user_create = [
         password,
         firstName,
         lastName,
-        phoneNumber
+        phoneNumber,
+        rol
       );
 
       const result = await usersCollection.insertOne(user);
