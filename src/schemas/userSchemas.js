@@ -62,6 +62,16 @@ const userRegisterSchema = {
       errorMessage: "Phone number must be a valid mobile phone number",
     },
   },
+  role: {
+    in: ["body"],
+    trim: true,
+    escape: true,
+    isIn: {
+      options: [["admin", "manager", "employee"]],
+      errorMessage:
+        "Role must be one of the following: admin, manager, employee",
+    },
+  },
 };
 
 const userLoginSchema = {
@@ -138,6 +148,17 @@ const userUpdateSchema = {
       errorMessage: "username is not a valid email",
     },
   },
+
+  role: {
+    in: ["body"],
+    trim: true,
+    escape: true,
+    isIn: {
+      options: [["admin", "manager", "employee"]],
+      errorMessage:
+        "Role must be one of the following: admin, manager, employee",
+    },
+  },
 };
 
 // Middleware to sanitize body
@@ -148,6 +169,7 @@ const sanitizeRegisterBody = function (req, res, next) {
     "firstName",
     "lastName",
     "phoneNumber",
+    "role",
   ];
   Object.keys(req.body).forEach((key) => {
     if (!allowedFields.includes(key)) {
@@ -172,7 +194,13 @@ const sanitizeLoginBody = function (req, res, next) {
 };
 
 const sanitizeUpdateBody = function (req, res, next) {
-  const allowedFields = ["firstName", "lastName", "phoneNumber", "email"];
+  const allowedFields = [
+    "firstName",
+    "lastName",
+    "phoneNumber",
+    "email",
+    "role",
+  ];
   Object.keys(req.body).forEach((key) => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];

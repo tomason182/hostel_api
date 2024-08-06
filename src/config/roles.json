@@ -1,0 +1,23 @@
+{
+  "roles": [
+    {
+      "name": "admin",
+      "permissions": [
+        "create_profile",
+        "read_profile",
+        "update_profile",
+        "delete_profile",
+        "create_property",
+        "update_property"
+      ]
+    },
+    {
+      "name": "manager",
+      "permissions": ["create_profile", "read_profile", "update_profile"]
+    },
+    {
+      "name": "employee",
+      "permissions": ["read_profile"]
+    }
+  ]
+}

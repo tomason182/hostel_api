@@ -13,10 +13,11 @@ const {
   sanitizeUpdateBody,
 } = require("../schemas/userSchemas");
 const { getDb } = require("../config/db_config");
-const { saltGenerator, hashGenerator } = require("../utils/hash");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
+const User = require("../models/userModel");
+const hashGenerator = require("../utils/hash").hashGenerator;
 
-// @desc    Create a new User
+// @desc    Create a new User w/ role
 // @route   POST /api/v1/users
 // @access  Public
 exports.user_create = [
@@ -30,7 +31,7 @@ exports.user_create = [
       }
 
       // Extract req values
-      const { username, password, firstName, lastName, phoneNumber } =
+      const { username, password, firstName, lastName, phoneNumber, role } =
         matchedData(req);
 
       // Check if user exist in the database
@@ -46,27 +47,16 @@ exports.user_create = [
         throw new Error("User already exist");
       }
 
-      // Create salt and hash the password
-      const salt = saltGenerator(32);
-      const hashedPassword = hashGenerator(password, salt);
+      const user = new User(
+        username,
+        password,
+        firstName,
+        lastName,
+        phoneNumber,
+        role
+      );
 
-      // Create the User object according to db structure
-
-      const User = {
-        username: username,
-        hashedPassword: hashedPassword,
-        salt: salt,
-        firstName: firstName,
-        lastName: lastName,
-        contactDetails: {
-          email: username,
-          phoneNumber: phoneNumber,
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      const result = await usersCollection.insertOne(User);
+      const result = await usersCollection.insertOne(user);
 
       return res
         .status(200)
