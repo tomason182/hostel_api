@@ -17,8 +17,8 @@ const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const hashGenerator = require("../utils/hash").hashGenerator;
 
-// @desc    Create a new User w/ role
-// @route   POST /api/v1/users
+// @desc    Register new User
+// @route   POST /api/v1/users/register
 // @access  Public
 exports.user_create = [
   sanitizeRegisterBody,
@@ -31,8 +31,11 @@ exports.user_create = [
       }
 
       // Extract req values
-      const { username, password, firstName, lastName, phoneNumber, role } =
+      const { username, password, firstName, lastName, phoneNumber } =
         matchedData(req);
+
+      // Set the user as owner, for later create a property
+      const isOwner = true;
 
       // Check if user exist in the database
       const db = getDb();
@@ -51,9 +54,9 @@ exports.user_create = [
         username,
         password,
         firstName,
+        isOwner,
         lastName,
-        phoneNumber,
-        role
+        phoneNumber
       );
 
       const result = await usersCollection.insertOne(user);
