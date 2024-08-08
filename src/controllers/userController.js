@@ -17,6 +17,7 @@ const {
 const { getDb, startSession } = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
+const AccessControl = require("../models/accessControlModel");
 const { ObjectId } = require("mongodb");
 const hashGenerator = require("../utils/hash").hashGenerator;
 
@@ -37,9 +38,6 @@ exports.user_register = [
       const { username, password, firstName, lastName, phoneNumber } =
         matchedData(req);
 
-      // Set the user as owner, for later create a property
-      const isOwner = true;
-
       // Check if user exist in the database
       const db = getDb();
       const usersCollection = db.collection("users");
@@ -53,16 +51,65 @@ exports.user_register = [
         throw new Error("User already exist");
       }
 
-      const user = new User(
-        username,
-        password,
-        firstName,
-        isOwner,
-        lastName,
-        phoneNumber
-      );
+      const session = startSession();
 
-      const result = await usersCollection.insertOne(user);
+      try {
+        session.startTransaction();
+        const user = new User(
+          username,
+          password,
+          firstName,
+          lastName,
+          phoneNumber
+        );
+
+        const userResult = await usersCollection.insertOne(user, { session });
+
+        const property = {
+          property_name: null,
+          address: {
+            street: null,
+            city: null,
+            postal_code: null,
+            country_code: null,
+          },
+          contact_info: {
+            phone_number: null,
+            email: email,
+          },
+          createdBy: userResult.insertedId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        const propertyColl = db.collection("property");
+        const propertyResult = await propertyColl.insertOne(property, {
+          session,
+        });
+
+        const accessControl = new AccessControl(propertyResult.insertedId);
+        accessControl.setUserAccess(userResult.insertedId, "admin");
+
+        const accessControlColl = db.collection("access_control");
+        const accessControlResult = await accessControlColl.insertOne(
+          accessControl,
+          {
+            session,
+          }
+        );
+
+        await session.commitTransaction();
+        res
+          .status(200)
+          .json(
+            `User created successfully. Access Control id: ${accessControlResult.insertedId}`
+          );
+      } catch (err) {
+        await session.abortTransaction();
+        throw new Error(err);
+      } finally {
+        await session.endSession();
+      }
 
       return res
         .status(200)
@@ -176,8 +223,10 @@ exports.user_auth = [
       const { username, password } = matchedData(req);
 
       // Get database and collection
-      const db = getDb();
+      const db = await getDb();
       const usersCollection = db.collection("users");
+      const accessControlColl = db.collection("access_control");
+
       const user = await usersCollection.findOne({ username });
       if (user === null) {
         res.status(401);
@@ -191,7 +240,25 @@ exports.user_auth = [
         throw new Error("Invalid username or password");
       }
 
-      jwtTokenGenerator(res, user._id);
+      const query = { "access.userId": user._id };
+      const filter = {
+        _id: 0,
+        property_id: 1,
+        access: { $elemMatch: { user_id: user._id } },
+      };
+      const accessInfo = await accessControlColl.findOne(query, filter);
+
+      if (!accessInfo) {
+        res.status(400);
+        throw new Error("An unexpected error ocurred");
+      }
+
+      jwtTokenGenerator(
+        res,
+        user._id,
+        accessInfo.property_id,
+        accessInfo.access[0].roles
+      );
     } catch (err) {
       next(err);
     }
