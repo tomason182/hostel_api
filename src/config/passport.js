@@ -20,19 +20,21 @@ const jwtOptions = {
 
 const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
-    const userId = { _id: ObjectId.createFromHexString(payload.sub) };
-    const propId = { _id: ObjectId.createFromHexString(payload.prop) };
+    const userId = ObjectId.createFromHexString(payload.sub);
+    // const propId = ObjectId.createFromHexString(payload.prop);
 
-    const query = { property_id: propId };
-    const filter = {
-      _id: 0,
-      property_id: 1,
-      access: { $elemMatch: { user_id: userId } },
+    const query = { "access.user_id": userId };
+    const options = {
+      projection: {
+        _id: 0,
+        property_id: 1,
+        access: { $elemMatch: { user_id: userId } },
+      },
     };
 
     const db = getDb();
     const accessControlColl = db.collection("access_control");
-    const access = await accessControlColl.findOne(query, filter);
+    const access = await accessControlColl.findOne(query, options);
 
     if (access === null) {
       return done(null, false);
