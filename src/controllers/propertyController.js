@@ -12,21 +12,19 @@ const { ObjectId } = require("mongodb");
 // @access  Private
 exports.property_details_get = async (req, res, next) => {
   try {
-    const propertyId = ObjectId.createFromHexString(req.params.id);
-    // check that params_id are valid for the user
-    const db = getDb();
+    const propertyId = req.user.property_id;
+    if (!ObjectId.isValid(propertyId)) {
+      res.status(400);
+      throw new Error("Not a valid mongodb id");
+    }
+
+    const db = await getDb();
     const propertyCollection = db.collection("properties");
     const result = await propertyCollection.findOne({ _id: propertyId });
 
     if (result === null) {
       res.status(400);
       throw new Error("property not found");
-    }
-
-    if (result.createdBy.toString() !== req.user._id.toString()) {
-      // En realidad esta comprobación esta mal. Solo permite ver detalles de la propiedad al usuario que la creo. Habria que manejar roles.
-      res.status(401);
-      throw new Error("invalid credentials");
     }
 
     res.status(200).json(result);
