@@ -1,6 +1,6 @@
 class AccessControl {
-  constructor(propertyId) {
-    (this.propertyId = propertyId), (this.access = []);
+  constructor(property_id) {
+    (this.property_id = property_id), (this.access = []);
   }
 
   setUserAccess(userId, role) {
