@@ -8,19 +8,22 @@ const {
   userRegisterSchema,
   userLoginSchema,
   userUpdateSchema,
+  userCreationSchema,
   sanitizeRegisterBody,
   sanitizeLoginBody,
   sanitizeUpdateBody,
+  sanitizeCreateBody,
 } = require("../schemas/userSchemas");
-const { getDb } = require("../config/db_config");
+const { getDb, startSession } = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
+const { ObjectId } = require("mongodb");
 const hashGenerator = require("../utils/hash").hashGenerator;
 
 // @desc    Register new User
 // @route   POST /api/v1/users/register
 // @access  Public
-exports.user_create = [
+exports.user_register = [
   sanitizeRegisterBody,
   checkSchema(userRegisterSchema),
   async (req, res, next) => {
@@ -39,7 +42,7 @@ exports.user_create = [
 
       // Check if user exist in the database
       const db = getDb();
-      const usersCollection = await db.collection("users");
+      const usersCollection = db.collection("users");
       const userExist = await usersCollection.findOne({
         username,
       });
@@ -64,6 +67,94 @@ exports.user_create = [
       return res
         .status(200)
         .json({ msg: `User created id: ${result.insertedId}` });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc    Create a new User
+// @route   POST /api/v1/users/create
+// @access  Private
+// @role    admin, manager
+exports.user_create = [
+  sanitizeCreateBody,
+  checkSchema(userCreationSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const { username, password, firstName, lastName, phoneNumber, role } =
+        matchedData(req);
+
+      // Check if user exist in the database
+      const db = await getDb();
+      const usersCollection = db.collection("users");
+
+      const userExist = await usersCollection.findOne({
+        username,
+      });
+
+      // If user exist in the db, throw an error
+      if (userExist !== null) {
+        res.status(400);
+        throw new Error("User already exist");
+      }
+
+      // Check if propertyId is valid
+      if (!ObjectId.isValid(req.propertyId)) {
+        return res.status(400).json({ error: "invalid propertyId" });
+      }
+
+      const newUser = new User(
+        username,
+        password,
+        firstName,
+        lastName,
+        phoneNumber
+      );
+
+      // Create an access to the access_control collection
+      const accessControlColl = db.collection("access_control");
+
+      const session = startSession();
+      try {
+        session.startTransaction();
+
+        const userResult = await usersCollection.insertOne(newUser, {
+          session,
+        });
+
+        const filter = { property_id: req.propertyId };
+        const updateDoc = {
+          $push: { access: { user_id: userResult.insertedId, role: role } },
+        };
+        const options = {
+          upsert: false,
+        };
+        const accessControlResult = await accessControlColl.updateOne(
+          filter,
+          updateDoc,
+          options,
+          { session }
+        );
+
+        if (accessControlResult.matchedCount === 0) {
+          throw new Error("Error: Require to create a property first");
+        }
+
+        await session.commitTransaction();
+
+        res.status(200).json({ msg: "User created successfully" });
+      } catch (err) {
+        await session.abortTransaction();
+        next(err);
+      } finally {
+        await session.endSession(); // Hay que probar si se ejecuta throw new error finally se alcanza
+      }
     } catch (err) {
       next(err);
     }
