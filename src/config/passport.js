@@ -21,22 +21,29 @@ const jwtOptions = {
 const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
     const userId = { _id: ObjectId.createFromHexString(payload.sub) };
-    const options = {
-      projection: { hashedPassword: 0, salt: 0 },
+    const propId = { _id: ObjectId.createFromHexString(payload.prop) };
+
+    const query = { property_id: propId };
+    const filter = {
+      _id: 0,
+      property_id: 1,
+      access: { $elemMatch: { user_id: userId } },
     };
+
     const db = getDb();
-    const usersCollection = db.collection("users");
-    const user = await usersCollection.findOne(userId, options);
-    if (user === null) {
+    const accessControlColl = db.collection("access_control");
+    const access = await accessControlColl.findOne(query, filter);
+
+    if (access === null) {
       return done(null, false);
     }
 
-    return done(null, user);
+    return done(null, access);
   } catch (err) {
     return done(err, false);
   }
 });
 
-module.exports = (passport) => {
+module.exports = passport => {
   passport.use(jwtStrategy);
 };
