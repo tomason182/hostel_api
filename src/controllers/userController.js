@@ -146,9 +146,8 @@ exports.user_create = [
         res.status(400);
         throw new Error("User already exist");
       }
-
       // Check if propertyId is valid
-      if (!ObjectId.isValid(req.propertyId)) {
+      if (!ObjectId.isValid(req.user.property_id)) {
         return res.status(400).json({ error: "invalid propertyId" });
       }
 
@@ -171,7 +170,7 @@ exports.user_create = [
           session,
         });
 
-        const filter = { property_id: req.propertyId };
+        const filter = { property_id: req.user.property_id };
         const updateDoc = {
           $push: { access: { user_id: userResult.insertedId, role: role } },
         };
@@ -186,7 +185,7 @@ exports.user_create = [
         );
 
         if (accessControlResult.matchedCount === 0) {
-          throw new Error("Error: Require to create a property first");
+          throw new Error("Error: Require to create a property");
         }
 
         await session.commitTransaction();
@@ -221,7 +220,6 @@ exports.user_auth = [
       // Get database and collection
       const db = await getDb();
       const usersCollection = db.collection("users");
-      const accessControlColl = db.collection("access_control");
 
       const user = await usersCollection.findOne({ username });
       if (user === null) {
@@ -236,27 +234,7 @@ exports.user_auth = [
         throw new Error("Invalid username or password");
       }
 
-      const query = { "access.user_id": user._id };
-      const filter = {
-        _id: 0,
-        property_id: 1,
-        access: { $elemMatch: { user_id: user._id } },
-      };
-      const accessInfo = await accessControlColl.findOne(query, filter);
-
-      if (!accessInfo) {
-        res.status(400);
-        throw new Error("An unexpected error ocurred");
-      }
-
-      console.log(accessInfo);
-
-      jwtTokenGenerator(
-        res,
-        user._id,
-        accessInfo.property_id,
-        accessInfo.access[0].role
-      );
+      jwtTokenGenerator(res, user._id);
     } catch (err) {
       next(err);
     }
