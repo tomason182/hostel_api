@@ -82,7 +82,7 @@ exports.user_register = [
           updatedAt: new Date(),
         };
 
-        const propertyColl = db.collection("property");
+        const propertyColl = db.collection("properties");
         const propertyResult = await propertyColl.insertOne(property, {
           session,
         });
@@ -110,10 +110,6 @@ exports.user_register = [
       } finally {
         await session.endSession();
       }
-
-      return res
-        .status(200)
-        .json({ msg: `User created id: ${result.insertedId}` });
     } catch (err) {
       next(err);
     }
@@ -240,7 +236,7 @@ exports.user_auth = [
         throw new Error("Invalid username or password");
       }
 
-      const query = { "access.userId": user._id };
+      const query = { "access.user_id": user._id };
       const filter = {
         _id: 0,
         property_id: 1,
@@ -253,11 +249,13 @@ exports.user_auth = [
         throw new Error("An unexpected error ocurred");
       }
 
+      console.log(accessInfo);
+
       jwtTokenGenerator(
         res,
         user._id,
         accessInfo.property_id,
-        accessInfo.access[0].roles
+        accessInfo.access[0].role
       );
     } catch (err) {
       next(err);
