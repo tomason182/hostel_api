@@ -9,7 +9,10 @@ const user_controller = require("../../controllers/userController");
 /// USER ROUTES ///
 
 // Register a new user
-router.post("/register", user_controller.user_create);
+router.post("/register", user_controller.user_register);
+
+// Create a new user
+router.post("/create", user_controller.user_create);
 
 // Authenticate a user
 router.post("/auth", user_controller.user_auth);
