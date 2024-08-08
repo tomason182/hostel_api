@@ -75,7 +75,7 @@ exports.user_register = [
           },
           contact_info: {
             phone_number: null,
-            email: email,
+            email: null,
           },
           createdBy: userResult.insertedId,
           createdAt: new Date(),
@@ -99,7 +99,7 @@ exports.user_register = [
         );
 
         await session.commitTransaction();
-        res
+        return res
           .status(200)
           .json(
             `User created successfully. Access Control id: ${accessControlResult.insertedId}`
