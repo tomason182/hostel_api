@@ -7,14 +7,14 @@ class User {
     firstName,
     lastName,
     phoneNumber,
-    owner = false
+    isOwner = false
   ) {
     (this.username = username),
       (this.salt = saltGenerator(32)),
       (this.hashedPassword = hashGenerator(password, this.salt)),
       (this.firstName = firstName),
       (this.lastName = lastName),
-      (this.owner = owner),
+      (this.isOwner = isOwner),
       (this.contactDetails = {
         email: username,
         phoneNumber: phoneNumber || null,
