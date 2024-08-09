@@ -7,7 +7,7 @@ require("dotenv").config();
 const app = require("../src/app");
 const debug = require("debug")("hostel-api:server");
 const http = require("http");
-const { connectToDatabase, closeConn } = require("../src/config/db_config");
+const connect = require("../src/config/db_config");
 
 /**
  * Get port from environment and store in Express.
@@ -29,13 +29,14 @@ const server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-connectToDatabase().then(() => {
+connect.connectClient().then(() => {
   server.listen(port, () => console.log(`Server started on port ${port}`));
 });
 
 server.on("error", onError);
 server.on("listening", onListening);
 
+process.on("exit", onShutdown);
 process.on("SIGTERM", onShutdown);
 process.on("SIGINT", onShutdown);
 process.on("uncaughtException", onErrorShutdown);
@@ -103,7 +104,7 @@ function onListening() {
 
 async function onShutdown() {
   console.log("Shutting down the server...");
-  await closeConn();
+  await connect.closeClient();
   server.close(() => {
     console.log("Closed out remaining connections");
     process.exit(0);
@@ -117,6 +118,6 @@ async function onShutdown() {
 
 async function onErrorShutdown(error) {
   console.log("An unexpected error ocurred", error);
-  await closeConn();
+  await connect.closeClient();
   process.exit(1);
 }
