@@ -168,11 +168,7 @@ exports.user_auth = [
       }
       const { username, password } = matchedData(req);
 
-      // Get database and collection
-      const db = await getDb();
-      const usersCollection = db.collection("users");
-
-      const user = await usersCollection.findOne({ username });
+      const user = await crudOperations.findOneUser(client, dbname, username);
       if (user === null) {
         res.status(401);
         throw new Error("Invalid username or password");
