@@ -23,11 +23,15 @@ const connectToDatabase = async () => {
   }
 };
 
-const setDb = (database) => {
+const setDb = database => {
   db = database;
 };
 
 const getDb = () => db;
+
+const startSession = () => {
+  return client.startSession();
+};
 
 const closeConn = async () => {
   try {
@@ -39,4 +43,4 @@ const closeConn = async () => {
   }
 };
 
-module.exports = { connectToDatabase, closeConn, setDb, getDb };
+module.exports = { connectToDatabase, closeConn, setDb, getDb, startSession };

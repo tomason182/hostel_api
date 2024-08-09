@@ -8,8 +8,16 @@ const user_controller = require("../../controllers/userController");
 
 /// USER ROUTES ///
 
-// Create a user
-router.post("/", user_controller.user_create);
+// Register a new user
+router.post("/register", user_controller.user_register);
+
+// Create a new user
+router.post(
+  "/create",
+  authMiddleware,
+  rbacMiddleware.checkPermission("create_user"),
+  user_controller.user_create
+);
 
 // Authenticate a user
 router.post("/auth", user_controller.user_auth);

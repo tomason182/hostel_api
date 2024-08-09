@@ -1,11 +1,10 @@
-const Role = require("../models/roleModel");
-const Permissions = require("../models/permissions");
+const getPermissionByRoleName = require("../utils/permissions");
 
 // Check if the user has the required permission for the route
-exports.checkPermission = (permission) => {
+exports.checkPermission = permission => {
   return (req, res, next) => {
-    const userRole = req.user ? req.user.role : "anonymous";
-    const userPermission = new Permissions().getPermissionByRoleName(userRole);
+    const userRole = req.user.access[0].role || "guess";
+    const userPermission = getPermissionByRoleName(userRole);
 
     if (userPermission.includes(permission)) {
       return next();
