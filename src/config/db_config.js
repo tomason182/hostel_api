@@ -1,46 +1,48 @@
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
+const poolSize = parseInt(process.env.MONGO_POOL_SIZE) || 10;
+const connectTimeoutMS = parseInt(
+  process.env.MONGO_CONNECT_TIMEOUT_MS || 30000
+);
 
-// Create mongo client instance
-const client = new MongoClient(uri);
-let db = null;
-
-// Database name
-const dbname = process.env.DB_NAME;
-// Data collections
-// const usersCollection = client.db(dbname).collection("users");
-
-const connectToDatabase = async () => {
-  try {
-    if (db) return;
-    await client.connect();
-    db = client.db(dbname);
-    console.log(`Connected to database ${dbname}`);
-  } catch (err) {
-    console.error(`Error connecting to the database: ${err}`);
-    process.exit(1);
+class Connect {
+  constructor() {
+    this.client = new MongoClient(uri, {
+      poolSize,
+      connectTimeoutMS,
+    });
+    this.isConnected = false;
   }
-};
 
-const setDb = database => {
-  db = database;
-};
-
-const getDb = () => db;
-
-const startSession = () => {
-  return client.startSession();
-};
-
-const closeConn = async () => {
-  try {
-    await client.close();
-    console.log("connection Close");
-  } catch (err) {
-    console.error("Unable to close conn to database");
-    process.exit(1);
+  async connectClient() {
+    try {
+      await this.client.connect();
+      this.isConnected = true;
+      console.log("Connected to MongoDb");
+    } catch (err) {
+      console.error("Connection error:", err);
+      setTimeout(() => this.connectClient(), 5000);
+    }
   }
-};
 
-module.exports = { connectToDatabase, closeConn, setDb, getDb, startSession };
+  async closeClient() {
+    try {
+      await this.client.close();
+      this.isConnected = false;
+    } catch (err) {
+      console.error("Error closing connection", err);
+    }
+  }
+
+  getClient() {
+    if (!this.isConnected) {
+      throw new Error("Client is not connected");
+    }
+    return this.client;
+  }
+}
+
+const connect = new Connect();
+
+module.exports = connect;
