@@ -230,26 +230,16 @@ exports.user_profile_put = [
         return res.status(400).json(errors.array());
       }
 
-      const { firstName, lastName, phoneNumber, email } = matchedData(req);
+      const data = matchedData(req);
 
-      const filter = { _id: req.user._id };
+      const userId = req.user._id;
 
-      const updateUser = {
-        $set: {
-          firstName: firstName,
-          lastName: lastName,
-          contactDetails: {
-            phoneNumber: phoneNumber,
-            email: email,
-          },
-          updatedAt: new Date(),
-        },
-      };
-
-      const db = getDb();
-      const usersCollection = db.collection("users");
-
-      const result = await usersCollection.updateOne(filter, updateUser);
+      const result = await crudOperations.updateOneUser(
+        client,
+        dbname,
+        userId,
+        data
+      );
 
       return res.status(200).json({
         msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
