@@ -112,13 +112,14 @@ exports.user_create = [
       const { username, password, firstName, lastName, phoneNumber, role } =
         matchedData(req);
 
-      // Check if user exist in the database
-      const db = await getDb();
-      const usersCollection = db.collection("users");
+      const propertyId = req.user.property_id;
 
-      const userExist = await usersCollection.findOne({
-        username,
-      });
+      // Check if user exist in the database
+      const userExist = await crudOperations.findOneUser(
+        client,
+        dbname,
+        username
+      );
 
       // If user exist in the db, throw an error
       if (userExist !== null) {
@@ -138,44 +139,15 @@ exports.user_create = [
         phoneNumber
       );
 
-      // Create an access to the access_control collection
-      const accessControlColl = db.collection("access_control");
+      const result = await transactionsOperations.insertUserToProperty(
+        client,
+        dbname,
+        newUser,
+        role,
+        propertyId
+      );
 
-      const session = startSession();
-      try {
-        session.startTransaction();
-
-        const userResult = await usersCollection.insertOne(newUser, {
-          session,
-        });
-
-        const filter = { property_id: req.user.property_id };
-        const updateDoc = {
-          $push: { access: { user_id: userResult.insertedId, role: role } },
-        };
-        const options = {
-          upsert: false,
-        };
-        const accessControlResult = await accessControlColl.updateOne(
-          filter,
-          updateDoc,
-          options,
-          { session }
-        );
-
-        if (accessControlResult.matchedCount === 0) {
-          throw new Error("Error: Require to create a property");
-        }
-
-        await session.commitTransaction();
-
-        res.status(200).json({ msg: "User created successfully" });
-      } catch (err) {
-        await session.abortTransaction();
-        next(err);
-      } finally {
-        await session.endSession(); // Hay que probar si se ejecuta throw new error finally se alcanza
-      }
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
