@@ -1,4 +1,4 @@
-exports.findOneUser = async (client, dbname, username) => {
+exports.findOneUserByUsername = async (client, dbname, username) => {
   try {
     const db = client.db(dbname);
     const userColl = db.collection("users");

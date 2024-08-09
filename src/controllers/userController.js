@@ -45,7 +45,7 @@ exports.user_register = [
         matchedData(req);
 
       // Check if user exist in the database
-      const userExist = await crudOperations.findOneUser(
+      const userExist = await crudOperations.findOneUserByUsername(
         client,
         dbname,
         username
@@ -115,7 +115,7 @@ exports.user_create = [
       const propertyId = req.user.property_id;
 
       // Check if user exist in the database
-      const userExist = await crudOperations.findOneUser(
+      const userExist = await crudOperations.findOneUserByUsername(
         client,
         dbname,
         username
