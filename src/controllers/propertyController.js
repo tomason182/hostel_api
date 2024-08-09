@@ -5,7 +5,7 @@ const {
   validationResult,
   matchedData,
 } = require("express-validator");
-const client = require("../config/db_config").getClient();
+const { getClient } = require("../config/db_config");
 const crudOperations = require("../utils/crud_operations");
 const { ObjectId } = require("mongodb");
 
@@ -23,6 +23,7 @@ exports.property_details_get = async (req, res, next) => {
       throw new Error("Not a valid mongodb id");
     }
 
+    const client = getClient();
     const result = await crudOperations.findPropertyById(
       client,
       dbname,
@@ -55,17 +56,16 @@ exports.property_details_update = [
       const data = matchedData(req);
       const propId = req.user.property_id;
 
+      const client = getClient();
       const updatedResult = await crudOperations.updatePropertyInfo(
         client,
         dbname,
         propId,
         data
       );
-      res
-        .status(200)
-        .json({
-          msg: `${updatedResult.matchedCount} document(s) match the filter. Updated ${updatedResult.modifiedCount} document(s)`,
-        });
+      res.status(200).json({
+        msg: `${updatedResult.matchedCount} document(s) match the filter. Updated ${updatedResult.modifiedCount} document(s)`,
+      });
     } catch (err) {
       next(err);
     }

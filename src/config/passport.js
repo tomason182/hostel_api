@@ -1,7 +1,7 @@
 require("dotenv").config();
 const { ObjectId } = require("mongodb");
 const { ExtractJwt, Strategy } = require("passport-jwt");
-const client = require("./db_config").getClient();
+const { getClient } = require("./db_config");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -34,7 +34,7 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
         access: { $elemMatch: { user_id: userId } },
       },
     };
-
+    const client = getClient();
     const db = client.db(dbname);
     const accessControlColl = db.collection("access_control");
     const access = await accessControlColl.findOne(query, options);

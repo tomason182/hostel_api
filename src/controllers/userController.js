@@ -14,7 +14,7 @@ const {
   sanitizeUpdateBody,
   sanitizeCreateBody,
 } = require("../schemas/userSchemas");
-const client = require("../config/db_config").getClient();
+const { getClient } = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
@@ -40,6 +40,8 @@ exports.user_register = [
         return res.status(400).json(errors.array());
       }
 
+      const client = getClient();
+      console.log(`Client is: ${client}`);
       // Extract req values
       const { username, password, firstName, lastName, phoneNumber } =
         matchedData(req);
@@ -115,6 +117,7 @@ exports.user_create = [
       const propertyId = req.user.property_id;
 
       // Check if user exist in the database
+      const client = getClient();
       const userExist = await crudOperations.findOneUserByUsername(
         client,
         dbname,
@@ -168,6 +171,7 @@ exports.user_auth = [
       }
       const { username, password } = matchedData(req);
 
+      const client = getClient();
       const user = await crudOperations.findOneUser(client, dbname, username);
       if (user === null) {
         res.status(401);
@@ -234,6 +238,7 @@ exports.user_profile_put = [
 
       const userId = req.user._id;
 
+      const client = getClient();
       const result = await crudOperations.updateOneUser(
         client,
         dbname,
