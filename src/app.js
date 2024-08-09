@@ -4,6 +4,10 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const passport = require("passport");
+const connect = require("../src/config/db_config");
+
+// Connect the client at the start of the application
+connect.connectClient();
 
 // Require Errors middleware
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
