@@ -1,11 +1,16 @@
+require("dotenv").config();
 const propertySchema = require("../schemas/propertySchema");
 const {
   checkSchema,
   validationResult,
   matchedData,
 } = require("express-validator");
-const { getDb } = require("../config/db_config");
+const client = require("../config/db_config").getClient();
+const crudOperations = require("../utils/crud_operations");
 const { ObjectId } = require("mongodb");
+
+// Environment variables
+const dbname = process.env.DB_NAME;
 
 // @desc    get a property details
 // @route   GET /api/v1/property/
@@ -18,9 +23,11 @@ exports.property_details_get = async (req, res, next) => {
       throw new Error("Not a valid mongodb id");
     }
 
-    const db = await getDb();
-    const propertyCollection = db.collection("properties");
-    const result = await propertyCollection.findOne({ _id: propertyId });
+    const result = await crudOperations.findPropertyById(
+      client,
+      dbname,
+      propertyId
+    );
 
     if (result === null) {
       res.status(400);
@@ -48,33 +55,17 @@ exports.property_details_update = [
       const data = matchedData(req);
       const propId = req.user.property_id;
 
-      const db = getDb();
-      const propertyCollection = db.collection("properties");
-
-      const filter = { _id: propId };
-
-      const updateProperty = {
-        $set: {
-          property_name: data.propertyName,
-          address: {
-            street: data.street,
-            city: data.city,
-            postal_code: data.postalCode,
-            country_code: data.countryCode,
-          },
-          contact_info: {
-            phone_number: data.phoneNumber,
-            email: data.email,
-          },
-          updatedAt: new Date(),
-        },
-      };
-
-      const updatedResult = await propertyCollection.updateOne(
-        filter,
-        updateProperty
+      const updatedResult = await crudOperations.updatePropertyInfo(
+        client,
+        dbname,
+        propId,
+        data
       );
-      res.status(200).json({ msg: "Property Updated", value: updatedResult });
+      res
+        .status(200)
+        .json({
+          msg: `${updatedResult.matchedCount} document(s) match the filter. Updated ${updatedResult.modifiedCount} document(s)`,
+        });
     } catch (err) {
       next(err);
     }
