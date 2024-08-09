@@ -39,3 +39,53 @@ exports.updateOneUser = async (client, dbname, userId, data) => {
     );
   }
 };
+
+exports.findPropertyById = async (client, dbname, propertyId) => {
+  try {
+    const db = client.db(dbname);
+    const propertyColl = db.collection("properties");
+
+    const filter = { _id: propertyId };
+    const result = await propertyColl.findOne(filter);
+
+    return result;
+  } catch (err) {
+    throw new Error(
+      "An error occurred while tempting to find the property",
+      err
+    );
+  }
+};
+
+exports.updatePropertyInfo = async (client, dbname, propertyId, data) => {
+  try {
+    const db = client.db(dbname);
+    const propertyColl = db.collection("properties");
+
+    const filter = { _id: propertyId };
+    const updateDoc = {
+      $set: {
+        property_name: data.propertyName,
+        address: {
+          street: data.street,
+          city: data.city,
+          postal_code: data.postalCode,
+          country_code: data.countryCode,
+        },
+        contact_info: {
+          phone_number: data.phoneNumber,
+          email: data.email,
+        },
+        updateAt: new Date(),
+      },
+    };
+
+    const updatedResult = await propertyColl.updateOne(filter, updateDoc);
+    return updatedResult;
+  } catch (err) {
+    throw new Error(
+      "An error occurred while trying to update the property",
+      err
+    );
+  }
+};
