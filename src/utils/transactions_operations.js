@@ -66,7 +66,7 @@ exports.insertUserToProperty = async (
       upsert: false,
     };
     const accessControlColl = client.db(dbname).collection("access_control");
-    const accessControlResult = accessControlColl.updateOne(
+    const accessControlResult = await accessControlColl.updateOne(
       filter,
       updateDoc,
       options,

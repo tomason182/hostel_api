@@ -34,7 +34,7 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
         access: { $elemMatch: { user_id: userId } },
       },
     };
-    const client = conn.getClient;
+    const client = conn.getClient();
     const db = client.db(dbname);
     const accessControlColl = db.collection("access_control");
     const access = await accessControlColl.findOne(query, options);
@@ -49,6 +49,6 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   }
 });
 
-module.exports = (passport) => {
+module.exports = passport => {
   passport.use(jwtStrategy);
 };

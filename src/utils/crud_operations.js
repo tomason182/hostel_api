@@ -20,7 +20,7 @@ exports.updateOneUser = async (client, dbname, userId, data) => {
     const filter = { _id: userId };
     const updateUser = {
       $set: {
-        first_name: data.first_name,
+        first_name: data.firstName,
         last_name: data.lastName,
         contact_details: {
           phone_number: data.phoneNumber,
@@ -76,7 +76,7 @@ exports.updatePropertyInfo = async (client, dbname, propertyId, data) => {
           phone_number: data.phoneNumber,
           email: data.email,
         },
-        updateAt: new Date(),
+        updatedAt: new Date(),
       },
     };
 

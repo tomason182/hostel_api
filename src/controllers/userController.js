@@ -183,7 +183,7 @@ exports.user_auth = [
 
       const passwdHash = hashGenerator(password, user.salt);
 
-      if (passwdHash !== user.hashedPassword) {
+      if (passwdHash !== user.hashed_password) {
         res.status(401);
         throw new Error("Invalid username or password");
       }
@@ -238,8 +238,7 @@ exports.user_profile_put = [
       }
 
       const data = matchedData(req);
-
-      const userId = req.user._id;
+      const userId = req.user.access[0].user_id;
 
       const client = conn.getClient();
       const result = await crudOperations.updateOneUser(
