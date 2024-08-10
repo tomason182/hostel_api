@@ -171,7 +171,11 @@ exports.user_auth = [
       const { username, password } = matchedData(req);
 
       const client = conn.getClient();
-      const user = await crudOperations.findOneUser(client, dbname, username);
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
       if (user === null) {
         res.status(401);
         throw new Error("Invalid username or password");
