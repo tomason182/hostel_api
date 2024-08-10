@@ -19,8 +19,9 @@ exports.insertUserPropertyAndAccessControlOnRegister = async (
     const propertyResult = await propertyColl.insertOne(property, { session });
 
     const propertyId = propertyResult.insertedId;
+
     accessControl.setPropertyId(propertyId);
-    accessControl.setUserAccess(userResult);
+    accessControl.setUserAccess(userId, "admin");
 
     const accessControlColl = client.db(dbname).collection("access_control");
     const accessControlResult = await accessControlColl.insertOne(
