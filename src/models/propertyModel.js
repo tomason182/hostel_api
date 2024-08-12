@@ -3,13 +3,12 @@ const { captureRejectionSymbol } = require("supertest/lib/test");
 class Property {
   constructor(
     property_name,
-    street,
-    city,
-    postal_code,
-    country_code,
-    phone_number,
-    email,
-    createdBy
+    street = null,
+    city = null,
+    postal_code = null,
+    country_code = null,
+    phone_number = null,
+    email = null
   ) {
     (this.property_name = property_name),
       (this.address = {
@@ -22,13 +21,8 @@ class Property {
       phone_number: phone_number,
       email: email,
     };
-    (this.createdBy = createdBy),
-      (this.createdAt = new Date()),
-      (this.updatedAt = new Date());
-  }
-
-  setCreatedBy(userId) {
-    this.createdBy = userId;
+    this.access_control = [];
+    (this.createdAt = new Date()), (this.updatedAt = new Date());
   }
 }
 
