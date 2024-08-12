@@ -25,7 +25,7 @@ router.post("/auth", user_controller.user_auth);
 // Logout a user
 router.post("/logout", user_controller.user_logout);
 
-// Get user profile
+// Get user profile --> hay que corregir
 router.get(
   "/profile/",
   authMiddleware,

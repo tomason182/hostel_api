@@ -14,12 +14,18 @@ const {
   sanitizeUpdateBody,
   sanitizeCreateBody,
 } = require("../schemas/userSchemas");
-const { getDb, startSession } = require("../config/db_config");
+const conn = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
+const Property = require("../models/propertyModel");
 const AccessControl = require("../models/accessControlModel");
 const { ObjectId } = require("mongodb");
 const hashGenerator = require("../utils/hash").hashGenerator;
+const crudOperations = require("../utils/crud_operations");
+const transactionsOperations = require("../utils/transactions_operations");
+
+// Enviroment variables
+const dbname = process.env.DB_NAME;
 
 // @desc    Register new User
 // @route   POST /api/v1/users/register
@@ -34,16 +40,17 @@ exports.user_register = [
         return res.status(400).json(errors.array());
       }
 
+      const client = conn.getClient();
       // Extract req values
       const { username, password, firstName, lastName, phoneNumber } =
         matchedData(req);
 
       // Check if user exist in the database
-      const db = getDb();
-      const usersCollection = db.collection("users");
-      const userExist = await usersCollection.findOne({
-        username,
-      });
+      const userExist = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
 
       // If user exist in the db, throw an error
       if (userExist !== null) {
@@ -51,65 +58,38 @@ exports.user_register = [
         throw new Error("User already exist");
       }
 
-      const session = startSession();
+      // create User, Property & Access Control objects
+      const user = new User(
+        username,
+        password,
+        firstName,
+        lastName,
+        phoneNumber
+      );
 
-      try {
-        session.startTransaction();
-        const user = new User(
-          username,
-          password,
-          firstName,
-          lastName,
-          phoneNumber
+      const property = new Property(
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      );
+
+      const accessControl = new AccessControl();
+
+      const result =
+        await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
+          client,
+          dbname,
+          user,
+          property,
+          accessControl
         );
 
-        const userResult = await usersCollection.insertOne(user, { session });
-
-        const property = {
-          property_name: null,
-          address: {
-            street: null,
-            city: null,
-            postal_code: null,
-            country_code: null,
-          },
-          contact_info: {
-            phone_number: null,
-            email: null,
-          },
-          createdBy: userResult.insertedId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        const propertyColl = db.collection("properties");
-        const propertyResult = await propertyColl.insertOne(property, {
-          session,
-        });
-
-        const accessControl = new AccessControl(propertyResult.insertedId);
-        accessControl.setUserAccess(userResult.insertedId, "admin");
-
-        const accessControlColl = db.collection("access_control");
-        const accessControlResult = await accessControlColl.insertOne(
-          accessControl,
-          {
-            session,
-          }
-        );
-
-        await session.commitTransaction();
-        return res
-          .status(200)
-          .json(
-            `User created successfully. Access Control id: ${accessControlResult.insertedId}`
-          );
-      } catch (err) {
-        await session.abortTransaction();
-        throw new Error(err);
-      } finally {
-        await session.endSession();
-      }
+      return res.status(200).json(result);
     } catch (err) {
       next(err);
     }
@@ -133,13 +113,15 @@ exports.user_create = [
       const { username, password, firstName, lastName, phoneNumber, role } =
         matchedData(req);
 
-      // Check if user exist in the database
-      const db = await getDb();
-      const usersCollection = db.collection("users");
+      const propertyId = req.user.property_id;
 
-      const userExist = await usersCollection.findOne({
-        username,
-      });
+      // Check if user exist in the database
+      const client = conn.getClient();
+      const userExist = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
 
       // If user exist in the db, throw an error
       if (userExist !== null) {
@@ -159,44 +141,15 @@ exports.user_create = [
         phoneNumber
       );
 
-      // Create an access to the access_control collection
-      const accessControlColl = db.collection("access_control");
+      const result = await transactionsOperations.insertUserToProperty(
+        client,
+        dbname,
+        newUser,
+        role,
+        propertyId
+      );
 
-      const session = startSession();
-      try {
-        session.startTransaction();
-
-        const userResult = await usersCollection.insertOne(newUser, {
-          session,
-        });
-
-        const filter = { property_id: req.user.property_id };
-        const updateDoc = {
-          $push: { access: { user_id: userResult.insertedId, role: role } },
-        };
-        const options = {
-          upsert: false,
-        };
-        const accessControlResult = await accessControlColl.updateOne(
-          filter,
-          updateDoc,
-          options,
-          { session }
-        );
-
-        if (accessControlResult.matchedCount === 0) {
-          throw new Error("Error: Require to create a property");
-        }
-
-        await session.commitTransaction();
-
-        res.status(200).json({ msg: "User created successfully" });
-      } catch (err) {
-        await session.abortTransaction();
-        next(err);
-      } finally {
-        await session.endSession(); // Hay que probar si se ejecuta throw new error finally se alcanza
-      }
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
@@ -217,11 +170,12 @@ exports.user_auth = [
       }
       const { username, password } = matchedData(req);
 
-      // Get database and collection
-      const db = await getDb();
-      const usersCollection = db.collection("users");
-
-      const user = await usersCollection.findOne({ username });
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
       if (user === null) {
         res.status(401);
         throw new Error("Invalid username or password");
@@ -229,7 +183,7 @@ exports.user_auth = [
 
       const passwdHash = hashGenerator(password, user.salt);
 
-      if (passwdHash !== user.hashedPassword) {
+      if (passwdHash !== user.hashed_password) {
         res.status(401);
         throw new Error("Invalid username or password");
       }
@@ -283,26 +237,16 @@ exports.user_profile_put = [
         return res.status(400).json(errors.array());
       }
 
-      const { firstName, lastName, phoneNumber, email } = matchedData(req);
+      const data = matchedData(req);
+      const userId = req.user.access[0].user_id;
 
-      const filter = { _id: req.user._id };
-
-      const updateUser = {
-        $set: {
-          firstName: firstName,
-          lastName: lastName,
-          contactDetails: {
-            phoneNumber: phoneNumber,
-            email: email,
-          },
-          updatedAt: new Date(),
-        },
-      };
-
-      const db = getDb();
-      const usersCollection = db.collection("users");
-
-      const result = await usersCollection.updateOne(filter, updateUser);
+      const client = conn.getClient();
+      const result = await crudOperations.updateOneUser(
+        client,
+        dbname,
+        userId,
+        data
+      );
 
       return res.status(200).json({
         msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
