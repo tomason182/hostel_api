@@ -213,7 +213,6 @@ exports.user_profile_get = (req, res, next) => {
 // @route   PUT /api/v1/users/profile/
 // @access  Private
 exports.user_profile_put = [
-  sanitizeUpdateBody,
   checkSchema(userUpdateSchema),
   async (req, res, next) => {
     try {
@@ -223,7 +222,7 @@ exports.user_profile_put = [
       }
 
       const data = matchedData(req);
-      const userId = req.user.access[0].user_id;
+      const userId = req.user.access_control[0].user_id;
 
       const client = conn.getClient();
       const result = await crudOperations.updateOneUser(

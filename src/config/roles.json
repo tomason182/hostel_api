@@ -18,7 +18,7 @@
     },
     {
       "name": "employee",
-      "permissions": ["get_property"]
+      "permissions": ["get_property", "update_profile"]
     }
   ]
 }
