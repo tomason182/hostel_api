@@ -47,14 +47,14 @@ exports.insertUserToProperty = async (
     const userId = userResult.insertedId;
 
     // Find the property in the access_control collection and append the userId
-    const filter = { property_id: propertyId };
+    const filter = { _id: propertyId };
     const updateDoc = {
-      $push: { access: { user_id: userId, role: role } },
+      $push: { access_control: { user_id: userId, role: role } },
     };
     const options = {
       upsert: false,
     };
-    const accessControlColl = client.db(dbname).collection("access_control");
+    const accessControlColl = client.db(dbname).collection("properties");
     const accessControlResult = await accessControlColl.updateOne(
       filter,
       updateDoc,

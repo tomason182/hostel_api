@@ -88,7 +88,6 @@ exports.user_register = [
 // @access  Private
 // @role    admin, manager
 exports.user_create = [
-  sanitizeCreateBody,
   checkSchema(userCreationSchema),
   async (req, res, next) => {
     try {
@@ -97,10 +96,10 @@ exports.user_create = [
         return res.status(400).json(errors.array());
       }
 
-      const { username, password, firstName, lastName, phoneNumber, role } =
+      const { username, password, firstName, lastName, role } =
         matchedData(req);
 
-      const propertyId = req.user.property_id;
+      const propertyId = req.user._id;
 
       // Check if user exist in the database
       const client = conn.getClient();
@@ -116,22 +115,19 @@ exports.user_create = [
         throw new Error("User already exist");
       }
       // Check if propertyId is valid
-      if (!ObjectId.isValid(req.user.property_id)) {
+      if (!ObjectId.isValid(req.user._id)) {
         return res.status(400).json({ error: "invalid propertyId" });
       }
 
-      const newUser = new User(
-        username,
-        password,
-        firstName,
-        lastName,
-        phoneNumber
-      );
+      // create User, Property & Access Control objects
+      const user = new User(username, firstName, lastName);
+
+      await user.setHashPassword(password);
 
       const result = await transactionsOperations.insertUserToProperty(
         client,
         dbname,
-        newUser,
+        user,
         role,
         propertyId
       );
