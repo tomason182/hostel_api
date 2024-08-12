@@ -24,6 +24,13 @@ class Property {
     this.access_control = [];
     (this.createdAt = new Date()), (this.updatedAt = new Date());
   }
+
+  setAccessControl(userId, role) {
+    this.access_control.push({
+      user_id: userId,
+      role: role,
+    });
+  }
 }
 
 module.exports = Property;
