@@ -18,9 +18,9 @@ class User {
     }
   }
 
-  async comparePasswords(password) {
+  async comparePasswords(password, hashedPassword) {
     try {
-      const result = await bcrypt.compare(password, this.hashed_password);
+      const result = await bcrypt.compare(password, hashedPassword);
       return result;
     } catch (err) {
       throw new Error("An Error ocurred verifying the password");

@@ -147,7 +147,6 @@ exports.user_create = [
 // @route   POST /api/v1/users/auth
 // @access  Public
 exports.user_auth = [
-  sanitizeLoginBody,
   checkSchema(userLoginSchema),
   async (req, res, next) => {
     try {
@@ -168,9 +167,12 @@ exports.user_auth = [
         throw new Error("Invalid username or password");
       }
 
-      const passwdHash = hashGenerator(password, user.salt);
+      const result = await new User().comparePasswords(
+        password,
+        user.hashed_password
+      );
 
-      if (passwdHash !== user.hashed_password) {
+      if (!result) {
         res.status(401);
         throw new Error("Invalid username or password");
       }
