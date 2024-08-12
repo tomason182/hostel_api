@@ -2,8 +2,7 @@ exports.insertUserPropertyAndAccessControlOnRegister = async (
   client,
   dbname,
   user,
-  property,
-  accessControl
+  property
 ) => {
   const session = client.startSession();
   try {
@@ -13,25 +12,15 @@ exports.insertUserPropertyAndAccessControlOnRegister = async (
     const userResult = await userColl.insertOne(user, { session });
 
     const userId = userResult.insertedId;
-    property.setCreatedBy(userId);
+    const role = "admin"; // When user register we set admin role by default
+    property.setAccessControl(userId, role);
 
     const propertyColl = client.db(dbname).collection("properties");
     const propertyResult = await propertyColl.insertOne(property, { session });
 
-    const propertyId = propertyResult.insertedId;
-
-    accessControl.setPropertyId(propertyId);
-    accessControl.setUserAccess(userId, "admin");
-
-    const accessControlColl = client.db(dbname).collection("access_control");
-    const accessControlResult = await accessControlColl.insertOne(
-      accessControl,
-      { session }
-    );
-
     await session.commitTransaction();
     return {
-      msg: `User Created successfully. Access control id: ${accessControlResult.insertedId}`,
+      msg: `User Created successfully. Property id: ${propertyResult.insertedId}`,
     };
   } catch (err) {
     await session.abortTransaction();

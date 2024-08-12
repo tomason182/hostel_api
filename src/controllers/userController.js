@@ -1,6 +1,7 @@
 require("dotenv").config();
 const {
   checkSchema,
+  body,
   validationResult,
   matchedData,
 } = require("express-validator");
@@ -18,9 +19,7 @@ const conn = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
-const AccessControl = require("../models/accessControlModel");
 const { ObjectId } = require("mongodb");
-const hashGenerator = require("../utils/hash").hashGenerator;
 const crudOperations = require("../utils/crud_operations");
 const transactionsOperations = require("../utils/transactions_operations");
 
@@ -31,8 +30,12 @@ const dbname = process.env.DB_NAME;
 // @route   POST /api/v1/users/register
 // @access  Public
 exports.user_register = [
-  sanitizeRegisterBody,
   checkSchema(userRegisterSchema),
+  body("propertyName")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Property name must be specified"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -42,7 +45,7 @@ exports.user_register = [
 
       const client = conn.getClient();
       // Extract req values
-      const { username, password, firstName, lastName, phoneNumber } =
+      const { username, password, firstName, lastName, propertyName } =
         matchedData(req);
 
       // Check if user exist in the database
@@ -59,34 +62,18 @@ exports.user_register = [
       }
 
       // create User, Property & Access Control objects
-      const user = new User(
-        username,
-        password,
-        firstName,
-        lastName,
-        phoneNumber
-      );
+      const user = new User(username, firstName, lastName);
 
-      const property = new Property(
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      );
+      await user.setHashPassword(password);
 
-      const accessControl = new AccessControl();
+      const property = new Property(propertyName);
 
       const result =
         await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
           client,
           dbname,
           user,
-          property,
-          accessControl
+          property
         );
 
       return res.status(200).json(result);
