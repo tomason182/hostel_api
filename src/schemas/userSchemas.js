@@ -52,16 +52,6 @@ const userRegisterSchema = {
       errorMessage: "Last name must contain only alphabetic characters",
     },
   },
-  phoneNumber: {
-    in: ["body"],
-    optional: true,
-    trim: true,
-    escape: true,
-    isMobilePhone: {
-      options: ["any"],
-      errorMessage: "Phone number must be a valid mobile phone number",
-    },
-  },
 };
 
 const userLoginSchema = {
@@ -121,23 +111,6 @@ const userUpdateSchema = {
       errorMessage: "Last name must contain only alphabetic characters",
     },
   },
-  phoneNumber: {
-    in: ["body"],
-    optional: true,
-    trim: true,
-    escape: true,
-    isMobilePhone: {
-      options: ["any"],
-      errorMessage: "Phone number must be a valid mobile phone number",
-    },
-  },
-  email: {
-    in: ["body"],
-    isEmail: {
-      bail: true,
-      errorMessage: "username is not a valid email",
-    },
-  },
 };
 
 const userCreationSchema = {
@@ -194,16 +167,6 @@ const userCreationSchema = {
       errorMessage: "Last name must contain only alphabetic characters",
     },
   },
-  phoneNumber: {
-    in: ["body"],
-    optional: true,
-    trim: true,
-    escape: true,
-    isMobilePhone: {
-      options: ["any"],
-      errorMessage: "Phone number must be a valid mobile phone number",
-    },
-  },
   role: {
     in: ["body"],
     trim: true,
@@ -217,13 +180,7 @@ const userCreationSchema = {
 
 // Middleware to sanitize body
 const sanitizeRegisterBody = function (req, res, next) {
-  const allowedFields = [
-    "username",
-    "password",
-    "firstName",
-    "lastName",
-    "phoneNumber",
-  ];
+  const allowedFields = ["username", "password", "firstName", "lastName"];
   Object.keys(req.body).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
@@ -240,7 +197,6 @@ const sanitizeCreateBody = function (req, res, next) {
     "password",
     "firstName",
     "lastName",
-    "phoneNumber",
     "role",
   ];
   Object.keys(req.body).forEach(key => {
@@ -266,7 +222,7 @@ const sanitizeLoginBody = function (req, res, next) {
 };
 
 const sanitizeUpdateBody = function (req, res, next) {
-  const allowedFields = ["firstName", "lastName", "phoneNumber", "email"];
+  const allowedFields = ["firstName", "lastName"];
   Object.keys(req.body).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
