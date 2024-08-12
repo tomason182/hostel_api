@@ -6,14 +6,13 @@ class User {
       (this.first_name = first_name),
       (this.last_name = last_name),
       (this.hashed_password = hashed_password),
-      (this.saltRounds = 10),
       (this.createdAt = new Date()),
       (this.updatedAt = new Date());
   }
 
-  async setHashPassword(password) {
+  async setHashPassword(password, saltRounds = 10) {
     try {
-      this.hashed_password = await bcrypt.hash(password, this.saltRounds);
+      this.hashed_password = await bcrypt.hash(password, saltRounds);
     } catch (err) {
       throw new Error("Error hashing the password");
     }
