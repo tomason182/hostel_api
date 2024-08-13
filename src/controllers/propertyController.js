@@ -17,7 +17,7 @@ const dbname = process.env.DB_NAME;
 // @access  Private
 exports.property_details_get = async (req, res, next) => {
   try {
-    const propertyId = req.user.property_id;
+    const propertyId = req.user._id; // _id representa id de la propiedad, porque passport busca en la coleccion properties.
     if (!ObjectId.isValid(propertyId)) {
       res.status(400);
       throw new Error("Not a valid mongodb id");
@@ -42,7 +42,7 @@ exports.property_details_get = async (req, res, next) => {
 };
 
 // @desc    Update a property details
-// @route   PUT /api/v1/property/:id_property
+// @route   PUT /api/v1/property/
 // @access  Private
 exports.property_details_update = [
   checkSchema(propertySchema),
@@ -54,7 +54,7 @@ exports.property_details_update = [
       }
 
       const data = matchedData(req);
-      const propId = req.user.property_id;
+      const propId = req.user._id;
 
       const client = conn.getClient();
       const updatedResult = await crudOperations.updatePropertyInfo(
