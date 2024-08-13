@@ -1,6 +1,7 @@
 require("dotenv").config();
 const {
   checkSchema,
+  body,
   validationResult,
   matchedData,
 } = require("express-validator");
@@ -18,9 +19,7 @@ const conn = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
-const AccessControl = require("../models/accessControlModel");
 const { ObjectId } = require("mongodb");
-const hashGenerator = require("../utils/hash").hashGenerator;
 const crudOperations = require("../utils/crud_operations");
 const transactionsOperations = require("../utils/transactions_operations");
 
@@ -31,8 +30,12 @@ const dbname = process.env.DB_NAME;
 // @route   POST /api/v1/users/register
 // @access  Public
 exports.user_register = [
-  sanitizeRegisterBody,
   checkSchema(userRegisterSchema),
+  body("propertyName")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Property name must be specified"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -42,7 +45,7 @@ exports.user_register = [
 
       const client = conn.getClient();
       // Extract req values
-      const { username, password, firstName, lastName, phoneNumber } =
+      const { username, password, firstName, lastName, propertyName } =
         matchedData(req);
 
       // Check if user exist in the database
@@ -59,34 +62,18 @@ exports.user_register = [
       }
 
       // create User, Property & Access Control objects
-      const user = new User(
-        username,
-        password,
-        firstName,
-        lastName,
-        phoneNumber
-      );
+      const user = new User(username, firstName, lastName);
 
-      const property = new Property(
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      );
+      await user.setHashPassword(password);
 
-      const accessControl = new AccessControl();
+      const property = new Property(propertyName);
 
       const result =
         await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
           client,
           dbname,
           user,
-          property,
-          accessControl
+          property
         );
 
       return res.status(200).json(result);
@@ -101,7 +88,6 @@ exports.user_register = [
 // @access  Private
 // @role    admin, manager
 exports.user_create = [
-  sanitizeCreateBody,
   checkSchema(userCreationSchema),
   async (req, res, next) => {
     try {
@@ -110,10 +96,10 @@ exports.user_create = [
         return res.status(400).json(errors.array());
       }
 
-      const { username, password, firstName, lastName, phoneNumber, role } =
+      const { username, password, firstName, lastName, role } =
         matchedData(req);
 
-      const propertyId = req.user.property_id;
+      const propertyId = req.user._id;
 
       // Check if user exist in the database
       const client = conn.getClient();
@@ -129,22 +115,19 @@ exports.user_create = [
         throw new Error("User already exist");
       }
       // Check if propertyId is valid
-      if (!ObjectId.isValid(req.user.property_id)) {
+      if (!ObjectId.isValid(req.user._id)) {
         return res.status(400).json({ error: "invalid propertyId" });
       }
 
-      const newUser = new User(
-        username,
-        password,
-        firstName,
-        lastName,
-        phoneNumber
-      );
+      // create User, Property & Access Control objects
+      const user = new User(username, firstName, lastName);
+
+      await user.setHashPassword(password);
 
       const result = await transactionsOperations.insertUserToProperty(
         client,
         dbname,
-        newUser,
+        user,
         role,
         propertyId
       );
@@ -160,7 +143,6 @@ exports.user_create = [
 // @route   POST /api/v1/users/auth
 // @access  Public
 exports.user_auth = [
-  sanitizeLoginBody,
   checkSchema(userLoginSchema),
   async (req, res, next) => {
     try {
@@ -181,9 +163,12 @@ exports.user_auth = [
         throw new Error("Invalid username or password");
       }
 
-      const passwdHash = hashGenerator(password, user.salt);
+      const result = await new User().comparePasswords(
+        password,
+        user.hashed_password
+      );
 
-      if (passwdHash !== user.hashed_password) {
+      if (!result) {
         res.status(401);
         throw new Error("Invalid username or password");
       }
@@ -228,7 +213,6 @@ exports.user_profile_get = (req, res, next) => {
 // @route   PUT /api/v1/users/profile/
 // @access  Private
 exports.user_profile_put = [
-  sanitizeUpdateBody,
   checkSchema(userUpdateSchema),
   async (req, res, next) => {
     try {
@@ -238,7 +222,7 @@ exports.user_profile_put = [
       }
 
       const data = matchedData(req);
-      const userId = req.user.access[0].user_id;
+      const userId = req.user.access_control[0].user_id;
 
       const client = conn.getClient();
       const result = await crudOperations.updateOneUser(
