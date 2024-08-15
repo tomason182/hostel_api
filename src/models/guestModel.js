@@ -1,5 +1,11 @@
 class Guest {
-  constructor(property_id, first_name, last_name, genre = "undefined") {
+  constructor(
+    property_id,
+    first_name,
+    last_name,
+    genre = "undefined",
+    createdBy
+  ) {
     (this.property_id = property_id),
       (this.first_name = first_name),
       (this.last_name = last_name),
@@ -7,8 +13,8 @@ class Guest {
       (this.address = {}),
       (this.identification = {}),
       (this.genre = genre),
-      (this.created_At = new Date()),
-      (this.updated_At = new Date());
+      (this.created_By = createdBy);
+    (this.created_At = new Date()), (this.updated_At = new Date());
   }
 
   setContactInfo(email, phoneNumber) {
@@ -34,3 +40,5 @@ class Guest {
     };
   }
 }
+
+module.exports = Guest;
