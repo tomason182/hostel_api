@@ -85,3 +85,20 @@ exports.updatePropertyInfo = async (client, dbname, propertyId, data) => {
     );
   }
 };
+
+exports.findGuestByEmail = async (client, dbname, propertyId, email) => {
+  try {
+    const db = client.db(dbname);
+    const guestColl = db.collection("guests");
+
+    const query = {
+      property_id: propertyId,
+      $elemMatch: { contact_info: { email: email } },
+    };
+    const result = guestColl.findOne(query);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
