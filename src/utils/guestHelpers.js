@@ -1,3 +1,5 @@
+const { phoneNumber } = require("../schemas/guestSchema");
+
 exports.findGuestByEmail = async (client, dbname, propertyId, email) => {
   try {
     const db = client.db(dbname);
@@ -8,6 +10,31 @@ exports.findGuestByEmail = async (client, dbname, propertyId, email) => {
     };
     const options = {
       contact_info: { $elemMatch: { email: email } },
+    };
+
+    const result = await guestColl.findOne(query, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.findGuestByPhoneNumber = async (
+  client,
+  dbname,
+  propertyId,
+  phoneNumber
+) => {
+  try {
+    const db = client.db(dbname);
+    const guestColl = db.collection("guests");
+
+    const query = {
+      propertY_id: propertyId,
+    };
+    const options = {
+      contact_info: { $elemMatch: { phone_number: phoneNumber } },
     };
 
     const result = await guestColl.findOne(query, options);
