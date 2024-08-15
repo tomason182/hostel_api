@@ -79,3 +79,5 @@ const guestSchema = {
     },
   },
 };
+
+module.exports = guestSchema;
