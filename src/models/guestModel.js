@@ -11,7 +11,6 @@ class Guest {
       (this.last_name = last_name),
       (this.contact_info = {}),
       (this.address = {}),
-      (this.identification = {}),
       (this.genre = genre),
       (this.created_By = createdBy);
     (this.created_At = new Date()), (this.updated_At = new Date());
@@ -30,13 +29,6 @@ class Guest {
       city,
       countryCode,
       postalCode,
-    };
-  }
-
-  setIdentification(idType, idNumber) {
-    this.identification = {
-      idType,
-      idNumber,
     };
   }
 }
