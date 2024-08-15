@@ -93,9 +93,12 @@ exports.findGuestByEmail = async (client, dbname, propertyId, email) => {
 
     const query = {
       property_id: propertyId,
-      $elemMatch: { contact_info: { email: email } },
     };
-    const result = guestColl.findOne(query);
+    const options = {
+      contact_info: { $elemMatch: { email: email } },
+    };
+
+    const result = await guestColl.findOne(query, options);
 
     return result;
   } catch (err) {
