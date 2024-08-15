@@ -102,3 +102,20 @@ exports.findGuestByEmail = async (client, dbname, propertyId, email) => {
     throw new Error(err);
   }
 };
+
+exports.insertNewGuest = async (client, dbname, guest) => {
+  try {
+    const db = client.db(dbname);
+    const guestColl = db.collection("guests");
+
+    const result = await guestColl.insertOne(guest);
+
+    if (result.acknowledged === true) {
+      return `Guest added successfully. Guest id: ${result.insertedId}`;
+    } else {
+      throw new Error("Unable to insert the guest");
+    }
+  } catch (err) {
+    throw new Error(`Error inserting guest: ${err.message}`);
+  }
+};
