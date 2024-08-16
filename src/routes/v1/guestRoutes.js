@@ -13,14 +13,15 @@ const guestController = require("../../controllers/guestController");
 // @access  Private
 router.post("/create", authMiddleware, guestController.guest_create_post);
 
-// @desc    Get a Guest
-// @route   GET /api/v1/guests/?q=
+// @desc    Get a Guest by query search
+// @route   GET /api/v1/guests/find/?q=
 // @access  Private
-router.get("/", authMiddleware, guestController.guest_get_one);
+router.get("/find/", authMiddleware, guestController.guest_get_one);
 
 // @desc    Update a Guest
 // @route   PUT /api/v1/guests/:id
 // @access  Private
+router.put("/:id", authMiddleware, guestController.guest_update_one);
 
 // @desc    Delete a guest
 // @route   DELETE /api/v1/guests/:id

@@ -6,7 +6,9 @@ const {
   validationResult,
   matchedData,
   query,
+  param,
 } = require("express-validator");
+const { ObjectId } = require("mongodb");
 const conn = require("../config/db_config");
 
 // Environment variables
@@ -66,8 +68,8 @@ exports.guest_create_post = [
   },
 ];
 
-// @desc    Get an specific Guest
-// @route   GET /api/v1/guests/:query
+// @desc    Get an specific Guest by query search
+// @route   GET /api/v1/guests/find/:query
 // @access  Private
 exports.guest_get_one = [
   query("q").trim().escape().isLength({ min: 1, max: 50 }),
@@ -111,6 +113,54 @@ exports.guest_get_one = [
       }
 
       res.status(200).json(guest);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc    Update an specific guest
+// @route   PUT /api/v1/guests/:id
+// @access  Private
+exports.guest_update_one = [
+  param("id").trim().escape().isMongoId(),
+  checkSchema(guestSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const client = conn.getClient();
+      const data = matchedData(req);
+      const userId = req.user.access_control[0].user_id;
+      const propertyId = req.user._id;
+      const guestId = ObjectId.createFromHexString(data.id);
+
+      const guest = new Guest(
+        propertyId,
+        data.firstName,
+        data.lastName,
+        data.genre,
+        userId
+      );
+      guest.setContactInfo(data.email, data.phoneNumber),
+        guest.setAddress(
+          data.street,
+          data.city,
+          data.countryCode,
+          data.postalCode
+        );
+
+      const result = await guestHelper.updateGuestInfo(
+        client,
+        dbname,
+        guestId,
+        guest
+      );
+
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }

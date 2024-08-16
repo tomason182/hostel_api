@@ -53,3 +53,21 @@ exports.insertNewGuest = async (client, dbname, guest) => {
     throw new Error(`Error inserting guest: ${err.message}`);
   }
 };
+
+exports.updateGuestInfo = async (client, dbname, guestId, guestData) => {
+  try {
+    const db = client.db(dbname);
+    const guestColl = db.collection("guests");
+
+    const query = { _id: guestId };
+    const options = { upsert: false };
+
+    const updateDoc = {
+      $set: guestData,
+    };
+
+    const result = await guestColl.updateOne(query, updateDoc, options);
+
+    return `${result.matchedCount} document(s) match the filter, updated ${result.modifiedCount} document(s)`;
+  } catch (err) {}
+};
