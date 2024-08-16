@@ -21,14 +21,15 @@ exports.findGuestByPhoneNumber = async (client, dbname, propertyId, num) => {
     const db = client.db(dbname);
     const guestColl = db.collection("guests");
 
+    console.log(num);
     const query = {
-      propertY_id: propertyId,
-    };
-    const options = {
-      contact_info: { $elemMatch: { phone_number: { $regex: num } } },
+      property_id: propertyId,
+      "contact_info.phoneNumber": { $regex: num },
     };
 
-    const result = await guestColl.findOne(query, options);
+    const cursor = await guestColl.find(query);
+
+    const result = await cursor.toArray();
 
     return result;
   } catch (err) {

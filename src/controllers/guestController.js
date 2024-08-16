@@ -81,7 +81,6 @@ exports.guest_get_one = [
       }
 
       const query = req.query.q;
-      console.log(query);
       const propertyId = req.user._id;
       const client = conn.getClient();
       let guest = null;
