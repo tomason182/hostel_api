@@ -81,33 +81,29 @@ exports.guest_get_one = [
       }
 
       const query = req.query.q;
+      console.log(query);
       const propertyId = req.user._id;
       const client = conn.getClient();
       let guest = null;
-      switch (query) {
-        // Check if the query is a valid email address
-        case /^[{\w-\.}]+@([\w-]+\.)+[\w]{2,4}$/:
-          guest = guestHelper.findGuestByEmail(
-            client,
-            dbname,
-            propertyId,
-            query
-          );
-          break;
-        case /[0-9]/:
-          // if the query contains numbers we suppose that is a phone number search
-          // We take the last 6 number to make the search
-          const num = query.slice(-6);
-          guest = guestHelper.findGuestByPhoneNumber(
-            client,
-            dbname,
-            propertyId,
-            num
-          );
-          break;
-        default:
-          res.status(400);
-          throw new Error("Query is not a valid email or phone number");
+
+      if (/^[{\w-\.}]+@([\w-]+\.)+[\w]{2,4}$/.test(query)) {
+        guest = await guestHelper.findGuestByEmail(
+          client,
+          dbname,
+          propertyId,
+          query
+        );
+      } else if (/[0-9]/.test(query)) {
+        const num = query.slice(-6);
+        guest = await guestHelper.findGuestByPhoneNumber(
+          client,
+          dbname,
+          propertyId,
+          num
+        );
+      } else {
+        res.status(400);
+        throw new Error("Query is not a valid email or phone number");
       }
 
       if (guest === null) {
