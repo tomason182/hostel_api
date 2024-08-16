@@ -14,8 +14,9 @@ const guestController = require("../../controllers/guestController");
 router.post("/create", authMiddleware, guestController.guest_create_post);
 
 // @desc    Get a Guest
-// @route   GET /api/v1/guests/:id
+// @route   GET /api/v1/guests/?q=
 // @access  Private
+router.get("/", authMiddleware, guestController.guest_get_one);
 
 // @desc    Update a Guest
 // @route   PUT /api/v1/guests/:id
