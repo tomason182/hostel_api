@@ -19,7 +19,7 @@ class Guest {
   setContactInfo(email, phoneNumber) {
     this.contact_info = {
       email,
-      phoneNumber,
+      phone_number: phoneNumber,
     };
   }
 
@@ -27,8 +27,8 @@ class Guest {
     this.address = {
       street,
       city,
-      countryCode,
-      postalCode,
+      country_code: countryCode,
+      postal_code: postalCode,
     };
   }
 }

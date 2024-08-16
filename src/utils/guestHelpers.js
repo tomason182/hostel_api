@@ -24,7 +24,7 @@ exports.findGuestByPhoneNumber = async (client, dbname, propertyId, num) => {
     console.log(num);
     const query = {
       property_id: propertyId,
-      "contact_info.phoneNumber": { $regex: num },
+      "contact_info.phone_number": { $regex: num },
     };
 
     const cursor = await guestColl.find(query);
