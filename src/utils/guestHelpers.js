@@ -20,12 +20,7 @@ exports.findGuestByEmail = async (client, dbname, propertyId, email) => {
   }
 };
 
-exports.findGuestByPhoneNumber = async (
-  client,
-  dbname,
-  propertyId,
-  phoneNumber
-) => {
+exports.findGuestByPhoneNumber = async (client, dbname, propertyId, num) => {
   try {
     const db = client.db(dbname);
     const guestColl = db.collection("guests");
@@ -34,7 +29,7 @@ exports.findGuestByPhoneNumber = async (
       propertY_id: propertyId,
     };
     const options = {
-      contact_info: { $elemMatch: { phone_number: phoneNumber } },
+      contact_info: { $elemMatch: { phone_number: { $regex: num } } },
     };
 
     const result = await guestColl.findOne(query, options);
