@@ -69,5 +69,22 @@ exports.updateGuestInfo = async (client, dbname, guestId, guestData) => {
     const result = await guestColl.updateOne(query, updateDoc, options);
 
     return `${result.matchedCount} document(s) match the filter, updated ${result.modifiedCount} document(s)`;
-  } catch (err) {}
+  } catch (err) {
+    throw new Error(`Unable to update the guest. Error: ${err}`);
+  }
+};
+
+exports.deleteGuest = async (client, dbname, guestId) => {
+  try {
+    const db = client.db(dbname);
+    const guestColl = db.collection("guests");
+
+    const query = { _id: guestId };
+
+    const result = await guestColl.deleteOne(query);
+
+    return result;
+  } catch (err) {
+    throw new Error(`Unable to delete the guest. Error: ${err}`);
+  }
 };

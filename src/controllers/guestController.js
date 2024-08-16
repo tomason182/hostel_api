@@ -123,7 +123,7 @@ exports.guest_get_one = [
 // @route   PUT /api/v1/guests/:id
 // @access  Private
 exports.guest_update_one = [
-  param("id").trim().escape().isMongoId(),
+  param("id").trim().escape().isMongoId().withMessage("not a valid mongoId"),
   checkSchema(guestSchema),
   async (req, res, next) => {
     try {
@@ -161,6 +161,38 @@ exports.guest_update_one = [
       );
 
       res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc    Delete an specific guest
+// @route   DELETE /api/v1/guests/:id
+// @access  Private
+
+exports.guest_delete_one = [
+  param("id").trim().escape().isMongoId().withMessage("not a valid mongoId"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json(errors.array());
+      }
+
+      const client = conn.getClient();
+
+      const guestId = ObjectId.createFromHexString(req.params.id);
+      const result = await guestHelper.deleteGuest(client, dbname, guestId);
+
+      if (result.deletedCount === 1) {
+        res.status(200).json({ msg: "Successfully deleted one guest" });
+      } else {
+        res.status(400);
+        throw new Error("Unable to delete guess. Deleted 0 documents");
+      }
+
+      console.log(guestId);
     } catch (err) {
       next(err);
     }
