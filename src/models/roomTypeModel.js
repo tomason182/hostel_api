@@ -57,4 +57,4 @@ class RoomType {
   }
 }
 
-module.exports = User;
+module.exports = RoomType;
