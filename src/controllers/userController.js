@@ -68,6 +68,12 @@ exports.user_register = [
 
       const property = new Property(propertyName);
 
+      const property_id = new ObjectId();
+
+      property.set_ID(property_id);
+
+      user.setPropertyId(property_id);
+
       const result =
         await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
           client,

@@ -85,3 +85,30 @@ exports.updatePropertyInfo = async (client, dbname, propertyId, data) => {
     );
   }
 };
+
+exports.findOneRoomTypeByDescription = async (client, dbname, description) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypeColl = db.collection("room_types");
+
+    const query = { description: description };
+    const result = roomTypeColl.findOne(query);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.insertNewRoomType = async (client, dbname, roomType) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypeColl = db.collection("room_types");
+    const result = roomTypeColl.insertOne(roomType);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+  
+}

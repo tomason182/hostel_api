@@ -3,7 +3,7 @@ const getPermissionByRoleName = require("../utils/permissions");
 // Check if the user has the required permission for the route
 exports.checkPermission = permission => {
   return (req, res, next) => {
-    console.log(req.user);
+    //console.log(req.user);
     const userRole = req.user.access_control[0].role || "guess";
     const userPermission = getPermissionByRoleName(userRole);
 
