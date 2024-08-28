@@ -17,6 +17,6 @@ router.get("/:id", authMiddleware, rbacMiddleware.checkPermission("read_room_typ
 // Update room types
 router.put("/update/:id", authMiddleware, rbacMiddleware.checkPermission("update_room_type"), sanitizeUpdateBody, room_type_controller.room_type_update);
 // Delete a room type
-router.delete("/delete/:id", authMiddleware, rbacMiddleware.checkPermission("delete_room_type"), room_type_controller.room_type_delete);
+router.delete("/:id", authMiddleware, rbacMiddleware.checkPermission("delete_room_type"), room_type_controller.room_type_delete);
 
 module.exports = router;
