@@ -1,5 +1,6 @@
 
 class RoomType {
+  _id = null;
   property_id = null;
   constructor(description, type, bathroom = null, max_occupancy, inventory, base_rate, currency) {
       (this.description = description),
@@ -11,6 +12,10 @@ class RoomType {
       (this.currency = currency),
       (this.createdAt = new Date()),
       (this.updatedAt = new Date());
+  }
+
+  get_ID() {
+    return this._id;
   }
 
   getPropertyID() {
@@ -43,6 +48,10 @@ class RoomType {
 
   getCurrency() {
     return this.currency;
+  }
+
+  set_ID(newID) {
+    this._id = newID;
   }
 
   setBathroom(newBath) {

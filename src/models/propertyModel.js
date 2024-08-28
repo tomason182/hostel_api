@@ -3,7 +3,6 @@ const { captureRejectionSymbol } = require("supertest/lib/test");
 class Property {
 
   _id = null;
-
   constructor(
     property_name,
     street = null,
