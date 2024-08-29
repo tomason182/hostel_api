@@ -1,6 +1,8 @@
 const { captureRejectionSymbol } = require("supertest/lib/test");
 
 class Property {
+
+  _id = null;
   constructor(
     property_name,
     street = null,
@@ -25,6 +27,10 @@ class Property {
     (this.createdAt = new Date()), (this.updatedAt = new Date());
   }
 
+  set_ID (newID) {
+    this._id = newID;
+  }
+ 
   setAccessControl(userId, role) {
     this.access_control.push({
       user_id: userId,

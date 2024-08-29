@@ -9,7 +9,11 @@
         "delete_profile",
         "create_property",
         "update_property",
-        "create_user"
+        "create_user",
+        "create_room_type",
+        "read_room_type",
+        "update_room_type",
+        "delete_room_type"
       ]
     },
     {

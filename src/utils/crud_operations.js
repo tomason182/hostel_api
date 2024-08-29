@@ -85,3 +85,113 @@ exports.updatePropertyInfo = async (client, dbname, propertyId, data) => {
     );
   }
 };
+
+
+exports.insertNewRoomType = async (client, dbname, roomType) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypesColl = db.collection("room_types");
+    const insertedRoomType = await roomTypesColl.insertOne(roomType);
+
+    return insertedRoomType;
+
+  } catch (err) {
+    throw new Error("An error occurred during insertion", err);
+  }
+};
+
+
+exports.findOneRoomTypeByDescription = async (client, dbname, description, propertyId) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypesColl = db.collection("room_types");
+
+    const query = { property_id: propertyId, description: description };
+    const result = roomTypesColl.findOne(query);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+
+exports.findAllRoomTypesByPropertyId = async (client, dbname, propertyId) => {
+  try {
+    const db = client.db(dbname);
+    const result = db.collection("room_types").find({property_id: propertyId}).toArray();
+
+    console.log(result)
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+
+exports.findRoomTypeById = async (client, dbname, roomTypeId) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypesColl = db.collection("room_types");
+
+    const query = { _id: roomTypeId };
+    const result = roomTypesColl.findOne(query);
+    
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+
+exports.updateRoomTypeById = async (
+  client, 
+  dbname, 
+  roomTypeId,
+  description,
+  type,
+  bathroom,
+  max_occupancy,
+  inventory,
+  base_rate,
+  currency
+) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypesColl = db.collection("room_types");
+
+    const filter = { _id: roomTypeId };
+    const updateDoc = {
+      $set: {
+        description: description,
+        type: type,
+        bathroom: bathroom,
+        max_occupancy: max_occupancy,
+        inventory: inventory,
+        base_rate: base_rate,
+        currency: currency,
+        updatedAt: new Date(),
+      },
+    };
+
+    const updatedResult = await roomTypesColl.updateOne(filter, updateDoc);
+    return updatedResult;
+  } catch (err) {
+    throw new Error("An error occurred while trying to update the room type", err);
+  }
+};
+
+
+exports.deleteRoomTypeById = async (client, dbname, roomTypeId) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypesColl = db.collection("room_types");
+
+    const query = { _id: roomTypeId };
+    const result = roomTypesColl.findOneAndDelete(query);
+    
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
