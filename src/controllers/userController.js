@@ -72,8 +72,6 @@ exports.user_register = [
 
       property.set_ID(property_id);
 
-      user.setPropertyId(property_id);
-
       const result =
         await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
           client,
