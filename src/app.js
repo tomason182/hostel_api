@@ -12,6 +12,7 @@ const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const userRoutes = require("./routes/v1/userRoutes");
 const propertyRoutes = require("./routes/v1/propertyRoutes");
 const guestRoutes = require("./routes/v1/guestRoutes");
+const roomTypeRoutes = require("./routes/v1/roomTypeRoutes");
 
 const app = express();
 
@@ -22,10 +23,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.static(path.join(__dirname, "public")));
+
 // Use routes
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/properties", propertyRoutes);
 app.use("/api/v1/guests", guestRoutes);
+app.use("/api/v1/room-types", roomTypeRoutes);
 
 // Use Error middleware
 app.use(notFound);
