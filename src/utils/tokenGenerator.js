@@ -10,7 +10,7 @@ exports.jwtTokenGenerator = function (res, userId) {
 
   res
     .cookie("jwt", token, {
-      path: "/api/v1/",
+      path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       signed: true,
