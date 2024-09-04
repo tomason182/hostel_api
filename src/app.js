@@ -4,6 +4,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const passport = require("passport");
+const cors = require("cors");
 
 // Require Errors middleware
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
@@ -18,6 +19,7 @@ const app = express();
 
 require("./config/passport")(passport);
 
+app.use(cors());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
