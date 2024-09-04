@@ -44,10 +44,6 @@ const userRegisterSchema = {
     in: ["body"],
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Last name is required",
-    },
     isAlpha: {
       errorMessage: "Last name must contain only alphabetic characters",
     },
@@ -103,10 +99,6 @@ const userUpdateSchema = {
     in: ["body"],
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Last name is required",
-    },
     isAlpha: {
       errorMessage: "Last name must contain only alphabetic characters",
     },
@@ -159,10 +151,6 @@ const userCreationSchema = {
     in: ["body"],
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Last name is required",
-    },
     isAlpha: {
       errorMessage: "Last name must contain only alphabetic characters",
     },
