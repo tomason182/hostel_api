@@ -134,7 +134,8 @@ exports.user_auth = [
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json(errors.array());
+        res.status(401);
+        throw new Error("Invalid username or password");
       }
       const { username, password } = matchedData(req);
 
