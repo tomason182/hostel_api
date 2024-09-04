@@ -42,6 +42,7 @@ const userRegisterSchema = {
   },
   lastName: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
     isAlpha: {
@@ -97,6 +98,7 @@ const userUpdateSchema = {
   },
   lastName: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
     isAlpha: {
@@ -149,6 +151,7 @@ const userCreationSchema = {
   },
   lastName: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
     isAlpha: {

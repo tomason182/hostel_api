@@ -10,10 +10,6 @@ const {
   userLoginSchema,
   userUpdateSchema,
   userCreationSchema,
-  sanitizeRegisterBody,
-  sanitizeLoginBody,
-  sanitizeUpdateBody,
-  sanitizeCreateBody,
 } = require("../schemas/userSchemas");
 const conn = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
@@ -45,8 +41,7 @@ exports.user_register = [
 
       const client = conn.getClient();
       // Extract req values
-      const { username, password, firstName, lastName, propertyName } =
-        matchedData(req);
+      const { username, password, firstName, propertyName } = matchedData(req);
 
       // Check if user exist in the database
       const userExist = await crudOperations.findOneUserByUsername(
@@ -62,7 +57,7 @@ exports.user_register = [
       }
 
       // create User, Property & Access Control objects
-      const user = new User(username, firstName, lastName);
+      const user = new User(username, firstName);
 
       await user.setHashPassword(password);
 
