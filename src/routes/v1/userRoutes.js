@@ -22,6 +22,9 @@ router.post(
 // Authenticate a user
 router.post("/auth", user_controller.user_auth);
 
+// Validate cookie
+router.get("/validate", user_controller.user_validate);
+
 // Logout a user
 router.post("/logout", user_controller.user_logout);
 
