@@ -1,10 +1,7 @@
 require("dotenv").config();
 const { ObjectId } = require("mongodb");
 const { ExtractJwt, Strategy } = require("passport-jwt");
-const conn = require("./db_config");
-
-// Enviroment variables
-const dbname = process.env.DB_NAME;
+const { getDb } = require("./db_config");
 
 const { fromExtractors } = ExtractJwt;
 
@@ -23,29 +20,23 @@ const jwtOptions = {
 
 const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
-    const userId = ObjectId.createFromHexString(payload.sub);
-
-    const query = { "access_control.user_id": userId };
+    const userId = { _id: ObjectId.createFromHexString(payload.sub) };
     const options = {
-      projection: {
-        access_control: { $elemMatch: { user_id: userId } },
-      },
+      projection: { hashedPassword: 0, salt: 0 },
     };
-    const client = conn.getClient();
-    const db = client.db(dbname);
-    const accessControlColl = db.collection("properties");
-    const access = await accessControlColl.findOne(query, options);
-
-    if (access === null) {
+    const db = getDb();
+    const usersCollection = db.collection("users");
+    const user = await usersCollection.findOne(userId, options);
+    if (user === null) {
       return done(null, false);
     }
 
-    return done(null, access);
+    return done(null, user);
   } catch (err) {
     return done(err, false);
   }
 });
 
-module.exports = passport => {
+module.exports = (passport) => {
   passport.use(jwtStrategy);
 };

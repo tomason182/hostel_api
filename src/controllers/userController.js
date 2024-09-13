@@ -1,7 +1,6 @@
 require("dotenv").config();
 const {
   checkSchema,
-  body,
   validationResult,
   matchedData,
 } = require("express-validator");
@@ -9,29 +8,20 @@ const {
   userRegisterSchema,
   userLoginSchema,
   userUpdateSchema,
-  userCreationSchema,
+  sanitizeRegisterBody,
+  sanitizeLoginBody,
+  sanitizeUpdateBody,
 } = require("../schemas/userSchemas");
-const conn = require("../config/db_config");
+const { getDb } = require("../config/db_config");
+const { saltGenerator, hashGenerator } = require("../utils/hash");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
-const User = require("../models/userModel");
-const Property = require("../models/propertyModel");
-const { ObjectId } = require("mongodb");
-const crudOperations = require("../utils/crud_operations");
-const transactionsOperations = require("../utils/transactions_operations");
 
-// Enviroment variables
-const dbname = process.env.DB_NAME;
-
-// @desc    Register new User
-// @route   POST /api/v1/users/register
+// @desc    Create a new User
+// @route   POST /api/v1/users
 // @access  Public
-exports.user_register = [
+exports.user_create = [
+  sanitizeRegisterBody,
   checkSchema(userRegisterSchema),
-  body("propertyName")
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Property name must be specified"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -40,85 +30,47 @@ exports.user_register = [
       }
 
       // Extract req values
-      const { username, password, firstName, propertyName } = matchedData(req);
-
-      // create User, Property & Access Control objects
-      const user = new User(username, firstName);
-
-      await user.setHashPassword(password);
-
-      const property = new Property(propertyName);
-
-      const property_id = new ObjectId();
-
-      property.set_ID(property_id);
-
-      const client = conn.getClient();
-
-      const result = await transactionsOperations.createUser(
-        client,
-        dbname,
-        user,
-        property
-      );
-
-      return res.status(200).json(result);
-    } catch (err) {
-      next(err);
-    }
-  },
-];
-
-// @desc    Create a new User
-// @route   POST /api/v1/users/create
-// @access  Private
-// @role    admin, manager
-exports.user_create = [
-  checkSchema(userCreationSchema),
-  async (req, res, next) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json(errors.array());
-      }
-
-      const { username, password, firstName, lastName, role } =
+      const { username, password, firstName, lastName, phoneNumber } =
         matchedData(req);
 
-      const propertyId = req.user._id;
-
       // Check if user exist in the database
-      const client = conn.getClient();
-      const userExist = await crudOperations.findOneUserByUsername(
-        client,
-        dbname,
-        username
-      );
+      const db = getDb();
+      const usersCollection = await db.collection("users");
+      const userExist = await usersCollection.findOne({
+        username,
+      });
 
       // If user exist in the db, throw an error
       if (userExist !== null) {
         res.status(400);
         throw new Error("User already exist");
       }
-      // Check if propertyId is valid
-      if (!ObjectId.isValid(req.user._id)) {
-        return res.status(400).json({ error: "invalid propertyId" });
-      }
 
-      // create User, Property & Access Control objects
-      const user = new User(username, firstName, lastName);
+      // Create salt and hash the password
+      const salt = saltGenerator(32);
+      const hashedPassword = hashGenerator(password, salt);
 
-      await user.setHashPassword(password);
+      // Create the User object according to db structure
 
-      const result = await transactionsOperations.insertUserToProperty(
-        client,
-        dbname,
-        user,
-        role,
-        propertyId
-      );
+      const User = {
+        username: username,
+        hashedPassword: hashedPassword,
+        salt: salt,
+        firstName: firstName,
+        lastName: lastName,
+        contactDetails: {
+          email: username,
+          phoneNumber: phoneNumber,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      res.status(200).json(result);
+      const result = await usersCollection.insertOne(User);
+
+      return res
+        .status(200)
+        .json({ msg: `User created id: ${result.insertedId}` });
     } catch (err) {
       next(err);
     }
@@ -129,33 +81,28 @@ exports.user_create = [
 // @route   POST /api/v1/users/auth
 // @access  Public
 exports.user_auth = [
+  sanitizeLoginBody,
   checkSchema(userLoginSchema),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(401);
-        throw new Error("Invalid username or password");
+        return res.status(400).json(errors.array());
       }
       const { username, password } = matchedData(req);
 
-      const client = conn.getClient();
-      const user = await crudOperations.findOneUserByUsername(
-        client,
-        dbname,
-        username
-      );
+      // Get database and collection
+      const db = getDb();
+      const usersCollection = db.collection("users");
+      const user = await usersCollection.findOne({ username });
       if (user === null) {
         res.status(401);
         throw new Error("Invalid username or password");
       }
 
-      const result = await new User().comparePasswords(
-        password,
-        user.hashed_password
-      );
+      const passwdHash = hashGenerator(password, user.salt);
 
-      if (!result) {
+      if (passwdHash !== user.hashedPassword) {
         res.status(401);
         throw new Error("Invalid username or password");
       }
@@ -200,6 +147,7 @@ exports.user_profile_get = (req, res, next) => {
 // @route   PUT /api/v1/users/profile/
 // @access  Private
 exports.user_profile_put = [
+  sanitizeUpdateBody,
   checkSchema(userUpdateSchema),
   async (req, res, next) => {
     try {
@@ -208,16 +156,26 @@ exports.user_profile_put = [
         return res.status(400).json(errors.array());
       }
 
-      const data = matchedData(req);
-      const userId = req.user.access_control[0].user_id;
+      const { firstName, lastName, phoneNumber, email } = matchedData(req);
 
-      const client = conn.getClient();
-      const result = await crudOperations.updateOneUser(
-        client,
-        dbname,
-        userId,
-        data
-      );
+      const filter = { _id: req.user._id };
+
+      const updateUser = {
+        $set: {
+          firstName: firstName,
+          lastName: lastName,
+          contactDetails: {
+            phoneNumber: phoneNumber,
+            email: email,
+          },
+          updatedAt: new Date(),
+        },
+      };
+
+      const db = getDb();
+      const usersCollection = db.collection("users");
+
+      const result = await usersCollection.updateOne(filter, updateUser);
 
       return res.status(200).json({
         msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
