@@ -42,12 +42,9 @@ const userRegisterSchema = {
   },
   lastName: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Last name is required",
-    },
     isAlpha: {
       errorMessage: "Last name must contain only alphabetic characters",
     },
@@ -101,12 +98,9 @@ const userUpdateSchema = {
   },
   lastName: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Last name is required",
-    },
     isAlpha: {
       errorMessage: "Last name must contain only alphabetic characters",
     },
@@ -157,12 +151,9 @@ const userCreationSchema = {
   },
   lastName: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Last name is required",
-    },
     isAlpha: {
       errorMessage: "Last name must contain only alphabetic characters",
     },

@@ -10,10 +10,6 @@ const {
   userLoginSchema,
   userUpdateSchema,
   userCreationSchema,
-  sanitizeRegisterBody,
-  sanitizeLoginBody,
-  sanitizeUpdateBody,
-  sanitizeCreateBody,
 } = require("../schemas/userSchemas");
 const conn = require("../config/db_config");
 const { jwtTokenGenerator } = require("../utils/tokenGenerator");
@@ -43,26 +39,11 @@ exports.user_register = [
         return res.status(400).json(errors.array());
       }
 
-      const client = conn.getClient();
       // Extract req values
-      const { username, password, firstName, lastName, propertyName } =
-        matchedData(req);
-
-      // Check if user exist in the database
-      const userExist = await crudOperations.findOneUserByUsername(
-        client,
-        dbname,
-        username
-      );
-
-      // If user exist in the db, throw an error
-      if (userExist !== null) {
-        res.status(400);
-        throw new Error("User already exist");
-      }
+      const { username, password, firstName, propertyName } = matchedData(req);
 
       // create User, Property & Access Control objects
-      const user = new User(username, firstName, lastName);
+      const user = new User(username, firstName);
 
       await user.setHashPassword(password);
 
@@ -72,13 +53,14 @@ exports.user_register = [
 
       property.set_ID(property_id);
 
-      const result =
-        await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
-          client,
-          dbname,
-          user,
-          property
-        );
+      const client = conn.getClient();
+
+      const result = await transactionsOperations.createUser(
+        client,
+        dbname,
+        user,
+        property
+      );
 
       return res.status(200).json(result);
     } catch (err) {
@@ -152,7 +134,8 @@ exports.user_auth = [
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json(errors.array());
+        res.status(401);
+        throw new Error("Invalid username or password");
       }
       const { username, password } = matchedData(req);
 

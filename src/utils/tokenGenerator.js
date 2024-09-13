@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 exports.jwtTokenGenerator = function (res, userId) {
   const payload = {
-    sub: userId
+    sub: userId,
   };
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "8h",
@@ -10,7 +10,7 @@ exports.jwtTokenGenerator = function (res, userId) {
 
   res
     .cookie("jwt", token, {
-      path: "/api/v1/",
+      path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       signed: true,
