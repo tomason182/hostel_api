@@ -1,6 +1,5 @@
 const express = require("express");
-const authMiddleware = require("../../middlewares/authMiddleware");
-const rbacMiddleware = require("../../middlewares/rbacMiddleware");
+const auth = require("../../middlewares/authMiddleware");
 const router = express.Router();
 
 // Require Property controller
@@ -8,18 +7,16 @@ const property_controller = require("../../controllers/propertyController");
 
 /// PROPERTY ROUTES ///
 
-// Get a property details
-router.get("/", authMiddleware, property_controller.property_details_get);
+// Create a property
+router.post("/create", auth, property_controller.property_create);
 
-// Create and update a property
-router.put(
-  "/update",
-  authMiddleware,
-  rbacMiddleware.checkPermission("update_property"),
-  property_controller.property_details_update
-);
+// Get a property details
+router.get("/:id", auth, property_controller.property_details_get);
+
+// Update a property details
+router.put("/:id", auth, property_controller.property_details_update);
 
 // Delete a property
-router.delete("/", authMiddleware, property_controller.property_delete);
+router.delete("/:id_property", auth, property_controller.property_delete);
 
 module.exports = router;
