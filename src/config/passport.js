@@ -25,23 +25,46 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
   try {
     const userId = ObjectId.createFromHexString(payload.sub);
 
-    const query = { "access_control.user_id": userId };
-    const options = {
-      projection: {
-        property_name: 1,
-        access_control: { $elemMatch: { user_id: userId } },
-      },
-    };
     const client = conn.getClient();
     const db = client.db(dbname);
     const propertyColl = db.collection("properties");
-    const access = await propertyColl.findOne(query, options);
+    const access = await propertyColl
+      .aggregate([
+        {
+          $unwind: "$access_control",
+        },
+        {
+          $match: {
+            "access_control.user_id": userId,
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "access_control.user_id",
+            foreignField: "_id",
+            as: "user_info",
+          },
+        },
+        {
+          $unwind: "$user_info",
+        },
+        {
+          $project: {
+            property_name: 1,
+            "access_control.role": 1,
+            "user_info.first_name": 1,
+            "user_info.last_name": 1,
+          },
+        },
+      ])
+      .toArray();
 
     if (access === null) {
       return done(null, false);
     }
 
-    return done(null, access);
+    return done(null, access[0]);
   } catch (err) {
     return done(err, false);
   }
