@@ -28,13 +28,14 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
     const query = { "access_control.user_id": userId };
     const options = {
       projection: {
+        property_name: 1,
         access_control: { $elemMatch: { user_id: userId } },
       },
     };
     const client = conn.getClient();
     const db = client.db(dbname);
-    const accessControlColl = db.collection("properties");
-    const access = await accessControlColl.findOne(query, options);
+    const propertyColl = db.collection("properties");
+    const access = await propertyColl.findOne(query, options);
 
     if (access === null) {
       return done(null, false);
