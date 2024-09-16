@@ -22,8 +22,11 @@ router.post(
 // Authenticate a user
 router.post("/auth", user_controller.user_auth);
 
+// Validate cookie
+router.get("/validate", user_controller.user_validate);
+
 // Logout a user
-router.post("/logout", user_controller.user_logout);
+router.get("/logout", user_controller.user_logout);
 
 // Get user profile --> hay que corregir
 router.get(

@@ -12,7 +12,10 @@ const {
   userCreationSchema,
 } = require("../schemas/userSchemas");
 const conn = require("../config/db_config");
-const { jwtTokenGenerator } = require("../utils/tokenGenerator");
+const {
+  jwtTokenGenerator,
+  jwtTokenValidation,
+} = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
@@ -167,8 +170,27 @@ exports.user_auth = [
   },
 ];
 
+// @desc    Validate log in
+// @route   GET  /api/v1/users/validate
+// @access  Private
+exports.user_validate = (req, res, next) => {
+  const signedCookie = req.signedCookies["jwt"];
+
+  try {
+    const validateToken = jwtTokenValidation(signedCookie);
+    if (validateToken === false) {
+      res.status(401);
+      throw new Error("Invalid token");
+    }
+
+    return res.status(200).json({ validateToken });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Logout a user
-// @route   POST /api/v1/users/logout
+// @route   GET /api/v1/users/logout
 // @access  Private
 exports.user_logout = (req, res, next) => {
   return res

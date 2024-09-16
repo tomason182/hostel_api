@@ -20,3 +20,13 @@ exports.jwtTokenGenerator = function (res, userId) {
     .status(200)
     .json({ msg: "ok", token: token });
 };
+
+exports.jwtTokenValidation = function (token) {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded;
+  } catch (err) {
+    console.log(err.message);
+    return false;
+  }
+};
