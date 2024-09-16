@@ -190,7 +190,7 @@ exports.user_validate = (req, res, next) => {
 };
 
 // @desc    Logout a user
-// @route   POST /api/v1/users/logout
+// @route   GET /api/v1/users/logout
 // @access  Private
 exports.user_logout = (req, res, next) => {
   return res
