@@ -35,13 +35,13 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
         },
         {
           $match: {
-            "access_control.user_id": userId,
+            access_control: userId,
           },
         },
         {
           $lookup: {
             from: "users",
-            localField: "access_control.user_id",
+            localField: "access_control",
             foreignField: "_id",
             as: "user_info",
           },
@@ -52,7 +52,7 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
         {
           $project: {
             property_name: 1,
-            "access_control.role": 1,
+            "userInfo.role": 1,
             "user_info.first_name": 1,
             "user_info.last_name": 1,
           },

@@ -46,7 +46,10 @@ exports.user_register = [
       const { username, password, firstName, propertyName } = matchedData(req);
 
       // create User, Property & Access Control objects
+      const role = "admin"; // We assign role admin when user register
       const user = new User(username, firstName);
+      user.setRole(role);
+      console.log(user);
 
       await user.setHashPassword(password);
 
@@ -109,7 +112,7 @@ exports.user_create = [
       }
 
       // create User, Property & Access Control objects
-      const user = new User(username, firstName, lastName);
+      const user = new User(username, firstName, lastName, role);
 
       await user.setHashPassword(password);
 
@@ -117,7 +120,6 @@ exports.user_create = [
         client,
         dbname,
         user,
-        role,
         propertyId
       );
 
