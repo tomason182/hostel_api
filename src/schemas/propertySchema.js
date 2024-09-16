@@ -10,20 +10,22 @@ const propertySchema = {
   },
   street: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Address is required",
+    isLength: {
+      max: 100,
+      errorMessage: "Street max length is 100 characters",
     },
   },
   city: {
     in: ["body"],
+    optional: true,
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Address is required",
+    isLength: {
+      max: 100,
+      errorMessage: "City max length is 100 characters",
     },
   },
   postalCode: {
@@ -36,12 +38,9 @@ const propertySchema = {
   },
   countryCode: {
     in: ["body"],
+    optional: true,
     isISO31661Alpha2: {
       errorMessage: "Invalid country code",
-    },
-    notEmpty: {
-      bail: true,
-      errorMessage: "Country code is required",
     },
   },
   phoneNumber: {
