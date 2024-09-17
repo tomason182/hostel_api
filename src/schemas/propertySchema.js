@@ -1,29 +1,38 @@
 const propertySchema = {
   propertyName: {
     in: ["body"],
-    notEmpty: {
-      bail: true,
-      errorMessage: "Property name must not be empty",
-    },
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "Property name maximum length is 100 characters",
+    },
   },
   street: {
     in: ["body"],
     optional: true,
-    isLength: {
-      max: 100,
-      errorMessage: "Street max length is 100 characters",
-    },
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "Street maximum length is 100 characters",
+    },
   },
   city: {
     in: ["body"],
     optional: true,
     isLength: {
-      max: 100,
-      errorMessage: "City max length is 100 characters",
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "City name maximum length is 100 characters",
     },
     trim: true,
     escape: true,

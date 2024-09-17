@@ -42,7 +42,7 @@ exports.property_details_get = async (req, res, next) => {
 };
 
 // @desc    Update a property details
-// @route   PUT /api/v1/property/
+// @route   PUT /api/v1/properties/
 // @access  Private
 exports.property_details_update = [
   checkSchema(propertySchema),

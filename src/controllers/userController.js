@@ -34,7 +34,7 @@ exports.user_register = [
     .trim()
     .escape()
     .isLength({ min: 1, max: 100 })
-    .withMessage("Property name must be specified"),
+    .withMessage("Property name maximum length is 100 characters"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
