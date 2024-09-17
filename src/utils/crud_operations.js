@@ -51,8 +51,6 @@ exports.findAllPropertyUsers = async (client, dbname, propertyId) => {
 
     const userList = result.access_control;
 
-    console.log(userList);
-
     const userColl = db.collection("users");
 
     const filterUser = { _id: { $in: userList } };

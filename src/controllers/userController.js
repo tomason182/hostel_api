@@ -49,7 +49,6 @@ exports.user_register = [
       const role = "admin"; // We assign role admin when user register
       const user = new User(username, firstName);
       user.setRole(role);
-      console.log(user);
 
       await user.setHashPassword(password);
 
@@ -84,6 +83,7 @@ exports.user_create = [
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
+      console.log(errors.array());
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
@@ -213,7 +213,6 @@ exports.user_logout = (req, res, next) => {
 // @access  Private
 exports.user_profile_get = (req, res, next) => {
   const userProfile = req.user;
-  console.log(userProfile);
   if (!userProfile) {
     res.status(400);
     throw new Error("User does not exist");
