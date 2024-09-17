@@ -36,6 +36,38 @@ exports.updateOneUser = async (client, dbname, userId, data) => {
   }
 };
 
+exports.findAllPropertyUsers = async (client, dbname, propertyId) => {
+  try {
+    const db = client.db(dbname);
+    const propertyColl = db.collection("properties");
+
+    const filter = { _id: propertyId };
+    const options = {
+      projection: {
+        access_control: 1,
+      },
+    };
+    const result = await propertyColl.findOne(filter, options);
+
+    const userList = result.access_control;
+
+    console.log(userList);
+
+    const userColl = db.collection("users");
+
+    const filterUser = { _id: { $in: userList } };
+    const optionsUser = {
+      projection: {
+        hashed_password: 0,
+      },
+    };
+    const userArray = await userColl.find(filterUser, optionsUser).toArray();
+    return userArray;
+  } catch (err) {
+    throw new Error("An error ocurred while fetching property users", err);
+  }
+};
+
 exports.findPropertyById = async (client, dbname, propertyId) => {
   try {
     const db = client.db(dbname);
@@ -86,7 +118,6 @@ exports.updatePropertyInfo = async (client, dbname, propertyId, data) => {
   }
 };
 
-
 exports.insertNewRoomType = async (client, dbname, roomType) => {
   try {
     const db = client.db(dbname);
@@ -94,14 +125,17 @@ exports.insertNewRoomType = async (client, dbname, roomType) => {
     const insertedRoomType = await roomTypesColl.insertOne(roomType);
 
     return insertedRoomType;
-
   } catch (err) {
     throw new Error("An error occurred during insertion", err);
   }
 };
 
-
-exports.findOneRoomTypeByDescription = async (client, dbname, description, propertyId) => {
+exports.findOneRoomTypeByDescription = async (
+  client,
+  dbname,
+  description,
+  propertyId
+) => {
   try {
     const db = client.db(dbname);
     const roomTypesColl = db.collection("room_types");
@@ -115,19 +149,20 @@ exports.findOneRoomTypeByDescription = async (client, dbname, description, prope
   }
 };
 
-
 exports.findAllRoomTypesByPropertyId = async (client, dbname, propertyId) => {
   try {
     const db = client.db(dbname);
-    const result = db.collection("room_types").find({property_id: propertyId}).toArray();
+    const result = db
+      .collection("room_types")
+      .find({ property_id: propertyId })
+      .toArray();
 
-    console.log(result)
+    console.log(result);
     return result;
   } catch (err) {
     throw new Error(err);
   }
 };
-
 
 exports.findRoomTypeById = async (client, dbname, roomTypeId) => {
   try {
@@ -136,17 +171,16 @@ exports.findRoomTypeById = async (client, dbname, roomTypeId) => {
 
     const query = { _id: roomTypeId };
     const result = roomTypesColl.findOne(query);
-    
+
     return result;
   } catch (err) {
     throw new Error(err);
   }
 };
 
-
 exports.updateRoomTypeById = async (
-  client, 
-  dbname, 
+  client,
+  dbname,
   roomTypeId,
   description,
   type,
@@ -177,10 +211,12 @@ exports.updateRoomTypeById = async (
     const updatedResult = await roomTypesColl.updateOne(filter, updateDoc);
     return updatedResult;
   } catch (err) {
-    throw new Error("An error occurred while trying to update the room type", err);
+    throw new Error(
+      "An error occurred while trying to update the room type",
+      err
+    );
   }
 };
-
 
 exports.deleteRoomTypeById = async (client, dbname, roomTypeId) => {
   try {
@@ -189,7 +225,7 @@ exports.deleteRoomTypeById = async (client, dbname, roomTypeId) => {
 
     const query = { _id: roomTypeId };
     const result = roomTypesColl.findOneAndDelete(query);
-    
+
     return result;
   } catch (err) {
     throw new Error(err);

@@ -52,4 +52,6 @@ router.delete(
   user_controller.user_profile_delete
 );
 
+router.get("/all", authMiddleware, user_controller.user_get_all);
+
 module.exports = router;

@@ -270,3 +270,24 @@ exports.user_profile_delete = (req, res, next) => {
   // documentos asociados
   res.status(200).json({ msg: `Delete user ${req.params.id} profile` });
 };
+
+// @desc Get all property users
+// @route GET /api/v1/users/all
+// @access Private
+exports.user_get_all = async (req, res, next) => {
+  try {
+    const propertyId = req.user._id;
+
+    const client = conn.getClient();
+
+    const usersList = await crudOperations.findAllPropertyUsers(
+      client,
+      dbname,
+      propertyId
+    );
+
+    res.status(200).json({ msg: usersList });
+  } catch (err) {
+    next(err);
+  }
+};
