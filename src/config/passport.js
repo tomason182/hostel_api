@@ -52,7 +52,7 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
         {
           $project: {
             property_name: 1,
-            "userInfo.role": 1,
+            "user_info.role": 1,
             "user_info.first_name": 1,
             "user_info.last_name": 1,
           },

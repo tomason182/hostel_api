@@ -112,7 +112,8 @@ exports.user_create = [
       }
 
       // create User, Property & Access Control objects
-      const user = new User(username, firstName, lastName, role);
+      const user = new User(username, firstName, lastName);
+      user.setRole(role);
 
       await user.setHashPassword(password);
 
@@ -212,6 +213,7 @@ exports.user_logout = (req, res, next) => {
 // @access  Private
 exports.user_profile_get = (req, res, next) => {
   const userProfile = req.user;
+  console.log(userProfile);
   if (!userProfile) {
     res.status(400);
     throw new Error("User does not exist");

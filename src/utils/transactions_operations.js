@@ -26,9 +26,9 @@ exports.createUser = async (client, dbname, user, property) => {
       msg: `User Created successfully. Property id: ${propertyResult.insertedId}`,
     };
   } catch (err) {
-    console.error("transaction error", err);
+    console.error("transaction error", err.message);
     await session.abortTransaction();
-    throw new Error(err);
+    throw new Error(err.message);
   } finally {
     await session.endSession();
   }

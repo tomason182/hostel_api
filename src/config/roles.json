@@ -22,7 +22,7 @@
     },
     {
       "name": "employee",
-      "permissions": ["get_property", "update_profile"]
+      "permissions": ["get_property", "update_profile", "read_profile"]
     }
   ]
 }
