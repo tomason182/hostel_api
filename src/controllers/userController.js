@@ -234,7 +234,45 @@ exports.user_profile_put = [
       }
 
       const data = matchedData(req);
-      const userId = req.user.access_control[0].user_id;
+      const userId = req.user.user_info._id;
+
+      const client = conn.getClient();
+      const result = await crudOperations.updateOneUser(
+        client,
+        dbname,
+        userId,
+        data
+      );
+
+      return res.status(200).json({
+        msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc Edit users info
+// @route PUT /api/v1/users/profile/:id
+// @access Private
+exports.user_edit_profile = [
+  checkSchema(userUpdateSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      if (!ObjectId.isValid(req.params.id)) {
+        res.status(400);
+        throw new Error("Params is not a valid mongo ID");
+      }
+
+      console.log(req.params.id);
+      const userId = ObjectId.createFromHexString(req.params.id);
+      const data = matchedData(req);
 
       const client = conn.getClient();
       const result = await crudOperations.updateOneUser(

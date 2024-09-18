@@ -44,6 +44,13 @@ router.put(
   user_controller.user_profile_put
 );
 
+// Edit user profile
+router.put(
+  "/profile/edit/:id",
+  authMiddleware,
+  user_controller.user_edit_profile
+);
+
 // Delete user profile
 router.delete(
   "/profile/:id",
