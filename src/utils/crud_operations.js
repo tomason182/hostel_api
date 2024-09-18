@@ -22,6 +22,7 @@ exports.updateOneUser = async (client, dbname, userId, data) => {
       $set: {
         first_name: data.firstName,
         last_name: data.lastName,
+        role: data.role,
         updatedAt: new Date(),
       },
     };
