@@ -55,6 +55,7 @@ const jwtStrategy = new Strategy(jwtOptions, async function (payload, done) {
             "user_info.role": 1,
             "user_info.first_name": 1,
             "user_info.last_name": 1,
+            "user_info._id": 1,
           },
         },
       ])
