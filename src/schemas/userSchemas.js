@@ -105,6 +105,16 @@ const userUpdateSchema = {
       errorMessage: "Last name must contain only alphabetic characters",
     },
   },
+  role: {
+    in: ["body"],
+    trim: true,
+    escape: true,
+    isIn: {
+      options: [["admin", "manager", "employee"]],
+      errorMessage:
+        "Role must be one of the followings: admin, manager, employee",
+    },
+  },
 };
 
 const userCreationSchema = {
