@@ -53,7 +53,7 @@ router.put(
 
 // Delete user profile
 router.delete(
-  "/profile/:id",
+  "/profile/delete/:id",
   authMiddleware,
   rbacMiddleware.checkPermission("delete_profile"),
   user_controller.user_profile_delete

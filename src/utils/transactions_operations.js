@@ -70,7 +70,41 @@ exports.insertUserToProperty = async (client, dbname, user, propertyId) => {
     };
   } catch (err) {
     await session.abortTransaction();
-    throw new Error("An Error occurred during the transaction", err);
+    throw new Error("An Error occurred during the transaction", err.message);
+  } finally {
+    await session.endSession();
+  }
+};
+
+exports.deleteUser = async (client, dbname, userId, propertyId) => {
+  const session = client.startSession();
+  try {
+    session.startTransaction();
+
+    // Search user id in property collection
+    const propertyColl = client.db(dbname).collection("properties");
+    const filter = { _id: propertyId };
+    const options = {
+      $pull: { access_control: userId },
+    };
+    const result = await propertyColl.updateOne(filter, options, { session });
+    if (result.modifiedCount === 0) {
+      throw new Error("User not found");
+    }
+
+    const userColl = client.db(dbname).collection("users");
+    const query = { _id: userId };
+    const resultUser = await userColl.deleteOne(query, { session });
+
+    if (resultUser.deletedCount !== 1) {
+      throw new Error("No documents matched the query. Deleted 0 documents");
+    }
+
+    await session.commitTransaction();
+    return { msg: "User deleted successfully" };
+  } catch (err) {
+    await session.abortTransaction();
+    throw new Error(`Error During transaction, ${err.message}`);
   } finally {
     await session.endSession();
   }

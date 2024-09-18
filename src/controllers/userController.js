@@ -301,11 +301,26 @@ exports.user_changePasswd_put = (req, res, next) => {
 // @desc    Delete user profile
 // @route   DELETE /api/v1/users/profile/
 // @access  Private
-exports.user_profile_delete = (req, res, next) => {
-  // Este controlador deberia eliminar cuentas creadas por el adminitrador
-  // pero tambien deberia eliminar la cuenta de administrador junto con todos los
-  // documentos asociados
-  res.status(200).json({ msg: `Delete user ${req.params.id} profile` });
+exports.user_profile_delete = async (req, res, next) => {
+  try {
+    if (!ObjectId.isValid(req.params.id)) {
+      throw new Error("Param is not a valid mongo ID");
+    }
+
+    const userId = ObjectId.createFromHexString(req.params.id);
+    const propertyId = req.user._id;
+    const client = conn.getClient();
+    const result = await transactionsOperations.deleteUser(
+      client,
+      dbname,
+      userId,
+      propertyId
+    );
+
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
 };
 
 // @desc Get all property users
