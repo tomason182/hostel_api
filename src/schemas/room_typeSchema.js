@@ -7,6 +7,13 @@ const roomTypeSchema = {
       bail: true,
       errorMessage: "Description must not be empty",
     },
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "Room type name maximum length is 100 characters",
+    },
   },
   type: {
     in: ["body"],
@@ -16,11 +23,10 @@ const roomTypeSchema = {
       bail: true,
       errorMessage: "Type is required",
     },
-  },
-  bathroom: {
-    in: ["body"],
-    trim: true,
-    escape: true,
+    isIn: {
+      options: [["private", "dorm"]],
+      errorMessage: "room type must be private or dorm",
+    },
   },
   max_occupancy: {
     in: ["body"],
@@ -78,6 +84,13 @@ const updateRoomTypeSchema = {
       bail: true,
       errorMessage: "Description must not be empty",
     },
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "Room type name maximum length is 100 characters",
+    },
   },
   type: {
     in: ["body"],
@@ -87,11 +100,10 @@ const updateRoomTypeSchema = {
       bail: true,
       errorMessage: "Type is required",
     },
-  },
-  bathroom: {
-    in: ["body"],
-    trim: true,
-    escape: true,
+    isIn: {
+      options: [["private", "dorm"]],
+      errorMessage: "room type must be private or dorm",
+    },
   },
   max_occupancy: {
     in: ["body"],
@@ -142,7 +154,15 @@ const updateRoomTypeSchema = {
 
 // Middleware to sanitize body
 const sanitizeCreateBody = function (req, res, next) {
-  const allowedFields = ["description", "type", "bathroom", "max_occupancy", "inventory", "base_rate", "currency"];
+  const allowedFields = [
+    "description",
+    "type",
+    "bathroom",
+    "max_occupancy",
+    "inventory",
+    "base_rate",
+    "currency",
+  ];
   Object.keys(req.body).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
@@ -154,7 +174,15 @@ const sanitizeCreateBody = function (req, res, next) {
 };
 
 const sanitizeUpdateBody = function (req, res, next) {
-  const allowedFields = ["description", "type", "bathroom", "max_occupancy", "inventory", "base_rate", "currency"];
+  const allowedFields = [
+    "description",
+    "type",
+    "bathroom",
+    "max_occupancy",
+    "inventory",
+    "base_rate",
+    "currency",
+  ];
   Object.keys(req.body).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
@@ -165,8 +193,12 @@ const sanitizeUpdateBody = function (req, res, next) {
   next();
 };
 
-module.exports = { roomTypeSchema, updateRoomTypeSchema, sanitizeCreateBody, sanitizeUpdateBody };
-
+module.exports = {
+  roomTypeSchema,
+  updateRoomTypeSchema,
+  sanitizeCreateBody,
+  sanitizeUpdateBody,
+};
 
 // ###################################################################################
 // ##############         roomTypeSchema  =  updateRoomTypeSchema     ################
@@ -176,5 +208,3 @@ module.exports = { roomTypeSchema, updateRoomTypeSchema, sanitizeCreateBody, san
 // ##############       CUALQUIER COSA QUE EN EL FUTURO HAGAMOS       ################
 // ##############         COSAS DIFERENTES CON AMBOS ESQUEMAS         ################
 // ###################################################################################
-
-
