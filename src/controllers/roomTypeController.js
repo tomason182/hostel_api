@@ -13,7 +13,7 @@ const RoomType = require("../models/roomTypeModel");
 const crudOperations = require("../utils/crud_operations");
 const { ObjectId } = require("mongodb");
 
-// Enviroment variables
+// Environment variables
 const dbname = process.env.DB_NAME;
 
 // @desc    Create new room type
