@@ -10,8 +10,11 @@ const {
 } = require("../schemas/room_typeSchema");
 const conn = require("../config/db_config");
 const RoomType = require("../models/roomTypeModel");
+const RatesAndAvailability = require("../models/ratesAndAvailabilityModel");
 const crudOperations = require("../utils/crud_operations");
+const transactionOperations = require("../utils/transactions_operations");
 const { ObjectId } = require("mongodb");
+const Calendar = require("../models/calendarModel");
 
 // Environment variables
 const dbname = process.env.DB_NAME;
@@ -71,10 +74,24 @@ exports.room_type_create = [
       roomType.set_ID(room_type_id);
       roomType.setProducts();
 
-      const result = await crudOperations.insertNewRoomType(
+      // create rates and availability Object
+      const ratesAndAvailability = new RatesAndAvailability();
+      ratesAndAvailability.setRoomTypeId(room_type_id);
+
+      // create calendar
+      const roomList = roomType.products.flatMap(product => product.beds);
+      const calendarList = roomList.map(room_id => {
+        const calendar = new Calendar();
+        calendar.setId(room_id);
+        return calendar;
+      });
+
+      const result = await transactionOperations.insertRoomType(
         client,
         dbname,
-        roomType
+        roomType,
+        ratesAndAvailability,
+        calendarList
       );
 
       return res.status(200).json(result);
