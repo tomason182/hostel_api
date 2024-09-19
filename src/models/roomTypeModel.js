@@ -6,6 +6,7 @@ class RoomType {
   constructor(
     description,
     type,
+    gender,
     max_occupancy,
     inventory,
     base_rate,
@@ -14,6 +15,7 @@ class RoomType {
   ) {
     (this.description = description),
       (this.type = type),
+      (this.gender = gender),
       (this.max_occupancy = max_occupancy),
       (this.inventory = inventory),
       (this.base_rate = base_rate),

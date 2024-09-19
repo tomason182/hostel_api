@@ -28,6 +28,14 @@ const roomTypeSchema = {
       errorMessage: "room type must be private or dorm",
     },
   },
+  gender: {
+    in: ["body"],
+    trim: true,
+    isIn: {
+      options: [["mixed", "female"]],
+      errorMessage: "room type gender must be mixed or female",
+    },
+  },
   max_occupancy: {
     in: ["body"],
     trim: true,

@@ -40,6 +40,7 @@ exports.room_type_create = [
       const {
         description,
         type,
+        gender,
         max_occupancy,
         inventory,
         base_rate,
@@ -64,6 +65,7 @@ exports.room_type_create = [
       const roomType = new RoomType(
         description,
         type,
+        gender,
         max_occupancy,
         inventory,
         base_rate,
@@ -136,7 +138,7 @@ exports.room_types_read = async (req, res, next) => {
 };
 
 // @desc    Reads a room type through its identifier.
-// @route   GET /api/v1/room-types/##### string hexa desde un ObjectId #######
+// @route   GET /api/v1/room-types/:id ### string hexa desde un ObjectId ###
 // @access  Private
 exports.room_type_read = async (req, res, next) => {
   try {
