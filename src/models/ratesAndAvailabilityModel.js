@@ -12,3 +12,5 @@ class RatesAndAvailability {
     });
   }
 }
+
+module.exports = RatesAndAvailability;
