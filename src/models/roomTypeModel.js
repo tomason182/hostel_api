@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+const { ObjectId } = require("mongodb");
 
 class RoomType {
   _id = null;
@@ -9,7 +9,8 @@ class RoomType {
     max_occupancy,
     inventory,
     base_rate,
-    currency
+    currency,
+    products = []
   ) {
     (this.description = description),
       (this.type = type),
@@ -17,7 +18,8 @@ class RoomType {
       (this.inventory = inventory),
       (this.base_rate = base_rate),
       (this.currency = currency),
-      (this.products = [])((this.createdAt = new Date())),
+      (this.products = products),
+      (this.createdAt = new Date()),
       (this.updatedAt = new Date());
   }
 
@@ -29,15 +31,15 @@ class RoomType {
       // Si room type es "privete" le asignamos una sola cama
       // Si room type es "dorm" la cantidad de camas es igual a max_occupancy
       if (this.type === "private") {
-        bedsArray = new Array(1);
+        bedsArray = new Array(1).fill(null);
       } else {
-        bedsArray = new Array(parseInt(this.max_occupancy));
+        bedsArray = new Array(parseInt(this.max_occupancy)).fill(null);
       }
 
       // Agregamos un ID a cada cama
-      const bedsList = bedsArray.map(bed => new ObjectId());
+      const bedsList = bedsArray.map(() => new ObjectId());
 
-      const roomNum = i.toString();
+      const roomNum = (i + 1).toString();
       this.products.push({
         room_name: "Room" + roomNum.padStart(2, "0"),
         beds: bedsList,
