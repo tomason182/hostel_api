@@ -44,12 +44,21 @@ router.put(
   user_controller.user_profile_put
 );
 
+// Edit user profile
+router.put(
+  "/profile/edit/:id",
+  authMiddleware,
+  user_controller.user_edit_profile
+);
+
 // Delete user profile
 router.delete(
-  "/profile/:id",
+  "/profile/delete/:id",
   authMiddleware,
   rbacMiddleware.checkPermission("delete_profile"),
   user_controller.user_profile_delete
 );
+
+router.get("/all", authMiddleware, user_controller.user_get_all);
 
 module.exports = router;

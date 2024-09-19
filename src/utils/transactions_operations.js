@@ -16,9 +16,7 @@ exports.createUser = async (client, dbname, user, property) => {
     const userResult = await userColl.insertOne(user, { session });
     const userId = userResult.insertedId;
 
-    const role = "admin"; // When user register we set role admin by default
-
-    property.setAccessControl(userId, role);
+    property.setAccessControl(userId);
 
     const propertyColl = client.db(dbname).collection("properties");
     const propertyResult = await propertyColl.insertOne(property, { session });
@@ -28,55 +26,15 @@ exports.createUser = async (client, dbname, user, property) => {
       msg: `User Created successfully. Property id: ${propertyResult.insertedId}`,
     };
   } catch (err) {
-    console.error("transaction error", err);
+    console.error("transaction error", err.message);
     await session.abortTransaction();
-    throw new Error(err);
+    throw new Error(err.message);
   } finally {
     await session.endSession();
   }
 };
 
-// *** The following commented code was replace it by the createUser transaction *** //
-
-/* exports.insertUserPropertyAndAccessControlOnRegister = async (
-  client,
-  dbname,
-  user,
-  property
-) => {
-  const session = client.startSession();
-  try {
-    session.startTransaction();
-
-    const userColl = client.db(dbname).collection("users");
-    const userResult = await userColl.insertOne(user, { session });
-
-    const userId = userResult.insertedId;
-    const role = "admin"; // When user register we set admin role by default
-    property.setAccessControl(userId, role);
-
-    const propertyColl = client.db(dbname).collection("properties");
-    const propertyResult = await propertyColl.insertOne(property, { session });
-
-    await session.commitTransaction();
-    return {
-      msg: `User Created successfully. Property id: ${propertyResult.insertedId}`,
-    };
-  } catch (err) {
-    await session.abortTransaction();
-    throw new Error("An error occurred during the transaction", err);
-  } finally {
-    await session.endSession();
-  }
-}; */
-
-exports.insertUserToProperty = async (
-  client,
-  dbname,
-  user,
-  role,
-  propertyId
-) => {
+exports.insertUserToProperty = async (client, dbname, user, propertyId) => {
   const session = client.startSession();
   try {
     session.startTransaction();
@@ -89,7 +47,7 @@ exports.insertUserToProperty = async (
     // Find the property in the access_control collection and append the userId
     const filter = { _id: propertyId };
     const updateDoc = {
-      $push: { access_control: { user_id: userId, role: role } },
+      $push: { access_control: userId },
     };
     const options = {
       upsert: false,
@@ -112,7 +70,41 @@ exports.insertUserToProperty = async (
     };
   } catch (err) {
     await session.abortTransaction();
-    throw new Error("An Error occurred during the transaction", err);
+    throw new Error("An Error occurred during the transaction", err.message);
+  } finally {
+    await session.endSession();
+  }
+};
+
+exports.deleteUser = async (client, dbname, userId, propertyId) => {
+  const session = client.startSession();
+  try {
+    session.startTransaction();
+
+    // Search user id in property collection
+    const propertyColl = client.db(dbname).collection("properties");
+    const filter = { _id: propertyId };
+    const options = {
+      $pull: { access_control: userId },
+    };
+    const result = await propertyColl.updateOne(filter, options, { session });
+    if (result.modifiedCount === 0) {
+      throw new Error("User not found");
+    }
+
+    const userColl = client.db(dbname).collection("users");
+    const query = { _id: userId };
+    const resultUser = await userColl.deleteOne(query, { session });
+
+    if (resultUser.deletedCount !== 1) {
+      throw new Error("No documents matched the query. Deleted 0 documents");
+    }
+
+    await session.commitTransaction();
+    return { msg: "User deleted successfully" };
+  } catch (err) {
+    await session.abortTransaction();
+    throw new Error(`Error During transaction, ${err.message}`);
   } finally {
     await session.endSession();
   }

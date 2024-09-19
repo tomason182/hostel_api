@@ -34,7 +34,7 @@ exports.user_register = [
     .trim()
     .escape()
     .isLength({ min: 1, max: 100 })
-    .withMessage("Property name must be specified"),
+    .withMessage("Property name maximum length is 100 characters"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -46,7 +46,9 @@ exports.user_register = [
       const { username, password, firstName, propertyName } = matchedData(req);
 
       // create User, Property & Access Control objects
+      const role = "admin"; // We assign role admin when user register
       const user = new User(username, firstName);
+      user.setRole(role);
 
       await user.setHashPassword(password);
 
@@ -81,6 +83,7 @@ exports.user_create = [
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
+      console.log(errors.array());
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
@@ -110,6 +113,7 @@ exports.user_create = [
 
       // create User, Property & Access Control objects
       const user = new User(username, firstName, lastName);
+      user.setRole(role);
 
       await user.setHashPassword(password);
 
@@ -117,7 +121,6 @@ exports.user_create = [
         client,
         dbname,
         user,
-        role,
         propertyId
       );
 
@@ -231,7 +234,45 @@ exports.user_profile_put = [
       }
 
       const data = matchedData(req);
-      const userId = req.user.access_control[0].user_id;
+      const userId = req.user.user_info._id;
+
+      const client = conn.getClient();
+      const result = await crudOperations.updateOneUser(
+        client,
+        dbname,
+        userId,
+        data
+      );
+
+      return res.status(200).json({
+        msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc Edit users info
+// @route PUT /api/v1/users/profile/:id
+// @access Private
+exports.user_edit_profile = [
+  checkSchema(userUpdateSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      if (!ObjectId.isValid(req.params.id)) {
+        res.status(400);
+        throw new Error("Params is not a valid mongo ID");
+      }
+
+      console.log(req.params.id);
+      const userId = ObjectId.createFromHexString(req.params.id);
+      const data = matchedData(req);
 
       const client = conn.getClient();
       const result = await crudOperations.updateOneUser(
@@ -260,9 +301,45 @@ exports.user_changePasswd_put = (req, res, next) => {
 // @desc    Delete user profile
 // @route   DELETE /api/v1/users/profile/
 // @access  Private
-exports.user_profile_delete = (req, res, next) => {
-  // Este controlador deberia eliminar cuentas creadas por el adminitrador
-  // pero tambien deberia eliminar la cuenta de administrador junto con todos los
-  // documentos asociados
-  res.status(200).json({ msg: `Delete user ${req.params.id} profile` });
+exports.user_profile_delete = async (req, res, next) => {
+  try {
+    if (!ObjectId.isValid(req.params.id)) {
+      throw new Error("Param is not a valid mongo ID");
+    }
+
+    const userId = ObjectId.createFromHexString(req.params.id);
+    const propertyId = req.user._id;
+    const client = conn.getClient();
+    const result = await transactionsOperations.deleteUser(
+      client,
+      dbname,
+      userId,
+      propertyId
+    );
+
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc Get all property users
+// @route GET /api/v1/users/all
+// @access Private
+exports.user_get_all = async (req, res, next) => {
+  try {
+    const propertyId = req.user._id;
+
+    const client = conn.getClient();
+
+    const usersList = await crudOperations.findAllPropertyUsers(
+      client,
+      dbname,
+      propertyId
+    );
+
+    res.status(200).json({ msg: usersList });
+  } catch (err) {
+    next(err);
+  }
 };
