@@ -156,15 +156,7 @@ const sanitizeCreateBody = function (req, res, next) {
 };
 
 const sanitizeUpdateBody = function (req, res, next) {
-  const allowedFields = [
-    "description",
-    "type",
-    "gender",
-    "max_occupancy",
-    "inventory",
-    "base_rate",
-    "currency",
-  ];
+  const allowedFields = ["description", "gender", "base_rate", "currency"];
   Object.keys(req.body).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];

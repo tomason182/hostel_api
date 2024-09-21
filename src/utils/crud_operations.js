@@ -182,10 +182,7 @@ exports.updateRoomTypeById = async (
   dbname,
   roomTypeId,
   description,
-  type,
-  bathroom,
-  max_occupancy,
-  inventory,
+  gender,
   base_rate,
   currency
 ) => {
@@ -194,25 +191,28 @@ exports.updateRoomTypeById = async (
     const roomTypesColl = db.collection("room_types");
 
     const filter = { _id: roomTypeId };
+    const options = { upsert: false };
     const updateDoc = {
       $set: {
-        description: description,
-        type: type,
-        bathroom: bathroom,
-        max_occupancy: max_occupancy,
-        inventory: inventory,
-        base_rate: base_rate,
-        currency: currency,
+        description,
+        gender,
+        base_rate,
+        currency,
         updatedAt: new Date(),
       },
     };
 
-    const updatedResult = await roomTypesColl.updateOne(filter, updateDoc);
-    return updatedResult;
+    const updatedResult = await roomTypesColl.updateOne(
+      filter,
+      updateDoc,
+      options
+    );
+
+    console.log(`${updatedResult.modifiedCount} document(s) updated`);
+    return updatedResult.modifiedCount;
   } catch (err) {
     throw new Error(
-      "An error occurred while trying to update the room type",
-      err
+      `An error occurred trying to update room type: ${err.message}`
     );
   }
 };
