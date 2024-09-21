@@ -42,7 +42,7 @@ router.put(
 );
 // Delete a room type
 router.delete(
-  "/:id",
+  "/delete/:id",
   authMiddleware,
   rbacMiddleware.checkPermission("delete_room_type"),
   room_type_controller.room_type_delete
