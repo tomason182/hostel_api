@@ -10,7 +10,7 @@ exports.jwtTokenGenerator = function (res, userId) {
 
   res
     .cookie("jwt", token, {
-      path: "/api/v1/",
+      path:'/',
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       signed: true,
@@ -19,4 +19,16 @@ exports.jwtTokenGenerator = function (res, userId) {
     })
     .status(200)
     .json({ msg: "ok", token: token });
+};
+
+
+exports.jwtTokenGeneratorCE = function (userLocalID) {
+  const payload = {
+    sub: userLocalID
+  };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "900000",
+  });
+
+  return token;
 };

@@ -8,8 +8,10 @@ const user_controller = require("../../controllers/userController");
 
 /// USER ROUTES ///
 
-// Register a new user
+// Register a new user 
 router.post("/register", user_controller.user_register);
+
+router.get('/confirm-email/:token', user_controller.finish_user_register);
 
 // Create a new user
 router.post(

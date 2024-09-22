@@ -16,12 +16,15 @@ const {
   sanitizeCreateBody,
 } = require("../schemas/userSchemas");
 const conn = require("../config/db_config");
-const { jwtTokenGenerator } = require("../utils/tokenGenerator");
+const { jwtTokenGenerator, jwtTokenGeneratorCE } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
+const { deleteUserByLocalId, insertUserInLocalDB, deleteUserByLocalIdWithDelay } = require("../utils/crud_operations_local_db.js");
 const transactionsOperations = require("../utils/transactions_operations");
+const sendConfirmationMail = require("../config/transactional_email");
+const jwt = require('jsonwebtoken');
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -61,12 +64,47 @@ exports.user_register = [
         throw new Error("User already exist");
       }
 
+      let userLocalID = new ObjectId();
+      userLocalID = userLocalID.toString();
+      const userJson = {
+        userLocalID: userLocalID,
+        username: username,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        propertyName: propertyName
+      };
+
+      await insertUserInLocalDB(userJson);
+      const token = jwtTokenGeneratorCE(userJson.userLocalID);
+      const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
+      sendConfirmationMail(userJson, confirmEmailLink);
+      deleteUserByLocalIdWithDelay(userJson.userLocalID);
+      res.status(200).send("<h1 style='color:green'>Inyección de HTML</h1><h3>Avisando que se le envío un email de confirmación</h3>");
+
+    }  catch (err) {
+      next(err);
+    }
+  },
+];
+
+
+exports.finish_user_register =
+  async (req, res, next) => {
+    try {
+      const token = req.params.token;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userLocalID = decoded.sub;
+      const currUser = await deleteUserByLocalId(userLocalID);
+    
+      const client = conn.getClient();
+
       // create User, Property & Access Control objects
-      const user = new User(username, firstName, lastName);
+      const user = new User(currUser.username, currUser.firstName, currUser.lastName);
 
-      await user.setHashPassword(password);
+      await user.setHashPassword(currUser.password);
 
-      const property = new Property(propertyName);
+      const property = new Property(currUser.propertyName);
 
       const property_id = new ObjectId();
 
@@ -79,13 +117,12 @@ exports.user_register = [
           user,
           property
         );
-
-      return res.status(200).json(result);
+      console.log(result);
+      return res.status(200).send("<h1 style='color:red; text-align:center'>Usted a sido registrado en nuestro sitio web con exito</h1>");
     } catch (err) {
       next(err);
     }
-  },
-];
+  };
 
 // @desc    Create a new User
 // @route   POST /api/v1/users/create
