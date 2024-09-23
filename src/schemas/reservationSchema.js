@@ -67,7 +67,7 @@ const reservationSchema = {
       errorMessage: "Reservation status should be specified",
     },
     isIn: {
-      options: [["confirm", "provisional", "cancelled", "no_show"]],
+      options: [["confirmed", "provisional", "cancelled", "no_show"]],
     },
   },
   payment_status: {
@@ -85,6 +85,12 @@ const reservationSchema = {
     optional: true,
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        max: 50,
+      },
+      errorMessage: "Special request maximum length is 50 characters",
+    },
   },
 };
 

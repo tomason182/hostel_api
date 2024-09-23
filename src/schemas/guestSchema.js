@@ -1,8 +1,17 @@
+const { errorMonitor } = require("supertest/lib/test");
+
 const guestSchema = {
   firstName: {
     in: ["body"],
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "First name maximum length is 100 characters",
+    },
     notEmpty: {
       bail: true,
       errorMessage: "First name must not be empty",
@@ -12,6 +21,13 @@ const guestSchema = {
     in: ["body"],
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "Last name maximum length is 100 characters",
+    },
     notEmpty: {
       bail: true,
       errorMessage: "Last name must not be empty",
@@ -22,6 +38,13 @@ const guestSchema = {
     optional: true,
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        min: 1,
+        max: 25,
+      },
+      errorMessage: "Passport or ID maximum length is 25",
+    },
   },
   email: {
     in: ["body"],
@@ -33,6 +56,12 @@ const guestSchema = {
     notEmpty: {
       bail: true,
       errorMessage: "Email address must not be empty",
+    },
+    isLength: {
+      options: {
+        max: 50,
+      },
+      errorMessage: "Email maximum length is 50 characters",
     },
   },
   phoneNumber: {
@@ -48,12 +77,24 @@ const guestSchema = {
     optional: true,
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        max: 50,
+      },
+      errorMessage: "City maximum length is 50 characters",
+    },
   },
   street: {
     in: ["body"],
     optional: true,
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        max: 100,
+      },
+      errorMessage: "Address maximum length is 100 characters",
+    },
   },
   postalCode: {
     in: ["body"],
