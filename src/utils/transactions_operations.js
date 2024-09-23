@@ -109,3 +109,39 @@ exports.deleteUser = async (client, dbname, userId, propertyId) => {
     await session.endSession();
   }
 };
+
+exports.insertRoomType = async (
+  client,
+  dbname,
+  roomType,
+  ratesAndAvailability,
+  calendar
+) => {
+  const session = client.startSession();
+  try {
+    session.startTransaction();
+    const db = client.db(dbname);
+
+    // Insert room type in room_types collection
+    const roomTypeColl = db.collection("room_types");
+    await roomTypeColl.insertOne(roomType, { session });
+
+    // Create a rates and availability document for the inserted room type
+    const ratesAndAvailabilityColl = db.collection("rates_and_availability");
+    await ratesAndAvailabilityColl.insertOne(ratesAndAvailability, { session });
+
+    // Insert all calendar objects
+    const calendarColl = db.collection("calendars");
+    // prevents additional document to be inserted if one fails
+    const options = { ordered: true };
+    await calendarColl.insertMany(calendar, options, { session });
+
+    await session.commitTransaction();
+    return { msg: "Room type inserted successfully" };
+  } catch (err) {
+    await session.abortTransaction();
+    throw new Error(`Error during transaction: ${err.message}`);
+  } finally {
+    await session.endSession();
+  }
+};

@@ -7,6 +7,13 @@ const roomTypeSchema = {
       bail: true,
       errorMessage: "Description must not be empty",
     },
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "Room type name maximum length is 100 characters",
+    },
   },
   type: {
     in: ["body"],
@@ -16,11 +23,18 @@ const roomTypeSchema = {
       bail: true,
       errorMessage: "Type is required",
     },
+    isIn: {
+      options: [["private", "dorm"]],
+      errorMessage: "room type must be private or dorm",
+    },
   },
-  bathroom: {
+  gender: {
     in: ["body"],
     trim: true,
-    escape: true,
+    isIn: {
+      options: [["mixed", "female"]],
+      errorMessage: "room type gender must be mixed or female",
+    },
   },
   max_occupancy: {
     in: ["body"],
@@ -69,6 +83,9 @@ const roomTypeSchema = {
   },
 };
 
+// En un primera instancia permitiremos que los tipos de cuartos puedan actualizar:
+// Description, gender, base rate y currency.
+
 const updateRoomTypeSchema = {
   description: {
     in: ["body"],
@@ -78,43 +95,20 @@ const updateRoomTypeSchema = {
       bail: true,
       errorMessage: "Description must not be empty",
     },
-  },
-  type: {
-    in: ["body"],
-    trim: true,
-    escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Type is required",
+    isLength: {
+      options: {
+        min: 1,
+        max: 100,
+      },
+      errorMessage: "Room type name maximum length is 100 characters",
     },
   },
-  bathroom: {
+  gender: {
     in: ["body"],
     trim: true,
-    escape: true,
-  },
-  max_occupancy: {
-    in: ["body"],
-    trim: true,
-    isInt: {
-      bail: true,
-      errorMessage: "Invalid data type. Must be integer",
-    },
-    notEmpty: {
-      bail: true,
-      errorMessage: "Maximum occupancy is required",
-    },
-  },
-  inventory: {
-    in: ["body"],
-    trim: true,
-    isInt: {
-      bail: true,
-      errorMessage: "Invalid data type. Must be integer",
-    },
-    notEmpty: {
-      bail: true,
-      errorMessage: "Inventory is required",
+    isIn: {
+      options: [["mixed", "female"]],
+      errorMessage: "room type gender must be mixed or female",
     },
   },
   base_rate: {
@@ -142,7 +136,15 @@ const updateRoomTypeSchema = {
 
 // Middleware to sanitize body
 const sanitizeCreateBody = function (req, res, next) {
-  const allowedFields = ["description", "type", "bathroom", "max_occupancy", "inventory", "base_rate", "currency"];
+  const allowedFields = [
+    "description",
+    "type",
+    "gender",
+    "max_occupancy",
+    "inventory",
+    "base_rate",
+    "currency",
+  ];
   Object.keys(req.body).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
@@ -154,7 +156,7 @@ const sanitizeCreateBody = function (req, res, next) {
 };
 
 const sanitizeUpdateBody = function (req, res, next) {
-  const allowedFields = ["description", "type", "bathroom", "max_occupancy", "inventory", "base_rate", "currency"];
+  const allowedFields = ["description", "gender", "base_rate", "currency"];
   Object.keys(req.body).forEach(key => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
@@ -165,8 +167,12 @@ const sanitizeUpdateBody = function (req, res, next) {
   next();
 };
 
-module.exports = { roomTypeSchema, updateRoomTypeSchema, sanitizeCreateBody, sanitizeUpdateBody };
-
+module.exports = {
+  roomTypeSchema,
+  updateRoomTypeSchema,
+  sanitizeCreateBody,
+  sanitizeUpdateBody,
+};
 
 // ###################################################################################
 // ##############         roomTypeSchema  =  updateRoomTypeSchema     ################
@@ -176,5 +182,3 @@ module.exports = { roomTypeSchema, updateRoomTypeSchema, sanitizeCreateBody, san
 // ##############       CUALQUIER COSA QUE EN EL FUTURO HAGAMOS       ################
 // ##############         COSAS DIFERENTES CON AMBOS ESQUEMAS         ################
 // ###################################################################################
-
-
