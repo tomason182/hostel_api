@@ -1,5 +1,3 @@
-const { ObjectId } = require("mongodb");
-
 const reservationSchema = {
   guest_id: {
     in: ["body"],

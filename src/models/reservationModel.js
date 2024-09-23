@@ -2,7 +2,6 @@ const { ObjectId } = require("mongodb");
 
 class Reservation {
   constructor(
-    property_id,
     guest_id,
     room_type_id,
     booking_source,
@@ -15,8 +14,7 @@ class Reservation {
     payment_status,
     special_request
   ) {
-    (this.property_id = property_id),
-      (this.guest_id = ObjectId.createFromHexString(guest_id)),
+    (this.guest_id = ObjectId.createFromHexString(guest_id)),
       (this.room_type_id = ObjectId.createFromHexString(room_type_id)),
       (this.booking_source = booking_source),
       (this.check_in = check_in),

@@ -5,6 +5,7 @@ const {
   checkSchema,
   validationResult,
   matchedData,
+  param,
 } = require("express-validator");
 
 const conn = require("../config/db_config");
@@ -24,8 +25,6 @@ exports.reservation_create = [
         return res.status(400).json(errors.array());
       }
 
-      const propertyId = req.user._id;
-
       const {
         guest_id,
         room_type_id,
@@ -41,7 +40,6 @@ exports.reservation_create = [
       } = matchedData(req);
 
       const newReservation = new Reservation(
-        propertyId,
         guest_id,
         room_type_id,
         booking_source,
@@ -70,8 +68,42 @@ exports.reservation_create = [
   },
 ];
 
+// @desc      Get property reservation by date range
+// @route     GET /api/v1/reservation/:from-:to
+// @access    Private
+exports.reservation_get_data_range = [
+  param("from").trim().escape().isISO8601(),
+  param("to").trim().escape().isISO8601(),
+  ,
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const from = req.params.from;
+      const fromYear = from.substring(0, 4);
+      const fromMonth = from.substring(4, 6);
+      const fromDay = from.substring(6, 8);
+
+      const fromDate = new Date(fromYear, fromMonth - 1, fromDay);
+      fromDate.setHours(0, 0, 0, 0);
+      const to = req.params.to;
+    } catch (err) {}
+  },
+];
+
 // @desc      Get an specific reservation
 // @route     POST /api/v1/reservations/:id
+// @access    Private
+
+// @desc      Get reservations by guest name
+// @route     GET /api/v1/reservations/?name=value
+// @access    Private
+
+// @desc      Get reservations by room type
+// @route     GET /api/v1/reservations/:room-type
 // @access    Private
 
 // @desc      Update an specific reservation
