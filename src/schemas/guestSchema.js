@@ -17,6 +17,12 @@ const guestSchema = {
       errorMessage: "Last name must not be empty",
     },
   },
+  idNumber: {
+    in: ["body"],
+    optional: true,
+    trim: true,
+    escape: true,
+  },
   email: {
     in: ["body"],
     isEmail: {
@@ -31,13 +37,10 @@ const guestSchema = {
   },
   phoneNumber: {
     in: ["body"],
+    optional: true,
     isMobilePhone: {
       options: "any",
       errorMessage: "invalid phone number",
-    },
-    notEmpty: {
-      bail: true,
-      errorMessage: "Phone number must not be empty",
     },
   },
   city: {
@@ -45,20 +48,12 @@ const guestSchema = {
     optional: true,
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Address is required",
-    },
   },
   street: {
     in: ["body"],
     optional: true,
     trim: true,
     escape: true,
-    notEmpty: {
-      bail: true,
-      errorMessage: "Address is required",
-    },
   },
   postalCode: {
     in: ["body"],
@@ -70,12 +65,9 @@ const guestSchema = {
   },
   countryCode: {
     in: ["body"],
+    optional: true,
     isISO31661Alpha2: {
       errorMessage: "Invalid country code",
-    },
-    notEmpty: {
-      bail: true,
-      errorMessage: "Country code is required",
     },
   },
 };
