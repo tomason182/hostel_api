@@ -72,8 +72,16 @@ exports.reservation_create = [
 // @route     GET /api/v1/reservation/:from-:to
 // @access    Private
 exports.reservation_get_data_range = [
-  param("from").trim().escape().isISO8601(),
-  param("to").trim().escape().isISO8601(),
+  param("from")
+    .trim()
+    .escape()
+    .isISO8601()
+    .withMessage("not a valid ISO8601 date format"),
+  param("to")
+    .trim()
+    .escape()
+    .isISO8601()
+    .withMessage("not a valid ISO8601 date format"),
   ,
   async (req, res, next) => {
     try {
