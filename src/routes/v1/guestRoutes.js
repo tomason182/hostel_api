@@ -5,7 +5,6 @@ const router = express.Router();
 
 // require Guest controller
 const guestController = require("../../controllers/guestController");
-const auth = require("../../middlewares/authMiddleware");
 
 /// Guest routes ///
 
