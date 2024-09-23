@@ -1,27 +1,21 @@
 const { ObjectId } = require("mongodb");
 
 const reservationSchema = {
-  guestId: {
-    in: ["params"],
+  guest_id: {
+    in: ["body"],
     isMongoId: {
       bail: true,
       errorMessage: "Guest ID must be specified",
     },
-    customSanitizer: value => {
-      ObjectId.isValid(value) ? ObjectId.createFromHexString(value) : value;
-    },
   },
-  roomTypeId: {
-    in: ["params"],
+  room_type_id: {
+    in: ["body"],
     isMongoId: {
       bail: true,
       errorMessage: "Room type ID must be specified",
     },
-    customSanitizer: value => {
-      ObjectId.isValid(value) ? ObjectId.createFromHexString(value) : value;
-    },
   },
-  bookingSource: {
+  booking_source: {
     in: ["body"],
     optional: true,
     isIn: {
@@ -30,7 +24,7 @@ const reservationSchema = {
         "Booking source must be one of: Booking.com, HostelWorld, other",
     },
   },
-  checkIn: {
+  check_in: {
     in: ["body"],
     exists: {
       bail: true,
@@ -41,7 +35,7 @@ const reservationSchema = {
       errorMessage: "Check in date must be ISO8601 format",
     },
   },
-  checkOut: {
+  check_out: {
     in: ["body"],
     exists: {
       bail: true,
@@ -52,12 +46,20 @@ const reservationSchema = {
       errorMessage: "Check out date must be ISO8601 format",
     },
   },
-  numberOfGuest: {
+  number_Of_guest: {
     in: ["body"],
     isInt: {
       bail: true,
-      options: { min: 1, max: 1000 },
+      options: { min: 1, max: 100 },
       errorMessage: "Number of guest should be integer number",
+    },
+  },
+  total_price: {
+    in: ["body"],
+    isFloat: {
+      bail: true,
+      options: { min: 1 },
+      errorMessage: "Total price should be a decimal number",
     },
   },
   reservations_status: {
@@ -70,7 +72,7 @@ const reservationSchema = {
       options: [["confirm", "provisional", "cancelled", "no_show"]],
     },
   },
-  paymentStatus: {
+  payment_status: {
     in: ["body"],
     exists: {
       bail: true,
@@ -80,7 +82,7 @@ const reservationSchema = {
       options: [["pending", "canceled", "refunded", "paid", "partial"]],
     },
   },
-  specialRequest: {
+  special_request: {
     in: ["body"],
     optional: true,
     trim: true,
