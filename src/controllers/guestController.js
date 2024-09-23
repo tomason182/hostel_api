@@ -27,23 +27,23 @@ exports.guest_create_post = [
       }
 
       const propertyId = req.user._id;
-      const userId = req.user.access_control[0].user_id;
+      const userId = req.user.user_info._id;
       const data = matchedData(req);
 
       const guest = new Guest(
         propertyId,
         data.firstName,
         data.lastName,
-        data.genre,
+        data.idNumber || null,
         userId
       );
-      guest.setContactInfo(data.email, data.phoneNumber),
-        guest.setAddress(
-          data.street,
-          data.city,
-          data.countryCode,
-          data.postalCode
-        );
+      guest.setContactInfo(data.email || null, data.phoneNumber || null);
+      guest.setAddress(
+        data.street || null,
+        data.city || null,
+        data.countryCode || null,
+        data.postalCode || null
+      );
 
       const client = conn.getClient();
 
@@ -134,24 +134,20 @@ exports.guest_update_one = [
 
       const client = conn.getClient();
       const data = matchedData(req);
-      const userId = req.user.access_control[0].user_id;
+      const userId = req.user.user_info._id;
       const propertyId = req.user._id;
-      const guestId = ObjectId.createFromHexString(data.id);
+      const guestId = ObjectId.createFromHexString(req.params.id);
 
-      const guest = new Guest(
-        propertyId,
-        data.firstName,
-        data.lastName,
-        data.genre,
-        userId
+      const guest = new Guest(propertyId, data.firstName, data.lastName);
+      guest.setContactInfo(data.email, data.phoneNumber);
+      guest.setAddress(
+        data.street,
+        data.city,
+        data.countryCode,
+        data.postalCode
       );
-      guest.setContactInfo(data.email, data.phoneNumber),
-        guest.setAddress(
-          data.street,
-          data.city,
-          data.countryCode,
-          data.postalCode
-        );
+      guest.setUpdatedBy(userId);
+      guest.setUpdatedAt();
 
       const result = await guestHelper.updateGuestInfo(
         client,
