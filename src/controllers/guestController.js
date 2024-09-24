@@ -22,6 +22,7 @@ exports.guest_create_post = [
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
+
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
@@ -72,14 +73,16 @@ exports.guest_create_post = [
 // @route   GET /api/v1/guests/find/:query
 // @access  Private
 exports.guest_get_one = [
-  query("q").trim().escape().isLength({ min: 1, max: 50 }),
+  query("q")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 50 })
+    .withMessage("query should contain between 1 to 50 characters"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res
-          .status(400)
-          .json({ msg: "query should contain between 1 to 50 characters" });
+        res.status(400).json(errors.array());
       }
 
       const query = req.query.q;
@@ -107,11 +110,6 @@ exports.guest_get_one = [
         throw new Error("Query is not a valid email or phone number");
       }
 
-      if (guest === null) {
-        res.status(400);
-        throw new Error("guest not found");
-      }
-
       res.status(200).json(guest);
     } catch (err) {
       next(err);
@@ -120,7 +118,7 @@ exports.guest_get_one = [
 ];
 
 // @desc    Update an specific guest
-// @route   PUT /api/v1/guests/:id
+// @route   PUT /api/v1/guests/update/:id
 // @access  Private
 exports.guest_update_one = [
   param("id").trim().escape().isMongoId().withMessage("not a valid mongoId"),
@@ -138,7 +136,12 @@ exports.guest_update_one = [
       const propertyId = req.user._id;
       const guestId = ObjectId.createFromHexString(req.params.id);
 
-      const guest = new Guest(propertyId, data.firstName, data.lastName);
+      const guest = new Guest(
+        propertyId,
+        data.firstName,
+        data.lastName,
+        data.idNumber
+      );
       guest.setContactInfo(data.email, data.phoneNumber);
       guest.setAddress(
         data.street,
@@ -148,6 +151,8 @@ exports.guest_update_one = [
       );
       guest.setUpdatedBy(userId);
       guest.setUpdatedAt();
+
+      console.log(guest);
 
       const result = await guestHelper.updateGuestInfo(
         client,

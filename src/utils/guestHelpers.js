@@ -67,6 +67,7 @@ exports.updateGuestInfo = async (client, dbname, guestId, guestData) => {
     };
 
     const result = await guestColl.updateOne(query, updateDoc, options);
+    console.log(result);
 
     return `${result.matchedCount} document(s) match the filter, updated ${result.modifiedCount} document(s)`;
   } catch (err) {

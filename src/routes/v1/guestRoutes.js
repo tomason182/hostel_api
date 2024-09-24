@@ -19,9 +19,9 @@ router.post("/create", authMiddleware, guestController.guest_create_post);
 router.get("/find/", authMiddleware, guestController.guest_get_one);
 
 // @desc    Update a Guest
-// @route   PUT /api/v1/guests/:id
+// @route   PUT /api/v1/guests/update/:id
 // @access  Private
-router.put("/:id", authMiddleware, guestController.guest_update_one);
+router.put("/update/:id", authMiddleware, guestController.guest_update_one);
 
 // @desc    Delete a guest
 // @route   DELETE /api/v1/guests/:id
