@@ -22,9 +22,8 @@ class Reservation {
       (this.number_of_guest = number_of_guest),
       (this.total_price = total_price),
       (this.currency = currency),
-      (this.reservation_status = reservation_status)(
-        (this.payment_status = payment_status)
-      ),
+      (this.reservation_status = reservation_status),
+      (this.payment_status = payment_status),
       (this.special_request = special_request),
       (this.created_At = new Date()),
       (this.updated_At = new Date());

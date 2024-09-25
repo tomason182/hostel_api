@@ -17,9 +17,9 @@ const reservationSchema = {
     in: ["body"],
     optional: true,
     isIn: {
-      options: [["Booking.com", "HostelWorld.com", "other"]],
+      options: [["booking.com", "hostelWorld.com", "direct"]],
       errorMessage:
-        "Booking source must be one of: Booking.com, HostelWorld, other",
+        "Booking source must be one of: booking.com, hostelWorld, direct",
     },
   },
   check_in: {
@@ -44,7 +44,7 @@ const reservationSchema = {
       errorMessage: "Check out date must be ISO8601 format",
     },
   },
-  number_Of_guest: {
+  number_of_guest: {
     in: ["body"],
     isInt: {
       bail: true,
@@ -60,7 +60,7 @@ const reservationSchema = {
       errorMessage: "Total price should be a decimal number",
     },
   },
-  reservations_status: {
+  reservation_status: {
     in: ["body"],
     exists: {
       bail: true,

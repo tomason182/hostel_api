@@ -45,7 +45,7 @@ exports.insertNewGuest = async (client, dbname, guest) => {
     const result = await guestColl.insertOne(guest);
 
     if (result.acknowledged === true) {
-      return `Guest added successfully. Guest id: ${result.insertedId}`;
+      return result.insertedId;
     } else {
       throw new Error("Unable to insert the guest");
     }

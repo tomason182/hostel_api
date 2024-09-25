@@ -9,7 +9,7 @@ const reservationController = require("../../controllers/reservationController")
 /// Reservation Routes ///
 
 // @desc Create a new reservation
-// @route POST /api/v1/reservations/create
+// @route POST /api/v1/reservations/new
 // @access Private
 router.post(
   "/new",
