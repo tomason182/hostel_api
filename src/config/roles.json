@@ -13,7 +13,8 @@
         "create_room_type",
         "read_room_type",
         "update_room_type",
-        "delete_room_type"
+        "delete_room_type",
+        "create_reservation"
       ]
     },
     {
