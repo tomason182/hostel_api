@@ -55,7 +55,7 @@ exports.reservation_create = [
 
       const client = conn.getClient();
 
-      const result = reservationHelper.insertNewReservation(
+      const result = await reservationHelper.insertNewReservation(
         client,
         dbname,
         newReservation

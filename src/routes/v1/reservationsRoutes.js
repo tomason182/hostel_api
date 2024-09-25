@@ -12,8 +12,10 @@ const reservationController = require("../../controllers/reservationController")
 // @route POST /api/v1/reservations/create
 // @access Private
 router.post(
-  "/create",
+  "/new",
   authMiddleware,
-  rbacMiddleware,
+  rbacMiddleware.checkPermission("create_reservation"),
   reservationController.reservation_create
 );
+
+module.exports = router;
