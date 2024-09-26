@@ -76,24 +76,10 @@ exports.room_type_create = [
       roomType.set_ID(room_type_id);
       roomType.setProducts();
 
-      // create rates and availability Object
-      const ratesAndAvailability = new RatesAndAvailability();
-      ratesAndAvailability.setRoomTypeId(room_type_id);
-
-      // create calendar
-      const roomList = roomType.products.flatMap(product => product.beds);
-      const calendarList = roomList.map(room_id => {
-        const calendar = new Calendar();
-        calendar.setId(room_id);
-        return calendar;
-      });
-
-      const result = await transactionOperations.insertRoomType(
+      const result = await crudOperations.insertRoomType(
         client,
         dbname,
-        roomType,
-        ratesAndAvailability,
-        calendarList
+        roomType
       );
 
       return res.status(200).json(result);
