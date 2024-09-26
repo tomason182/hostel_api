@@ -17,8 +17,8 @@ exports.checkAvailability = async (
       throw new Error("Room type not found");
     }
     // Usamos flatMap para obtener todas las camas pertenecientes al tipo de cuarto.
-    const bedsId = roomType.products.flatMap(product => product.beds);
-    const maxOccupancy = bedsId.length;
+    const totalBeds = roomType.products.flatMap(product => product.beds);
+    const maxOccupancy = totalBeds.length;
 
     // Filtramos las reservas para obtener solo las que caen dentro del rango check in - check out
 
@@ -82,8 +82,18 @@ exports.checkAvailability = async (
       }
     }
 
-    return true;
+    const occupiedBeds = filteredReservations.flatMap(
+      reservation => reservation.assignedBeds
+    );
+
+    const availableBeds = bedAssignment(totalBeds, occupiedBeds);
+
+    return availableBeds;
   } catch (err) {
     throw err;
   }
 };
+
+function bedAssignment(totalBeds, occupiedBeds) {
+  return totalBeds.filter(bed => !occupiedBeds.include(bed));
+}
