@@ -9,6 +9,7 @@ const {
 } = require("express-validator");
 
 const conn = require("../config/db_config");
+const { checkAvailability } = require("../utils/availability_helpers");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -54,6 +55,21 @@ exports.reservation_create = [
       );
 
       const client = conn.getClient();
+
+      const availableBeds = await checkAvailability(
+        client,
+        dbname,
+        room_type_id,
+        check_in,
+        check_out,
+        number_of_guest
+      );
+
+      if (availableBeds === false) {
+        throw new Error("No bed available for the selected dates");
+      }
+
+      newReservation.setAssignedBeds(availableBeds, number_of_guest);
 
       const result = await reservationHelper.insertNewReservation(
         client,
