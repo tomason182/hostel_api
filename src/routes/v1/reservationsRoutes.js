@@ -18,4 +18,13 @@ router.post(
   reservationController.reservation_create
 );
 
+// @desc Get property reservations from date range
+// @router GET /api/v1/reservations/find/:from-:to
+// @access Private
+router.get(
+  "/find/:from-:to",
+  authMiddleware,
+  reservationController.reservation_get_date_range
+);
+
 module.exports = router;

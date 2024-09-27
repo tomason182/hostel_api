@@ -1,6 +1,7 @@
 const reservationSchema = require("../schemas/reservationSchema");
 const Reservation = require("../models/reservationModel");
 const reservationHelper = require("../utils/reservationHelpers");
+const parseDateHelper = require("../utils/parseDateHelper");
 const {
   checkSchema,
   validationResult,
@@ -26,8 +27,11 @@ exports.reservation_create = [
         return res.status(400).json(errors.array());
       }
 
+      const property_id = req.user._id;
+
       const {
         guest_id,
+        guest_name,
         room_type_id,
         booking_source,
         check_in,
@@ -40,12 +44,14 @@ exports.reservation_create = [
         special_request,
       } = matchedData(req);
 
+      console.log(guest_name);
+
       const newReservation = new Reservation(
         guest_id,
+        guest_name,
+        property_id,
         room_type_id,
         booking_source,
-        check_in,
-        check_out,
         number_of_guest,
         total_price,
         currency,
@@ -53,6 +59,8 @@ exports.reservation_create = [
         payment_status,
         special_request
       );
+
+      newReservation.setDates(check_in, check_out);
 
       const roomTypeId = newReservation.getRoomTypeId();
 
@@ -89,7 +97,7 @@ exports.reservation_create = [
 // @desc      Get property reservation by date range
 // @route     GET /api/v1/reservation/:from-:to
 // @access    Private
-exports.reservation_get_data_range = [
+exports.reservation_get_date_range = [
   param("from")
     .trim()
     .escape()
@@ -100,7 +108,6 @@ exports.reservation_get_data_range = [
     .escape()
     .isISO8601()
     .withMessage("not a valid ISO8601 date format"),
-  ,
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -108,15 +115,28 @@ exports.reservation_get_data_range = [
         return res.status(400).json(errors.array());
       }
 
+      const propertyId = req.user._id;
       const from = req.params.from;
-      const fromYear = from.substring(0, 4);
-      const fromMonth = from.substring(4, 6);
-      const fromDay = from.substring(6, 8);
-
-      const fromDate = new Date(fromYear, fromMonth - 1, fromDay);
-      fromDate.setHours(0, 0, 0, 0);
       const to = req.params.to;
-    } catch (err) {}
+
+      const fromDate = parseDateHelper.parseDateOnlyNumbers(from);
+      const toDate = parseDateHelper.parseDateOnlyNumbers(to);
+
+      const client = conn.getClient();
+
+      const reservationsList =
+        await reservationHelper.findReservationsByDateRange(
+          client,
+          dbname,
+          propertyId,
+          fromDate,
+          toDate
+        );
+
+      return res.status(200).json(reservationsList);
+    } catch (err) {
+      next(err);
+    }
   },
 ];
 

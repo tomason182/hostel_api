@@ -62,7 +62,7 @@ exports.guest_create_post = [
 
       const result = await guestHelper.insertNewGuest(client, dbname, guest);
 
-      res.status(200).json({ msg: result });
+      res.status(200).json({ _id: result });
     } catch (err) {
       next(err);
     }

@@ -1,12 +1,13 @@
 const { ObjectId } = require("mongodb");
+const parseDateHelper = require("../utils/parseDateHelper");
 
 class Reservation {
   constructor(
     guest_id,
+    guest_name,
+    property_id,
     room_type_id,
     booking_source,
-    check_in,
-    check_out,
     number_of_guest,
     total_price,
     currency,
@@ -16,10 +17,12 @@ class Reservation {
     assignedBeds = []
   ) {
     (this.guest_id = ObjectId.createFromHexString(guest_id)),
+      (this.guest_name = guest_name),
+      (this.property_id = property_id),
       (this.room_type_id = ObjectId.createFromHexString(room_type_id)),
       (this.booking_source = booking_source),
-      (this.check_in = check_in),
-      (this.check_out = check_out),
+      this.check_in,
+      this.check_out,
       (this.number_of_guest = number_of_guest),
       (this.total_price = total_price),
       (this.currency = currency),
@@ -35,6 +38,11 @@ class Reservation {
     for (let i = 0; i < numberOfGuest; i++) {
       this.assignedBeds.push(availableBeds[i]);
     }
+  }
+
+  setDates(checkIn, checkOut) {
+    this.check_in = parseDateHelper.parseDateWithHyphen(checkIn);
+    this.check_out = parseDateHelper.parseDateWithHyphen(checkOut);
   }
 
   getGuestId() {
