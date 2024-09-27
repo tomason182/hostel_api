@@ -54,12 +54,14 @@ exports.reservation_create = [
         special_request
       );
 
+      const roomTypeId = newReservation.getRoomTypeId();
+
       const client = conn.getClient();
 
       const availableBeds = await checkAvailability(
         client,
         dbname,
-        room_type_id,
+        roomTypeId,
         check_in,
         check_out,
         number_of_guest

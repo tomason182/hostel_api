@@ -117,7 +117,7 @@ exports.updatePropertyInfo = async (client, dbname, propertyId, data) => {
   }
 };
 
-exports.insertNewRoomType = async (client, dbname, roomType) => {
+exports.insertRoomType = async (client, dbname, roomType) => {
   try {
     const db = client.db(dbname);
     const roomTypesColl = db.collection("room_types");

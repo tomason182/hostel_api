@@ -8,8 +8,8 @@ exports.checkAvailability = async (
 ) => {
   try {
     const db = client.db(dbname);
-    const roomTypeColl = db.collections("room_types");
-    const reservationsColl = db.collections("reservations");
+    const roomTypeColl = db.collection("room_types");
+    const reservationsColl = db.collection("reservations");
 
     const roomType = await roomTypeColl.findOne({ _id: typeRoomId });
 
@@ -82,11 +82,13 @@ exports.checkAvailability = async (
       }
     }
 
-    const occupiedBeds = filteredReservations.flatMap(
+    const occupiedBeds = reservationsList.flatMap(
       reservation => reservation.assignedBeds
     );
 
     const availableBeds = bedAssignment(totalBeds, occupiedBeds);
+
+    /* console.log(availableBeds); */
 
     return availableBeds;
   } catch (err) {
@@ -95,5 +97,5 @@ exports.checkAvailability = async (
 };
 
 function bedAssignment(totalBeds, occupiedBeds) {
-  return totalBeds.filter(bed => !occupiedBeds.include(bed));
+  return totalBeds.filter(bed => !occupiedBeds.includes(bed));
 }

@@ -36,6 +36,14 @@ class Reservation {
       this.assignedBeds.push(availableBeds[i]);
     }
   }
+
+  getGuestId() {
+    return this.guest_id;
+  }
+
+  getRoomTypeId() {
+    return this.room_type_id;
+  }
 }
 
 module.exports = Reservation;
