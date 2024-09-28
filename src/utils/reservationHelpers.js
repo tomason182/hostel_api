@@ -1,8 +1,3 @@
-const {
-  room_type_id,
-  number_of_guest,
-} = require("../schemas/reservationSchema");
-
 exports.insertNewReservation = async (client, dbname, reservation) => {
   try {
     const db = client.db(dbname);
@@ -54,6 +49,7 @@ exports.findReservationsByDateRange = async (
           _id: 1,
           room_type_id: 1,
           number_of_guest: 1,
+          total_price: 1,
           reservation_status: 1,
           assigned_beds: 1,
           check_in: 1,
