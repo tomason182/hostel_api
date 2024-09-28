@@ -6,11 +6,6 @@ const reservationSchema = {
       errorMessage: "Guest ID must be specified",
     },
   },
-  guest_name: {
-    in: ["body"],
-    trim: true,
-    escape: true,
-  },
   room_type_id: {
     in: ["body"],
     isMongoId: {

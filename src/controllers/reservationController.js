@@ -31,7 +31,6 @@ exports.reservation_create = [
 
       const {
         guest_id,
-        guest_name,
         room_type_id,
         booking_source,
         check_in,
@@ -48,7 +47,6 @@ exports.reservation_create = [
 
       const newReservation = new Reservation(
         guest_id,
-        guest_name,
         property_id,
         room_type_id,
         booking_source,

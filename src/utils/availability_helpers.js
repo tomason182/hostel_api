@@ -89,11 +89,11 @@ exports.checkAvailability = async (
       reservation => reservation.assignedBeds
     );
 
-    console.log("camas ocupadas: ", occupiedBeds);
+    /*  console.log("camas ocupadas: ", occupiedBeds); */
 
     const availableBeds = bedAssignment(totalBeds, occupiedBeds);
 
-    console.log("camas habilitadas: ", availableBeds);
+    /*    console.log("camas habilitadas: ", availableBeds); */
 
     return availableBeds;
   } catch (err) {

@@ -4,7 +4,6 @@ const parseDateHelper = require("../utils/parseDateHelper");
 class Reservation {
   constructor(
     guest_id,
-    guest_name,
     property_id,
     room_type_id,
     booking_source,
@@ -17,7 +16,6 @@ class Reservation {
     assignedBeds = []
   ) {
     (this.guest_id = ObjectId.createFromHexString(guest_id)),
-      (this.guest_name = guest_name),
       (this.property_id = property_id),
       (this.room_type_id = ObjectId.createFromHexString(room_type_id)),
       (this.booking_source = booking_source),
