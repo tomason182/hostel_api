@@ -43,8 +43,6 @@ exports.reservation_create = [
         special_request,
       } = matchedData(req);
 
-      console.log(guest_name);
-
       const newReservation = new Reservation(
         guest_id,
         property_id,
@@ -133,6 +131,8 @@ exports.reservation_get_date_range = [
           fromDate,
           toDate
         );
+
+      console.log(reservationsList);
 
       return res.status(200).json(reservationsList);
     } catch (err) {

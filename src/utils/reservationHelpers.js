@@ -42,7 +42,7 @@ exports.findReservationsByDateRange = async (
         $lookup: {
           from: "guests",
           localField: "guest_id",
-          foreignField: "guest_id",
+          foreignField: "_id",
           as: "guest_info",
         },
       },
@@ -65,7 +65,9 @@ exports.findReservationsByDateRange = async (
       },
     ];
 
-    const reservationsList = await reservationColl.find(aggregation).toArray();
+    const reservationsList = await reservationColl
+      .aggregate(aggregation)
+      .toArray();
 
     return reservationsList;
   } catch (err) {

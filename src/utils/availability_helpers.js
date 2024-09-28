@@ -34,7 +34,7 @@ exports.checkAvailability = async (
         check_in: 1,
         check_out: 1,
         number_of_guest: 1,
-        assignedBeds: 1,
+        assigned_beds: 1,
       },
     };
 
@@ -86,14 +86,14 @@ exports.checkAvailability = async (
     }
 
     const occupiedBeds = reservationsList.flatMap(
-      reservation => reservation.assignedBeds
+      reservation => reservation.assigned_beds
     );
 
-    /*  console.log("camas ocupadas: ", occupiedBeds); */
+    /*     console.log("camas ocupadas: ", occupiedBeds); */
 
     const availableBeds = bedAssignment(totalBeds, occupiedBeds);
 
-    /*    console.log("camas habilitadas: ", availableBeds); */
+    /* console.log("camas habilitadas: ", availableBeds); */
 
     return availableBeds;
   } catch (err) {
