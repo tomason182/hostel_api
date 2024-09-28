@@ -13,7 +13,7 @@ class Reservation {
     reservation_status,
     payment_status,
     special_request,
-    assignedBeds = []
+    assigned_beds = []
   ) {
     (this.guest_id = ObjectId.createFromHexString(guest_id)),
       (this.property_id = property_id),
@@ -27,14 +27,14 @@ class Reservation {
       (this.reservation_status = reservation_status),
       (this.payment_status = payment_status),
       (this.special_request = special_request),
-      (this.assignedBeds = assignedBeds),
+      (this.assigned_beds = assigned_beds),
       (this.created_At = new Date()),
       (this.updated_At = new Date());
   }
 
   setAssignedBeds(availableBeds, numberOfGuest) {
     for (let i = 0; i < numberOfGuest; i++) {
-      this.assignedBeds.push(availableBeds[i]);
+      this.assigned_beds.push(availableBeds[i]);
     }
   }
 
