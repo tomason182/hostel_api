@@ -64,14 +64,17 @@ exports.reservation_create = [
 
       const roomTypeId = newReservation.getRoomTypeId();
 
+      const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
+      const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
+
       const client = conn.getClient();
 
       const availableBeds = await checkAvailability(
         client,
         dbname,
         roomTypeId,
-        check_in,
-        check_out,
+        checkIn,
+        checkOut,
         number_of_guest
       );
 

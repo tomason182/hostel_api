@@ -30,7 +30,12 @@ exports.checkAvailability = async (
     };
 
     const options = {
-      projection: { check_in: 1, check_out: 1, number_of_guest: 1 },
+      projection: {
+        check_in: 1,
+        check_out: 1,
+        number_of_guest: 1,
+        assignedBeds: 1,
+      },
     };
 
     const reservationsList = await reservationsColl
@@ -43,8 +48,8 @@ exports.checkAvailability = async (
     );
 
     // Iterar sobre cada una de las fechas de la reserva y verificar disponibilidad
-    const startDate = new Date(checkIn);
-    const endDate = new Date(checkOut);
+    const startDate = checkIn;
+    const endDate = checkOut;
 
     for (
       let date = startDate;
@@ -54,9 +59,7 @@ exports.checkAvailability = async (
       const currentDate = new Date(date);
 
       const filteredReservations = reservationsList.filter(
-        r =>
-          new Date(r.check_in) <= currentDate &&
-          new Date(r.check_out) > currentDate
+        r => r.check_in <= currentDate && r.check_out > currentDate
       );
 
       const filteredRooms = ratesAndAvailabilityList.filter(
@@ -86,9 +89,11 @@ exports.checkAvailability = async (
       reservation => reservation.assignedBeds
     );
 
+    console.log("camas ocupadas: ", occupiedBeds);
+
     const availableBeds = bedAssignment(totalBeds, occupiedBeds);
 
-    /* console.log(availableBeds); */
+    console.log("camas habilitadas: ", availableBeds);
 
     return availableBeds;
   } catch (err) {
@@ -97,5 +102,6 @@ exports.checkAvailability = async (
 };
 
 function bedAssignment(totalBeds, occupiedBeds) {
-  return totalBeds.filter(bed => !occupiedBeds.includes(bed));
+  const occupiedBedsIds = occupiedBeds.map(bed => bed.toString());
+  return totalBeds.filter(bed => !occupiedBedsIds.includes(bed.toString()));
 }
