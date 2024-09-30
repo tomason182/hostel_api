@@ -107,6 +107,7 @@ exports.reservation_get_date_range = [
     .escape()
     .isISO8601()
     .withMessage("not a valid ISO8601 date format"),
+  param("full_name").trim().escape().optional(),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -117,6 +118,9 @@ exports.reservation_get_date_range = [
       const propertyId = req.user._id;
       const from = req.params.from;
       const to = req.params.to;
+      const fullName = req.params.full_name;
+
+      console.log(fullName);
 
       const fromDate = parseDateHelper.parseDateOnlyNumbers(from);
       const toDate = parseDateHelper.parseDateOnlyNumbers(to);
@@ -129,10 +133,9 @@ exports.reservation_get_date_range = [
           dbname,
           propertyId,
           fromDate,
-          toDate
+          toDate,
+          fullName
         );
-
-      console.log(reservationsList);
 
       return res.status(200).json(reservationsList);
     } catch (err) {

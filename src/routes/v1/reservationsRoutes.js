@@ -22,7 +22,7 @@ router.post(
 // @router GET /api/v1/reservations/find/:from-:to
 // @access Private
 router.get(
-  "/find/:from-:to",
+  "/find/:from-:to-:full_name",
   authMiddleware,
   reservationController.reservation_get_date_range
 );

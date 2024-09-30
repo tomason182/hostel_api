@@ -1,3 +1,10 @@
+const { pipeline } = require("supertest/lib/test");
+const {
+  booking_source,
+  payment_status,
+  special_request,
+} = require("../schemas/reservationSchema");
+
 exports.insertNewReservation = async (client, dbname, reservation) => {
   try {
     const db = client.db(dbname);
@@ -17,11 +24,18 @@ exports.findReservationsByDateRange = async (
   dbname,
   propertyId,
   fromDate,
-  toDate
+  toDate,
+  fullName
 ) => {
   try {
     const db = client.db(dbname);
     const reservationColl = db.collection("reservations");
+
+    let nameTokens = [];
+
+    if (fullName !== null && fullName.toLowerCase() !== "null") {
+      nameTokens = fullName.toLowerCase().split(" ");
+    }
 
     const query = {
       property_id: propertyId,
@@ -38,6 +52,21 @@ exports.findReservationsByDateRange = async (
           from: "guests",
           localField: "guest_id",
           foreignField: "_id",
+          pipeline:
+            nameTokens.length === 0
+              ? []
+              : [
+                  {
+                    $match: {
+                      $and: nameTokens.map(token => ({
+                        $or: [
+                          { first_name: { $regex: token, $options: "i" } },
+                          { last_name: { $regex: token, $options: "i" } },
+                        ],
+                      })),
+                    },
+                  },
+                ],
           as: "guest_info",
         },
       },
@@ -51,6 +80,9 @@ exports.findReservationsByDateRange = async (
           number_of_guest: 1,
           total_price: 1,
           reservation_status: 1,
+          booking_source: 1,
+          payment_status: 1,
+          special_request: 1,
           assigned_beds: 1,
           check_in: 1,
           check_out: 1,
