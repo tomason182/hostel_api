@@ -94,4 +94,51 @@ const reservationSchema = {
   },
 };
 
-module.exports = reservationSchema;
+const updateDateAndPriceSchema = {
+  id: {
+    in: ["param"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Reservation ID must be a valid mongoDB id",
+    },
+    exists: {
+      bail: true,
+      errorMessage: "Reservation ID must be provided",
+    },
+  },
+  check_in: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Check in date must be specified",
+    },
+    isISO8601: {
+      strict: true,
+      errorMessage: "Check in date must be ISO8601 format",
+    },
+  },
+  check_out: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Check out date must be specified",
+    },
+    isISO8601: {
+      strict: true,
+      errorMessage: "Check out date must be ISO8601 format",
+    },
+  },
+  total_price: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Total price must be specified",
+    },
+    isFloat: {
+      bail: true,
+      options: { min: 1 },
+      errorMessage: "Total price should be a decimal number",
+    },
+  },
+};
+module.exports = { reservationSchema, updateDateAndPriceSchema };
