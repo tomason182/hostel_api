@@ -64,6 +64,17 @@ exports.findReservationsByDateRange = async (
         $unwind: "$guest_info",
       },
       {
+        $lookup: {
+          from: "room_types",
+          localField: "room_type_id",
+          foreignField: "_id",
+          as: "room_type_info",
+        },
+      },
+      {
+        $unwind: "$room_type_info",
+      },
+      {
         $project: {
           _id: 1,
           room_type_id: 1,
@@ -79,6 +90,7 @@ exports.findReservationsByDateRange = async (
           "guest_info.full_name": {
             $concat: ["$guest_info.first_name", " ", "$guest_info.last_name"],
           },
+          "room_type_info.description": 1,
         },
       },
     ];
