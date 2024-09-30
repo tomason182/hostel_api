@@ -1,10 +1,3 @@
-const { pipeline } = require("supertest/lib/test");
-const {
-  booking_source,
-  payment_status,
-  special_request,
-} = require("../schemas/reservationSchema");
-
 exports.insertNewReservation = async (client, dbname, reservation) => {
   try {
     const db = client.db(dbname);
@@ -31,11 +24,8 @@ exports.findReservationsByDateRange = async (
     const db = client.db(dbname);
     const reservationColl = db.collection("reservations");
 
-    let nameTokens = [];
-
-    if (fullName !== null && fullName.toLowerCase() !== "null") {
-      nameTokens = fullName.toLowerCase().split(" ");
-    }
+    const nameTokens =
+      fullName === "all" ? [] : fullName.toLowerCase().split(" ");
 
     const query = {
       property_id: propertyId,
