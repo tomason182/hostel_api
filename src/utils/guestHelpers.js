@@ -37,6 +37,18 @@ exports.findGuestByPhoneNumber = async (client, dbname, propertyId, num) => {
   }
 };
 
+exports.findGuestById = async (client, dbname, guestId) => {
+  try {
+    const db = client.db(dbname);
+    const guestColl = db.collection("guests");
+
+    const result = await guestColl.findOne(guestId);
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
 exports.insertNewGuest = async (client, dbname, guest) => {
   try {
     const db = client.db(dbname);

@@ -69,6 +69,36 @@ exports.guest_create_post = [
   },
 ];
 
+// @desc    Get an specific guest by id
+// @route   GET /api/v1/guests/find/:id
+// @access  Private
+exports.guest_by_id_get = [
+  param("id")
+    .trim()
+    .escape()
+    .isMongoId()
+    .withMessage("param is not a valid mongoDb ID"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json(errors.array());
+      }
+
+      const guestId = ObjectId.createFromHexString(req.params.id);
+      console.log(guestId);
+
+      const client = conn.getClient();
+
+      const result = await guestHelper.findGuestById(client, dbname, guestId);
+
+      res.status(200).json({ msg: result });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
 // @desc    Get an specific Guest by query search
 // @route   GET /api/v1/guests/find/:query
 // @access  Private

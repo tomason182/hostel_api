@@ -5,6 +5,7 @@ const router = express.Router();
 
 // require Guest controller
 const guestController = require("../../controllers/guestController");
+const auth = require("../../middlewares/authMiddleware");
 
 /// Guest routes ///
 
@@ -12,6 +13,11 @@ const guestController = require("../../controllers/guestController");
 // @route   POST /api/v1/guests/create
 // @access  Private
 router.post("/create", authMiddleware, guestController.guest_create_post);
+
+// @desc    Get a guest by ID
+// @route   GET /api/v1/guests/:id
+// @access  Private
+router.get("/:id", authMiddleware, guestController.guest_by_id_get);
 
 // @desc    Get a Guest by query search
 // @route   GET /api/v1/guests/find/?q=
