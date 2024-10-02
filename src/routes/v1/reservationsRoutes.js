@@ -18,6 +18,15 @@ router.post(
   reservationController.reservation_create
 );
 
+// @desc    Get property reservations from date range - Simple query
+// @route   GET /api/v1/reservations/simple/:from-:to
+// @access  Private
+router.get(
+  "/simple/:from-:to",
+  authMiddleware,
+  reservationController.reservations_get_date_range_simple
+);
+
 // @desc Get property reservations from date range
 // @router GET /api/v1/reservations/find/:from-:to
 // @access Private
@@ -25,6 +34,14 @@ router.get(
   "/find/:from-:to-:full_name",
   authMiddleware,
   reservationController.reservation_get_date_range
+);
+
+// @desc Get reservation by id
+// @router GET /api/v1/reservations/find/:id
+router.get(
+  "/find/:id",
+  authMiddleware,
+  reservationController.reservations_dates_and_numberOfGuest_update
 );
 
 module.exports = router;

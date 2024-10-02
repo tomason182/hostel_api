@@ -1,4 +1,7 @@
-const reservationSchema = require("../schemas/reservationSchema");
+const {
+  reservationSchema,
+  updateDateAndPriceSchema,
+} = require("../schemas/reservationSchema");
 const Reservation = require("../models/reservationModel");
 const reservationHelper = require("../utils/reservationHelpers");
 const parseDateHelper = require("../utils/parseDateHelper");
@@ -8,6 +11,7 @@ const {
   matchedData,
   param,
 } = require("express-validator");
+const { ObjectId } = require("mongodb");
 
 const conn = require("../config/db_config");
 const { checkAvailability } = require("../utils/availability_helpers");
@@ -93,6 +97,57 @@ exports.reservation_create = [
   },
 ];
 
+// @desc    Get property reservations from date range - Simple query
+// @route   GET /api/v1/reservations/simple/:from-:to
+// @access  Private
+exports.reservations_get_date_range_simple = [
+  param("from")
+    .trim()
+    .escape()
+    .isISO8601()
+    .withMessage("Not a valid ISO8601 date format"),
+  param("to")
+    .trim()
+    .escape()
+    .isISO8601()
+    .withMessage("Not a valid ISO8601 date format"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        res.status(400).json(errors);
+      }
+
+      const propertyId = req.user._id;
+      const from = req.params.from;
+      const to = req.params.to;
+
+      const fromDate = parseDateHelper.parseDateOnlyNumbers(from);
+      const toDate = parseDateHelper.parseDateOnlyNumbers(to);
+
+      if (fromDate > toDate) {
+        throw new Error("Dates are in reverse order");
+      }
+
+      const client = conn.getClient();
+
+      const reservationList =
+        await reservationHelper.findReservationByDateRangeSimple(
+          client,
+          dbname,
+          propertyId,
+          fromDate,
+          toDate
+        );
+
+      return res.status(200).json({ msg: reservationList });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
 // @desc      Get property reservation by date range
 // @route     GET /api/v1/reservation/:from-:to
 // @access    Private
@@ -120,8 +175,6 @@ exports.reservation_get_date_range = [
       const to = req.params.to;
       const fullName = req.params.full_name;
 
-      console.log(fullName);
-
       const fromDate = parseDateHelper.parseDateOnlyNumbers(from);
       const toDate = parseDateHelper.parseDateOnlyNumbers(to);
 
@@ -138,6 +191,57 @@ exports.reservation_get_date_range = [
         );
 
       return res.status(200).json(reservationsList);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc      Update reservation dates & price
+// @route     PUT /api/v1/reservations/dates_and_price/:id
+// @access    Private
+exports.reservations_dates_and_numberOfGuest_update = [
+  checkSchema(updateDateAndPriceSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json(errors.array());
+      }
+
+      const propertyId = req.user._id;
+      const reservationId = ObjectId.createFromHexString(req.params.id);
+
+      const { check_in, check_out, number_of_guest } = matchedData(req);
+
+      const client = conn.getClient();
+
+      const reservationResult = await reservationHelper.findReservationById(
+        client,
+        dbname,
+        propertyId,
+        reservationId
+      );
+
+      // set reservation status to cancelled for check availability purpose
+      const reservationStatus = "cancelled";
+      const result = await reservationHelper.handleReservationStatus(
+        client,
+        dbname,
+        propertyId,
+        reservationId,
+        reservationStatus
+      );
+
+      // Reservations dates
+      const reservationCheckIn = reservationResult.check_in;
+      const reservationCheckOut = reservationResult.check_out;
+
+      // Formatting input dates
+      const formattedCheckIn = new Date(check_in);
+      const formattedCheckOut = new Date(check_out);
+
+      return res.status(200).json(reservationResult);
     } catch (err) {
       next(err);
     }
