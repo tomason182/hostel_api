@@ -143,6 +143,7 @@ exports.findReservationsByDateRange = async (
         $project: {
           _id: 1,
           room_type_id: 1,
+          guest_id: 1,
           number_of_guest: 1,
           total_price: 1,
           reservation_status: 1,
