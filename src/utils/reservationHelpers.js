@@ -60,6 +60,7 @@ exports.findReservationByDateRangeSimple = async (
     };
 
     const projection = {
+      room_type_id: 1,
       number_of_guest: 1,
       check_in: 1,
       check_out: 1,
