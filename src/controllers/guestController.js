@@ -166,6 +166,21 @@ exports.guest_update_one = [
       const propertyId = req.user._id;
       const guestId = ObjectId.createFromHexString(req.params.id);
 
+      // Find user by email
+      const guestExits = await guestHelper.findGuestByEmail(
+        client,
+        dbname,
+        propertyId,
+        data.email
+      );
+
+      if (
+        guestExits !== null &&
+        guestExits._id.toString() !== guestId.toString()
+      ) {
+        throw new Error("Email already exist");
+      }
+
       const guest = new Guest(
         propertyId,
         data.firstName,
@@ -182,7 +197,7 @@ exports.guest_update_one = [
       guest.setUpdatedBy(userId);
       guest.setUpdatedAt();
 
-      console.log(guest);
+      /* console.log(guest); */
 
       const result = await guestHelper.updateGuestInfo(
         client,
