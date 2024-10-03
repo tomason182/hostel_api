@@ -309,3 +309,36 @@ exports.handleReservationStatus = async (
     throw new Error(err);
   }
 };
+
+exports.handleReservationPaymentStatus = async (
+  client,
+  dbname,
+  propertyId,
+  reservationId,
+  paymentStatus
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      _id: reservationId,
+      property_id: propertyId,
+    };
+
+    const options = {
+      upsert: false,
+    };
+
+    const updateDoc = {
+      $set: {
+        paymentStatus: paymentStatus,
+      },
+    };
+
+    const result = await reservationColl.updateOne(query, updateDoc, options);
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};

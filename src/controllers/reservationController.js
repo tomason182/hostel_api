@@ -2,6 +2,7 @@ const {
   reservationSchema,
   updateDateAndPriceSchema,
   updateReservationStatus,
+  updatePaymentStatus,
 } = require("../schemas/reservationSchema");
 const Reservation = require("../models/reservationModel");
 const reservationHelper = require("../utils/reservationHelpers");
@@ -275,6 +276,41 @@ exports.reservations_update_status_put = [
         propertyId,
         reservationId,
         reservation_status
+      );
+
+      return res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc      Update reservation payment status
+// @route     PUT /api/v1/reservations/payment_status/:id
+// @access    Private
+exports.reservation_update_payment_put = [
+  checkSchema(updatePaymentStatus),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const propertyId = req.user._id;
+
+      const { id, payment_status } = matchedData(req);
+
+      const reservationId = ObjectId.createFromHexString(id);
+
+      const client = conn.getClient();
+
+      const result = await reservationHelper.handleReservationPaymentStatus(
+        client,
+        dbname,
+        propertyId,
+        reservationId,
+        payment_status
       );
 
       return res.status(200).json(result);

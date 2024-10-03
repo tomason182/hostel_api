@@ -158,8 +158,25 @@ const updateReservationStatus = {
   },
 };
 
+const updatePaymentStatus = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Param is not a valid MongoDb ID",
+    },
+  },
+  payment_status: {
+    in: ["body"],
+    isIn: {
+      options: [["pending", "canceled", "refunded", "paid", "partial"]],
+    },
+  },
+};
+
 module.exports = {
   reservationSchema,
   updateDateAndPriceSchema,
   updateReservationStatus,
+  updatePaymentStatus,
 };
