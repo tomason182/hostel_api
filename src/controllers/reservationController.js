@@ -1,6 +1,7 @@
 const {
   reservationSchema,
   updateDateAndPriceSchema,
+  updateReservationStatus,
 } = require("../schemas/reservationSchema");
 const Reservation = require("../models/reservationModel");
 const reservationHelper = require("../utils/reservationHelpers");
@@ -206,7 +207,7 @@ exports.reservations_dates_and_numberOfGuest_update = [
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json(errors.array());
+        return res.status(400).json(errors.array());
       }
 
       const propertyId = req.user._id;
@@ -242,6 +243,41 @@ exports.reservations_dates_and_numberOfGuest_update = [
       const formattedCheckOut = new Date(check_out);
 
       return res.status(200).json(reservationResult);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc      Update reservation status
+// @route     PUT /api/v1/reservations/status/:id
+// @access    Private
+exports.reservations_update_status_put = [
+  checkSchema(updateReservationStatus),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const propertyId = req.user._id;
+      const { id, reservation_status } = matchedData(req);
+
+      console.log(reservation_status);
+
+      const reservationId = ObjectId.createFromHexString(id);
+
+      const client = conn.getClient();
+      const result = await reservationHelper.handleReservationStatus(
+        client,
+        dbname,
+        propertyId,
+        reservationId,
+        reservation_status
+      );
+
+      return res.status(200).json(result);
     } catch (err) {
       next(err);
     }

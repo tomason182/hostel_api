@@ -304,6 +304,7 @@ exports.handleReservationStatus = async (
     };
 
     const result = await reservationColl.updateOne(filter, updateDoc, options);
+    return result;
   } catch (err) {
     throw new Error(err);
   }
