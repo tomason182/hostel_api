@@ -67,7 +67,7 @@ const reservationSchema = {
       errorMessage: "Reservation status should be specified",
     },
     isIn: {
-      options: [["confirmed", "provisional", "cancelled", "no_show"]],
+      options: [["confirmed", "provisional", "canceled", "no_show"]],
     },
   },
   payment_status: {
@@ -96,7 +96,7 @@ const reservationSchema = {
 
 const updateDateAndPriceSchema = {
   id: {
-    in: ["param"],
+    in: ["params"],
     isMongoId: {
       bail: true,
       errorMessage: "Reservation ID must be a valid mongoDB id",
@@ -141,4 +141,25 @@ const updateDateAndPriceSchema = {
     },
   },
 };
-module.exports = { reservationSchema, updateDateAndPriceSchema };
+
+const updateReservationStatus = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Param is not a valid MongoDb ID",
+    },
+  },
+  reservation_status: {
+    in: ["body"],
+    isIn: {
+      options: [["canceled", "no_show"]],
+    },
+  },
+};
+
+module.exports = {
+  reservationSchema,
+  updateDateAndPriceSchema,
+  updateReservationStatus,
+};
