@@ -300,9 +300,7 @@ exports.reservation_update_payment_put = [
       const propertyId = req.user._id;
 
       const { id, payment_status } = matchedData(req);
-
       const reservationId = ObjectId.createFromHexString(id);
-
       const client = conn.getClient();
 
       const result = await reservationHelper.handleReservationPaymentStatus(

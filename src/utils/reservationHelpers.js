@@ -332,7 +332,7 @@ exports.handleReservationPaymentStatus = async (
 
     const updateDoc = {
       $set: {
-        paymentStatus: paymentStatus,
+        payment_status: paymentStatus,
       },
     };
 
