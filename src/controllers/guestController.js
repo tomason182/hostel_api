@@ -22,28 +22,29 @@ exports.guest_create_post = [
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
+
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
 
       const propertyId = req.user._id;
-      const userId = req.user.access_control[0].user_id;
+      const userId = req.user.user_info._id;
       const data = matchedData(req);
 
       const guest = new Guest(
         propertyId,
         data.firstName,
         data.lastName,
-        data.genre,
+        data.idNumber || null,
         userId
       );
-      guest.setContactInfo(data.email, data.phoneNumber),
-        guest.setAddress(
-          data.street,
-          data.city,
-          data.countryCode,
-          data.postalCode
-        );
+      guest.setContactInfo(data.email || null, data.phoneNumber || null);
+      guest.setAddress(
+        data.street || null,
+        data.city || null,
+        data.countryCode || null,
+        data.postalCode || null
+      );
 
       const client = conn.getClient();
 
@@ -61,6 +62,36 @@ exports.guest_create_post = [
 
       const result = await guestHelper.insertNewGuest(client, dbname, guest);
 
+      res.status(200).json({ _id: result });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc    Get an specific guest by id
+// @route   GET /api/v1/guests/find/:id
+// @access  Private
+exports.guest_by_id_get = [
+  param("id")
+    .trim()
+    .escape()
+    .isMongoId()
+    .withMessage("param is not a valid mongoDb ID"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json(errors.array());
+      }
+
+      const guestId = ObjectId.createFromHexString(req.params.id);
+      console.log(guestId);
+
+      const client = conn.getClient();
+
+      const result = await guestHelper.findGuestById(client, dbname, guestId);
+
       res.status(200).json({ msg: result });
     } catch (err) {
       next(err);
@@ -72,14 +103,16 @@ exports.guest_create_post = [
 // @route   GET /api/v1/guests/find/:query
 // @access  Private
 exports.guest_get_one = [
-  query("q").trim().escape().isLength({ min: 1, max: 50 }),
+  query("q")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 50 })
+    .withMessage("query should contain between 1 to 50 characters"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res
-          .status(400)
-          .json({ msg: "query should contain between 1 to 50 characters" });
+        res.status(400).json(errors.array());
       }
 
       const query = req.query.q;
@@ -107,11 +140,6 @@ exports.guest_get_one = [
         throw new Error("Query is not a valid email or phone number");
       }
 
-      if (guest === null) {
-        res.status(400);
-        throw new Error("guest not found");
-      }
-
       res.status(200).json(guest);
     } catch (err) {
       next(err);
@@ -120,7 +148,7 @@ exports.guest_get_one = [
 ];
 
 // @desc    Update an specific guest
-// @route   PUT /api/v1/guests/:id
+// @route   PUT /api/v1/guests/update/:id
 // @access  Private
 exports.guest_update_one = [
   param("id").trim().escape().isMongoId().withMessage("not a valid mongoId"),
@@ -134,24 +162,42 @@ exports.guest_update_one = [
 
       const client = conn.getClient();
       const data = matchedData(req);
-      const userId = req.user.access_control[0].user_id;
+      const userId = req.user.user_info._id;
       const propertyId = req.user._id;
-      const guestId = ObjectId.createFromHexString(data.id);
+      const guestId = ObjectId.createFromHexString(req.params.id);
+
+      // Find user by email
+      const guestExits = await guestHelper.findGuestByEmail(
+        client,
+        dbname,
+        propertyId,
+        data.email
+      );
+
+      if (
+        guestExits !== null &&
+        guestExits._id.toString() !== guestId.toString()
+      ) {
+        throw new Error("Email already exist");
+      }
 
       const guest = new Guest(
         propertyId,
         data.firstName,
         data.lastName,
-        data.genre,
-        userId
+        data.idNumber
       );
-      guest.setContactInfo(data.email, data.phoneNumber),
-        guest.setAddress(
-          data.street,
-          data.city,
-          data.countryCode,
-          data.postalCode
-        );
+      guest.setContactInfo(data.email, data.phoneNumber);
+      guest.setAddress(
+        data.street,
+        data.city,
+        data.countryCode,
+        data.postalCode
+      );
+      guest.setUpdatedBy(userId);
+      guest.setUpdatedAt();
+
+      /* console.log(guest); */
 
       const result = await guestHelper.updateGuestInfo(
         client,

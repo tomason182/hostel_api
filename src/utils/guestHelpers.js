@@ -37,6 +37,18 @@ exports.findGuestByPhoneNumber = async (client, dbname, propertyId, num) => {
   }
 };
 
+exports.findGuestById = async (client, dbname, guestId) => {
+  try {
+    const db = client.db(dbname);
+    const guestColl = db.collection("guests");
+
+    const result = await guestColl.findOne(guestId);
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
 exports.insertNewGuest = async (client, dbname, guest) => {
   try {
     const db = client.db(dbname);
@@ -45,7 +57,7 @@ exports.insertNewGuest = async (client, dbname, guest) => {
     const result = await guestColl.insertOne(guest);
 
     if (result.acknowledged === true) {
-      return `Guest added successfully. Guest id: ${result.insertedId}`;
+      return result.insertedId;
     } else {
       throw new Error("Unable to insert the guest");
     }
@@ -67,6 +79,7 @@ exports.updateGuestInfo = async (client, dbname, guestId, guestData) => {
     };
 
     const result = await guestColl.updateOne(query, updateDoc, options);
+    console.log(result);
 
     return `${result.matchedCount} document(s) match the filter, updated ${result.modifiedCount} document(s)`;
   } catch (err) {

@@ -14,6 +14,7 @@ const userRoutes = require("./routes/v1/userRoutes");
 const propertyRoutes = require("./routes/v1/propertyRoutes");
 const guestRoutes = require("./routes/v1/guestRoutes");
 const roomTypeRoutes = require("./routes/v1/roomTypeRoutes");
+const reservationRoutes = require("./routes/v1/reservationsRoutes");
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/properties", propertyRoutes);
 app.use("/api/v1/guests", guestRoutes);
 app.use("/api/v1/room-types", roomTypeRoutes);
+app.use("/api/v1/reservations", reservationRoutes);
 
 // Use Error middleware
 app.use(notFound);

@@ -1,19 +1,15 @@
 class Guest {
-  constructor(
-    property_id,
-    first_name,
-    last_name,
-    genre = "undefined",
-    createdBy
-  ) {
+  constructor(property_id, first_name, last_name, idNumber, createdBy) {
     (this.property_id = property_id),
       (this.first_name = first_name),
       (this.last_name = last_name),
+      (this.id_number = idNumber),
       (this.contact_info = {}),
       (this.address = {}),
-      (this.genre = genre),
-      (this.created_By = createdBy);
-    (this.created_At = new Date()), (this.updated_At = new Date());
+      (this.created_By = createdBy),
+      (this.updated_By = null),
+      (this.created_At = new Date()),
+      (this.updated_At = new Date());
   }
 
   setContactInfo(email, phoneNumber) {
@@ -30,6 +26,14 @@ class Guest {
       country_code: countryCode,
       postal_code: postalCode,
     };
+  }
+
+  setUpdatedBy(id) {
+    this.updated_By = id;
+  }
+
+  setUpdatedAt() {
+    this.updated_At = new Date();
   }
 }
 

@@ -11,7 +11,8 @@ class RoomType {
     inventory,
     base_rate,
     currency,
-    products = []
+    products = [],
+    rates_and_availability = []
   ) {
     (this.description = description),
       (this.type = type),
@@ -21,6 +22,7 @@ class RoomType {
       (this.base_rate = base_rate),
       (this.currency = currency),
       (this.products = products),
+      (this.rates_and_availability = rates_and_availability),
       (this.createdAt = new Date()),
       (this.updatedAt = new Date());
   }
@@ -47,6 +49,20 @@ class RoomType {
         beds: bedsList,
       });
     }
+  }
+
+  setRatesAndAvailability(
+    start_date,
+    end_date,
+    custom_rate,
+    custom_availability
+  ) {
+    this.rates_and_availability.push({
+      start_date,
+      end_date,
+      custom_rate,
+      custom_availability,
+    });
   }
 
   get_ID() {

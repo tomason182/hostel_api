@@ -1,36 +1,28 @@
-const { ObjectId } = require("mongodb");
-
 const reservationSchema = {
-  guestId: {
-    in: ["params"],
+  guest_id: {
+    in: ["body"],
     isMongoId: {
       bail: true,
       errorMessage: "Guest ID must be specified",
     },
-    customSanitizer: value => {
-      ObjectId.isValid(value) ? ObjectId.createFromHexString(value) : value;
-    },
   },
-  roomTypeId: {
-    in: ["params"],
+  room_type_id: {
+    in: ["body"],
     isMongoId: {
       bail: true,
       errorMessage: "Room type ID must be specified",
     },
-    customSanitizer: value => {
-      ObjectId.isValid(value) ? ObjectId.createFromHexString(value) : value;
-    },
   },
-  bookingSource: {
+  booking_source: {
     in: ["body"],
     optional: true,
     isIn: {
-      options: [["Booking.com", "HostelWorld.com", "other"]],
+      options: [["booking.com", "hostelWorld.com", "direct"]],
       errorMessage:
-        "Booking source must be one of: Booking.com, HostelWorld, other",
+        "Booking source must be one of: booking.com, hostelWorld, direct",
     },
   },
-  checkIn: {
+  check_in: {
     in: ["body"],
     exists: {
       bail: true,
@@ -41,7 +33,7 @@ const reservationSchema = {
       errorMessage: "Check in date must be ISO8601 format",
     },
   },
-  checkOut: {
+  check_out: {
     in: ["body"],
     exists: {
       bail: true,
@@ -52,25 +44,33 @@ const reservationSchema = {
       errorMessage: "Check out date must be ISO8601 format",
     },
   },
-  numberOfGuest: {
+  number_of_guest: {
     in: ["body"],
     isInt: {
       bail: true,
-      options: { min: 1, max: 1000 },
+      options: { min: 1, max: 100 },
       errorMessage: "Number of guest should be integer number",
     },
   },
-  reservations_status: {
+  total_price: {
+    in: ["body"],
+    isFloat: {
+      bail: true,
+      options: { min: 1 },
+      errorMessage: "Total price should be a decimal number",
+    },
+  },
+  reservation_status: {
     in: ["body"],
     exists: {
       bail: true,
       errorMessage: "Reservation status should be specified",
     },
     isIn: {
-      options: [["confirm", "provisional", "cancelled", "no_show"]],
+      options: [["confirmed", "provisional", "canceled", "no_show"]],
     },
   },
-  paymentStatus: {
+  payment_status: {
     in: ["body"],
     exists: {
       bail: true,
@@ -80,12 +80,103 @@ const reservationSchema = {
       options: [["pending", "canceled", "refunded", "paid", "partial"]],
     },
   },
-  specialRequest: {
+  special_request: {
     in: ["body"],
     optional: true,
     trim: true,
     escape: true,
+    isLength: {
+      options: {
+        max: 50,
+      },
+      errorMessage: "Special request maximum length is 50 characters",
+    },
   },
 };
 
-module.exports = reservationSchema;
+const updateDateAndPriceSchema = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Reservation ID must be a valid mongoDB id",
+    },
+    exists: {
+      bail: true,
+      errorMessage: "Reservation ID must be provided",
+    },
+  },
+  check_in: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Check in date must be specified",
+    },
+    isISO8601: {
+      strict: true,
+      errorMessage: "Check in date must be ISO8601 format",
+    },
+  },
+  check_out: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Check out date must be specified",
+    },
+    isISO8601: {
+      strict: true,
+      errorMessage: "Check out date must be ISO8601 format",
+    },
+  },
+  total_price: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Total price must be specified",
+    },
+    isFloat: {
+      bail: true,
+      options: { min: 1 },
+      errorMessage: "Total price should be a decimal number",
+    },
+  },
+};
+
+const updateReservationStatus = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Param is not a valid MongoDb ID",
+    },
+  },
+  reservation_status: {
+    in: ["body"],
+    isIn: {
+      options: [["canceled", "no_show"]],
+    },
+  },
+};
+
+const updatePaymentStatus = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Param is not a valid MongoDb ID",
+    },
+  },
+  payment_status: {
+    in: ["body"],
+    isIn: {
+      options: [["pending", "canceled", "refunded", "paid", "partial"]],
+    },
+  },
+};
+
+module.exports = {
+  reservationSchema,
+  updateDateAndPriceSchema,
+  updateReservationStatus,
+  updatePaymentStatus,
+};
