@@ -1,4 +1,11 @@
 const ratesAndAvailabilitySchema = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Param is not a valid MongoID",
+    },
+  },
   start_date: {
     in: ["body"],
     trim: true,
@@ -16,8 +23,9 @@ const ratesAndAvailabilitySchema = {
     },
   },
   custom_rate: {
-    in: [body],
+    in: ["body"],
     trim: true,
+    escape: true,
     notEmpty: {
       bail: true,
       errorMessage: "rate is required",
@@ -28,9 +36,10 @@ const ratesAndAvailabilitySchema = {
     },
   },
   custom_availability: {
-    in: [body],
+    in: ["body"],
     optional: true,
     trim: true,
+    escape: true,
     isInt: {
       bail: true,
       errorMessage: "availability must be integer",

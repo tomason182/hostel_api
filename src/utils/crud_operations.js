@@ -169,7 +169,7 @@ exports.findRoomTypeById = async (client, dbname, roomTypeId) => {
     const roomTypesColl = db.collection("room_types");
 
     const query = { _id: roomTypeId };
-    const result = roomTypesColl.findOne(query);
+    const result = await roomTypesColl.findOne(query);
 
     return result;
   } catch (err) {
