@@ -134,13 +134,11 @@ exports.pullOverlappingElementsFromArray = async (
   client,
   dbname,
   roomTypeId,
-  objectToEliminate
+  idsToEliminate
 ) => {
   try {
     const db = client.db(dbname);
     const roomTypeColl = db.collection("room_types");
-
-    console.log(objectToEliminate);
 
     const query = {
       _id: roomTypeId,
@@ -149,19 +147,17 @@ exports.pullOverlappingElementsFromArray = async (
       upsert: false,
     };
 
-    objectToEliminate.forEach(async obj => {
-      const updateDoc = {
-        $pull: {
-          rates_and_availability: {
-            $elemMatch: obj,
-          },
+    const updateDoc = {
+      $pull: {
+        rates_and_availability: {
+          _id: { $in: idsToEliminate },
         },
-      };
-      await roomTypeColl.updateOne(query, updateDoc, options);
-    });
+      },
+    };
 
-    const result = "OK";
-    return result;
+    const result = await roomTypeColl.updateOne(query, updateDoc, options);
+
+    return result.modifiedCount;
   } catch (err) {
     throw new Error(err);
   }

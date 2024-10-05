@@ -54,7 +54,6 @@ exports.rates_and_availability_new_post = [
       // Parse incoming dates
       const startDate = parseDataHelper.parseDateWithHyphen(start_date);
       const endDate = parseDataHelper.parseDateWithHyphen(end_date);
-      console.log(startDate);
 
       // Set up availability. If custom availability is provided availability is equal to custom_availability if not the data provided by roomTypeData
       let availability = roomTypeData.max_occupancy * roomTypeData.inventory;
@@ -111,16 +110,19 @@ exports.rates_and_availability_new_post = [
       // If there are result overlapping the query, then we need to split the date ranges
       if (overlappingResults.length > 0) {
         // first we need to eliminate them from the array
+        const idsToEliminate = overlappingResults.map(obj => obj._id);
 
         const eliminatedElements =
           await availabilityHelper.pullOverlappingElementsFromArray(
             client,
             dbname,
-            roomTypeData,
-            overlappingResults
+            roomTypeId,
+            idsToEliminate
           );
 
-        /*      console.log(eliminatedElements); */
+        if (eliminatedElements === 0) {
+          throw new Error("Unable to eliminate previous range. Try again");
+        }
 
         // Now we create the new date ranges and push them to the array
 
@@ -137,7 +139,9 @@ exports.rates_and_availability_new_post = [
           firstEnd.setDate(startDate.getDate() - 1);
           const firstCustomAvailability = smallestDate.custom_availability;
           const firstCustomRate = smallestDate.custom_rate;
+          const firstId = new ObjectId();
           const firstSplittedRange = new RatesAndAvailability(
+            firstId,
             firstStart,
             firstEnd,
             firstCustomRate,
@@ -159,7 +163,9 @@ exports.rates_and_availability_new_post = [
           const lastEnd = biggestDate.end_date;
           const lastCustomAvailability = biggestDate.custom_availability;
           const lastCustomRate = biggestDate.custom_rate;
+          const lastId = new ObjectId();
           const lastSplittedRange = new RatesAndAvailability(
+            lastId,
             lastStart,
             lastEnd,
             lastCustomRate,
@@ -176,7 +182,9 @@ exports.rates_and_availability_new_post = [
       }
 
       // Finally we push the new date range
+      const newId = new ObjectId();
       const newRateAndAvailability = new RatesAndAvailability(
+        newId,
         startDate,
         endDate,
         customRate,
