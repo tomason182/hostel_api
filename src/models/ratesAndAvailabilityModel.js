@@ -4,7 +4,8 @@ class RatesAndAvailability {
       (this.start_date = start_date),
       (this.end_date = end_date),
       (this.custom_rate = custom_rate),
-      (this.custom_availability = custom_availability);
+      (this.custom_availability = custom_availability),
+      (this.created_At = new Date());
   }
 }
 
