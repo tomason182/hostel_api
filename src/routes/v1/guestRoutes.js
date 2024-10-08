@@ -17,12 +17,12 @@ router.post("/create", authMiddleware, guestController.guest_create_post);
 // @desc    Get a guest by ID
 // @route   GET /api/v1/guests/:id
 // @access  Private
-router.get("/:id", authMiddleware, guestController.guest_by_id_get);
+router.get("/some/:id", authMiddleware, guestController.guest_by_id_get);
 
-// @desc    Get a Guest by query search
-// @route   GET /api/v1/guests/find/?q=
+// @desc    Get a Guest by email
+// @route   GET /api/v1/guests/find_by_email
 // @access  Private
-router.get("/find/", authMiddleware, guestController.guest_get_one);
+router.get("/find", authMiddleware, guestController.guest_get_one);
 
 // @desc    Update a Guest
 // @route   PUT /api/v1/guests/update/:id

@@ -7,6 +7,7 @@ const {
   matchedData,
   query,
   param,
+  body,
 } = require("express-validator");
 const { ObjectId } = require("mongodb");
 const conn = require("../config/db_config");
@@ -70,7 +71,7 @@ exports.guest_create_post = [
 ];
 
 // @desc    Get an specific guest by id
-// @route   GET /api/v1/guests/find/:id
+// @route   GET /api/v1/guests/:id
 // @access  Private
 exports.guest_by_id_get = [
   param("id")
@@ -82,7 +83,7 @@ exports.guest_by_id_get = [
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json(errors.array());
+        return res.status(400).json(errors.array());
       }
 
       const guestId = ObjectId.createFromHexString(req.params.id);
@@ -100,19 +101,19 @@ exports.guest_by_id_get = [
 ];
 
 // @desc    Get an specific Guest by query search
-// @route   GET /api/v1/guests/find/:query
+// @route   GET /api/v1/guests/find
 // @access  Private
 exports.guest_get_one = [
   query("q")
     .trim()
     .escape()
-    .isLength({ min: 1, max: 50 })
-    .withMessage("query should contain between 1 to 50 characters"),
+    .isLength({ min: 1, max: 100 })
+    .withMessage("query should contain between 1 to 100 characters"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json(errors.array());
+        return res.status(400).json(errors.array());
       }
 
       const query = req.query.q;
@@ -223,7 +224,7 @@ exports.guest_delete_one = [
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        res.status(400).json(errors.array());
+        return res.status(400).json(errors.array());
       }
 
       const client = conn.getClient();
