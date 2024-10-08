@@ -17,7 +17,7 @@ router.post("/create", authMiddleware, guestController.guest_create_post);
 // @desc    Get a guest by ID
 // @route   GET /api/v1/guests/:id
 // @access  Private
-router.get("/some/:id", authMiddleware, guestController.guest_by_id_get);
+router.get("/find-by-id/:id", authMiddleware, guestController.guest_by_id_get);
 
 // @desc    Get a Guest by email
 // @route   GET /api/v1/guests/find_by_email
