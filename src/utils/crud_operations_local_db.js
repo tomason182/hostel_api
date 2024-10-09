@@ -16,7 +16,7 @@ async function findOneUserByLocalIdInLocalDB (userLocalID) {
       return false;
     })
     .catch((err) => {
-      next(err)
+      console.error(err);
     });
 }
 
@@ -28,11 +28,12 @@ async function insertUserInLocalDB (userJson) {
       return db;
     })
     .then((db) => {
+      throw new Error("Me lo agarró");
       db.update(({ users }) => users.push(userJson));
       console.log("OK!, The register was saved!");
     })
     .catch((err) => {
-      next(err)
+      console.error(err);
     });
 }
 
@@ -54,7 +55,7 @@ async function deleteUserByLocalId (userLocalID) {
     return currentUser;
   })
   .catch((err) => {
-    next(err)
+    console.error(err);
   });
 }
 
@@ -68,7 +69,7 @@ async function deleteUserByLocalIdWithDelay (userLocalID) {
           console.log("The record had already been deleted from the local database");
         }
       })
-      .catch((error) => {next(error)});
+      .catch((err) => {console.error(err);});
   }, 1020000);
 }
 
