@@ -51,4 +51,12 @@ router.delete(
   user_controller.user_profile_delete
 );
 
+// Update user password
+router.put(
+  "/profile/change-pass/",
+  authMiddleware,
+  rbacMiddleware.checkPermission("update_password"),
+  user_controller.user_changePasswd_put
+);
+
 module.exports = router;

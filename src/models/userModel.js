@@ -10,6 +10,10 @@ class User {
       (this.updatedAt = new Date());
   }
 
+  getHashedPassword() {
+    return this.hashed_password;
+  }
+
   async setHashPassword(password, saltRounds = 10) {
     try {
       this.hashed_password = await bcrypt.hash(password, saltRounds);

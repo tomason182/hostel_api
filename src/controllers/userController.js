@@ -10,6 +10,7 @@ const {
   userLoginSchema,
   userUpdateSchema,
   userCreationSchema,
+  userChangePassSchema,
   sanitizeRegisterBody,
   sanitizeLoginBody,
   sanitizeUpdateBody,
@@ -66,10 +67,12 @@ exports.user_register = [
 
       let userLocalID = new ObjectId();
       userLocalID = userLocalID.toString();
+      const currUser = new User();
+      await currUser.setHashPassword(password);
       const userJson = {
         userLocalID: userLocalID,
         username: username,
-        password: password,
+        hashedPassword: currUser.getHashedPassword(),
         firstName: firstName,
         lastName: lastName,
         propertyName: propertyName
@@ -80,7 +83,7 @@ exports.user_register = [
       const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
       sendConfirmationMail(userJson, confirmEmailLink);
       deleteUserByLocalIdWithDelay(userJson.userLocalID);
-      res.status(200).send("<h1 style='color:green'>Inyección de HTML</h1><h3>Avisando que se le envío un email de confirmación</h3>");
+      res.status(200).json({ msg: "The e-mail has been sent for the user to confirm their electronic mail address." });
 
     }  catch (err) {
       next(err);
@@ -100,9 +103,7 @@ exports.finish_user_register =
       const client = conn.getClient();
 
       // create User, Property & Access Control objects
-      const user = new User(currUser.username, currUser.firstName, currUser.lastName);
-
-      await user.setHashPassword(currUser.password);
+      const user = new User(currUser.username, currUser.firstName, currUser.lastName, currUser.hashedPassword);
 
       const property = new Property(currUser.propertyName);
 
@@ -118,7 +119,7 @@ exports.finish_user_register =
           property
         );
       console.log(result);
-      return res.status(200).send("<h1 style='color:red; text-align:center'>Usted a sido registrado en nuestro sitio web con exito</h1>");
+      return res.status(200).json({ msg: "The user has successfully registered on the website." });
     } catch (err) {
       next(err);
     }
@@ -285,9 +286,50 @@ exports.user_profile_put = [
 // @desc    Update password
 // @route   PUT /api/v1/users/profile/change-password
 // @access  Private
-exports.user_changePasswd_put = (req, res, next) => {
-  res.status(200).json({ msg: "Change password" });
-};
+exports.user_changePasswd_put = [
+  checkSchema(userChangePassSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+      const { currentPassword, newPassword, repeatNewPassword } = matchedData(req);
+      const userId = req.user.access_control[0].user_id;
+
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserById(
+        client,
+        dbname,
+        userId
+      );
+
+      const result = await new User().comparePasswords(
+        currentPassword,
+        user.hashed_password
+      );
+
+      if (!result) {
+        res.status(401);
+        throw new Error("Invalid current password");
+      }
+
+      if (newPassword !== repeatNewPassword) {
+        res.status(401);
+        throw new Error("The new password entered for the second time does not match the one entered for the first time.");
+      }
+      const objUser = new User();
+      await objUser.setHashPassword(newPassword);
+      const hashedPassword = objUser.getHashedPassword();
+      const resultUpdate = await crudOperations.updateOneUserPass(client, dbname, userId, hashedPassword);
+
+      return res.status(200).json({ msg: "Change password", resultUpdate });
+      
+    } catch (error) {
+      next(error);
+    }
+  },
+];
 
 // @desc    Delete user profile
 // @route   DELETE /api/v1/users/profile/
