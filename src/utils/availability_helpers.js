@@ -44,7 +44,7 @@ exports.checkAvailability = async (
 
     // obtenemos rangos de rates and availability
     const ratesAndAvailabilityList = roomType.rates_and_availability.filter(
-      item => item.start_date <= checkOut && item.end_date >= checkIn
+      item => item.start_date < checkOut && item.end_date >= checkIn
     );
 
     // Iterar sobre cada una de las fechas de la reserva y verificar disponibilidad
@@ -77,10 +77,10 @@ exports.checkAvailability = async (
       // Obtenemos la cantidad total de camas para esa fecha.
       const totalBedsAvailable =
         filteredRooms.length === 0
-          ? maxOccupancy
+          ? maxOccupancy - totalGuest
           : filteredRooms[0].custom_availability;
 
-      if (totalBedsAvailable - totalGuest - numberOfGuest < 0) {
+      if (totalBedsAvailable - numberOfGuest < 0) {
         return false;
       }
     }
@@ -100,6 +100,70 @@ exports.checkAvailability = async (
     throw err;
   }
 };
+
+exports.pushNewDateRangeIntoArray = async (
+  client,
+  dbname,
+  roomTypeId,
+  newRange
+) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypeColl = db.collection("room_types");
+
+    const filter = {
+      _id: roomTypeId,
+    };
+
+    const options = {
+      upsert: false,
+    };
+
+    const updateDoc = {
+      $push: { rates_and_availability: newRange },
+    };
+
+    const result = await roomTypeColl.updateOne(filter, updateDoc, options);
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.pullOverlappingElementsFromArray = async (
+  client,
+  dbname,
+  roomTypeId,
+  idsToEliminate
+) => {
+  try {
+    const db = client.db(dbname);
+    const roomTypeColl = db.collection("room_types");
+
+    const query = {
+      _id: roomTypeId,
+    };
+    const options = {
+      upsert: false,
+    };
+
+    const updateDoc = {
+      $pull: {
+        rates_and_availability: {
+          _id: { $in: idsToEliminate },
+        },
+      },
+    };
+
+    const result = await roomTypeColl.updateOne(query, updateDoc, options);
+
+    return result.modifiedCount;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+// Helper functions //
 
 function bedAssignment(totalBeds, occupiedBeds) {
   const occupiedBedsIds = occupiedBeds.map(bed => bed.toString());

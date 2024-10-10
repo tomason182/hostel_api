@@ -46,7 +46,8 @@ exports.findReservationByDateRangeSimple = async (
   dbname,
   propertyId,
   fromDate,
-  toDate
+  toDate,
+  roomTypeId = null
 ) => {
   try {
     const db = client.db(dbname);
@@ -54,9 +55,10 @@ exports.findReservationByDateRangeSimple = async (
 
     const query = {
       property_id: propertyId,
-      reservation_status: { $in: ["confirmed", "pending"] },
+      reservation_status: { $in: ["confirmed", "provisional"] },
       check_in: { $lte: toDate },
       check_out: { $gt: fromDate },
+      ...(roomTypeId && { room_type_id: roomTypeId }),
     };
 
     const projection = {
