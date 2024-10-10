@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node ./bin/www",
-    "devstart": "nodemon ./bin/www",
+    "devstart": "nodemon ./bin/www --ignore src/local_db/",
     "debug": "DEBUG=hostel-api:* npm run devstart",
     "test": "NODE_ENV='test' && jest --watchAll --detectOpenHandles"
   },
@@ -21,8 +21,10 @@
     "express": "^4.19.2",
     "express-validator": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "lowdb": "^7.0.1",
     "mongodb": "^6.8.0",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.9.15",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1"
   },

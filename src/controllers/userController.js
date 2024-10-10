@@ -10,17 +10,27 @@ const {
   userLoginSchema,
   userUpdateSchema,
   userCreationSchema,
+  userChangePassSchema,
 } = require("../schemas/userSchemas");
 const conn = require("../config/db_config");
 const {
   jwtTokenGenerator,
   jwtTokenValidation,
+  jwtTokenGeneratorCE,
 } = require("../utils/tokenGenerator");
+
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
+const {
+  deleteUserByLocalId,
+  insertUserInLocalDB,
+  deleteUserByLocalIdWithDelay,
+} = require("../utils/crud_operations_local_db.js");
 const transactionsOperations = require("../utils/transactions_operations");
+const sendConfirmationMail = require("../config/transactional_email");
+const jwt = require("jsonwebtoken");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -45,34 +55,66 @@ exports.user_register = [
       // Extract req values
       const { username, password, firstName, propertyName } = matchedData(req);
 
-      // create User, Property & Access Control objects
-      const role = "admin"; // We assign role admin when user register
-      const user = new User(username, firstName);
-      user.setRole(role);
+      const userLocalID = new ObjectId().toString();
+      const currUser = new User();
+      await currUser.setHashPassword(password);
+      const userJson = {
+        userLocalID: userLocalID,
+        username: username,
+        hashedPassword: currUser.getHashedPassword(),
+        firstName: firstName,
+        propertyName: propertyName,
+      };
 
-      await user.setHashPassword(password);
-
-      const property = new Property(propertyName);
-
-      const property_id = new ObjectId();
-
-      property.set_ID(property_id);
-
-      const client = conn.getClient();
-
-      const result = await transactionsOperations.createUser(
-        client,
-        dbname,
-        user,
-        property
-      );
-
-      return res.status(200).json(result);
+      await insertUserInLocalDB(userJson);
+      const token = jwtTokenGeneratorCE(userJson.userLocalID);
+      const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
+      sendConfirmationMail(userJson, confirmEmailLink);
+      deleteUserByLocalIdWithDelay(userJson.userLocalID);
+      res
+        .status(200)
+        .json({
+          msg: "The e-mail has been sent for the user to confirm their electronic mail address.",
+        });
     } catch (err) {
       next(err);
     }
   },
 ];
+
+exports.finish_user_register = async (req, res, next) => {
+  try {
+    const token = req.params.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLocalID = decoded.sub;
+    const currUser = await deleteUserByLocalId(userLocalID);
+
+    // create User, Property & Access Control objects
+    const role = "admin"; // We assign role admin when user register
+    const user = new User(currUser.username, currUser.firstName);
+    user.setRole(role);
+    user.setPasswordHashed(currUser.hashedPassword);
+
+    const property = new Property(currUser.propertyName);
+
+    const property_id = new ObjectId();
+
+    property.set_ID(property_id);
+
+    const client = conn.getClient();
+
+    const result = await transactionsOperations.createUser(
+      client,
+      dbname,
+      user,
+      property
+    );
+
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
 
 // @desc    Create a new User
 // @route   POST /api/v1/users/create
@@ -294,9 +336,53 @@ exports.user_edit_profile = [
 // @desc    Update password
 // @route   PUT /api/v1/users/profile/change-password
 // @access  Private
-exports.user_changePasswd_put = (req, res, next) => {
-  res.status(200).json({ msg: "Change password" });
-};
+exports.user_changePasswd_put = [
+  checkSchema(userChangePassSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+      const { currentPassword, newPassword, repeatNewPassword } =
+        matchedData(req);
+      const userId = req.user.access_control[0].user_id;
+
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserById(client, dbname, userId);
+
+      const result = await new User().comparePasswords(
+        currentPassword,
+        user.hashed_password
+      );
+
+      if (!result) {
+        res.status(401);
+        throw new Error("Invalid current password");
+      }
+
+      if (newPassword !== repeatNewPassword) {
+        res.status(401);
+        throw new Error(
+          "The new password entered for the second time does not match the one entered for the first time."
+        );
+      }
+      const objUser = new User();
+      await objUser.setHashPassword(newPassword);
+      const hashedPassword = objUser.getHashedPassword();
+      const resultUpdate = await crudOperations.updateOneUserPass(
+        client,
+        dbname,
+        userId,
+        hashedPassword
+      );
+
+      return res.status(200).json({ msg: "Change password", resultUpdate });
+    } catch (error) {
+      next(error);
+    }
+  },
+];
 
 // @desc    Delete user profile
 // @route   DELETE /api/v1/users/profile/

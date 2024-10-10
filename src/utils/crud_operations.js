@@ -12,6 +12,43 @@ exports.findOneUserByUsername = async (client, dbname, username) => {
   }
 };
 
+exports.findOneUserById = async (client, dbname, userId) => {
+  try {
+    const db = client.db(dbname);
+    const usersColl = db.collection("users");
+
+    const query = { _id: userId };
+    const result = usersColl.findOne(query);
+    
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.updateOneUserPass = async (client, dbname, userId, hashedPassword) => {
+  try {
+    const db = client.db(dbname);
+    const usersColl = db.collection("users");
+
+    const filter = { _id: userId };
+    const updateUserPass = {
+      $set: {
+        hashed_password: hashedPassword,
+        updatedAt: new Date(),
+      },
+    };
+
+    const result = await usersColl.updateOne(filter, updateUserPass);
+    return result;
+  } catch (err) {
+    throw new Error(
+      "An error ocurred while updating the user password",
+      err
+    );
+  }
+};
+
 exports.updateOneUser = async (client, dbname, userId, data) => {
   try {
     const db = client.db(dbname);

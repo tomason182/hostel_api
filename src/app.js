@@ -19,7 +19,9 @@ const ratesAndAvailabilityRoutes = require("./routes/v1/ratesAndAvailabilityRout
 
 const app = express();
 
-require("./config/passport")(passport);
+require("./config/passport")(passport);  //Importo la función de "./config/passport" y le paso como argumento
+                                         // el "passport" de node_modules. En resumen aquí, le digo al "passport"
+                                         // de node_modules que use la estrategia que hice yo en "./config/passport"
 
 const corsOptions = {
   origin: "http://localhost:5173",
