@@ -71,11 +71,9 @@ exports.user_register = [
       const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
       sendConfirmationMail(userJson, confirmEmailLink);
       deleteUserByLocalIdWithDelay(userJson.userLocalID);
-      res
-        .status(200)
-        .json({
-          msg: "The e-mail has been sent for the user to confirm their electronic mail address.",
-        });
+      res.status(200).json({
+        msg: "The e-mail has been sent for the user to confirm their electronic mail address.",
+      });
     } catch (err) {
       next(err);
     }
@@ -346,7 +344,7 @@ exports.user_changePasswd_put = [
       }
       const { currentPassword, newPassword, repeatNewPassword } =
         matchedData(req);
-      const userId = req.user.access_control[0].user_id;
+      const userId = req.user.user_info._id;
 
       const client = conn.getClient();
       const user = await crudOperations.findOneUserById(client, dbname, userId);
