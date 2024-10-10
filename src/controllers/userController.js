@@ -2,6 +2,7 @@ require("dotenv").config();
 const {
   checkSchema,
   body,
+  param,
   validationResult,
   matchedData,
 } = require("express-validator");
@@ -80,39 +81,47 @@ exports.user_register = [
   },
 ];
 
-exports.finish_user_register = async (req, res, next) => {
-  try {
-    const token = req.params.token;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userLocalID = decoded.sub;
-    const currUser = await deleteUserByLocalId(userLocalID);
+exports.finish_user_register = [
+  param("token").trim().escape().isJWT().withMessage("Invalid JWT token"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
 
-    // create User, Property & Access Control objects
-    const role = "admin"; // We assign role admin when user register
-    const user = new User(currUser.username, currUser.firstName);
-    user.setRole(role);
-    user.setPasswordHashed(currUser.hashedPassword);
+      if (!errors.empty()) {
+        return res.status(400).json(errors.array());
+      }
+      const token = req.params.token;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userLocalID = decoded.sub;
+      const currUser = await deleteUserByLocalId(userLocalID);
 
-    const property = new Property(currUser.propertyName);
+      // create User, Property & Access Control objects
+      const role = "admin"; // We assign role admin when user register
+      const user = new User(currUser.username, currUser.firstName);
+      user.setRole(role);
+      user.setPasswordHashed(currUser.hashedPassword);
 
-    const property_id = new ObjectId();
+      const property = new Property(currUser.propertyName);
 
-    property.set_ID(property_id);
+      const property_id = new ObjectId();
 
-    const client = conn.getClient();
+      property.set_ID(property_id);
 
-    const result = await transactionsOperations.createUser(
-      client,
-      dbname,
-      user,
-      property
-    );
+      const client = conn.getClient();
 
-    return res.status(200).json(result);
-  } catch (err) {
-    next(err);
-  }
-};
+      const result = await transactionsOperations.createUser(
+        client,
+        dbname,
+        user,
+        property
+      );
+
+      return res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
 
 // @desc    Create a new User
 // @route   POST /api/v1/users/create
