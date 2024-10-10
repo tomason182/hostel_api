@@ -11,6 +11,8 @@ const user_controller = require("../../controllers/userController");
 // Register a new user
 router.post("/register", user_controller.user_register);
 
+router.get("/confirm-email/:token", user_controller.finish_user_register);
+
 // Create a new user
 router.post(
   "/create",
@@ -60,5 +62,13 @@ router.delete(
 );
 
 router.get("/all", authMiddleware, user_controller.user_get_all);
+
+// Update user password
+router.put(
+  "/profile/change-pass/",
+  authMiddleware,
+  rbacMiddleware.checkPermission("update_password"),
+  user_controller.user_changePasswd_put
+);
 
 module.exports = router;

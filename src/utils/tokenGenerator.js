@@ -30,3 +30,14 @@ exports.jwtTokenValidation = function (token) {
     return false;
   }
 };
+
+exports.jwtTokenGeneratorCE = function (userLocalID) {
+  const payload = {
+    sub: userLocalID,
+  };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "900000",
+  });
+
+  return token;
+};
