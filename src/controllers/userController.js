@@ -286,7 +286,7 @@ exports.user_profile_put = [
       const userId = req.user.user_info._id;
 
       const client = conn.getClient();
-      const result = await crudOperations.updateOneUser(
+      const result = await crudOperations.editUserProfile(
         client,
         dbname,
         userId,
