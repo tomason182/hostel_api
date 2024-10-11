@@ -87,7 +87,7 @@ exports.finish_user_register = [
     try {
       const errors = validationResult(req);
 
-      if (!errors.empty()) {
+      if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
       const token = req.params.token;
