@@ -370,9 +370,7 @@ exports.user_changePasswd_put = [
 
       if (newPassword !== repeatNewPassword) {
         res.status(401);
-        throw new Error(
-          "The new password entered for the second time does not match the one entered for the first time."
-        );
+        throw new Error("Confirm password does not match");
       }
       const objUser = new User();
       await objUser.setHashPassword(newPassword);
@@ -384,7 +382,7 @@ exports.user_changePasswd_put = [
         hashedPassword
       );
 
-      return res.status(200).json({ msg: "Change password", resultUpdate });
+      return res.status(200).json(resultUpdate.matchedCount);
     } catch (error) {
       next(error);
     }
