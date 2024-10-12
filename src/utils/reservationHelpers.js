@@ -155,6 +155,7 @@ exports.findReservationsByDateRange = async (
           assigned_beds: 1,
           check_in: 1,
           check_out: 1,
+          updated_At: 1,
           "guest_info.full_name": {
             $concat: ["$guest_info.first_name", " ", "$guest_info.last_name"],
           },
