@@ -355,6 +355,37 @@ exports.reservation_update_info_put = [
 // @desc      Get an specific reservation
 // @route     POST /api/v1/reservations/:id
 // @access    Private
+exports.reservation_find_by_id_get = [
+  param("id")
+    .trim()
+    .escape()
+    .isMongoId()
+    .withMessage("Param is not a valid mongoID"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(200).json(errors.array());
+      }
+
+      const propertyId = req.user._id;
+      const id = req.params.id;
+      const reservationId = ObjectId.createFromHexString(id);
+
+      const client = conn.getClient();
+      const result = await reservationHelper.findReservationById(
+        client,
+        dbname,
+        propertyId,
+        reservationId
+      );
+
+      return res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
 
 // @desc      Get reservations by guest name
 // @route     GET /api/v1/reservations/?name=value
