@@ -54,11 +54,24 @@ const reservationSchema = {
   },
   total_price: {
     in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Total price must be provided",
+    },
     isFloat: {
       bail: true,
       options: { min: 1 },
       errorMessage: "Total price should be a decimal number",
     },
+  },
+  currency: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Currency myst be provided",
+    },
+    trim: true,
+    escape: true,
   },
   reservation_status: {
     in: ["body"],
@@ -78,6 +91,83 @@ const reservationSchema = {
     },
     isIn: {
       options: [["pending", "canceled", "refunded", "paid", "partial"]],
+    },
+  },
+  special_request: {
+    in: ["body"],
+    optional: true,
+    trim: true,
+    escape: true,
+    isLength: {
+      options: {
+        max: 50,
+      },
+      errorMessage: "Special request maximum length is 50 characters",
+    },
+  },
+};
+
+const updateReservationInfo = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Reservation ID must be a valid mongoDB id",
+    },
+    exists: {
+      bail: true,
+      errorMessage: "Reservation ID must be provided",
+    },
+  },
+  reservation_status: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Reservation status must be specified",
+    },
+    isIn: {
+      options: [["confirmed", "provisional"]], // Can not change status of reservation marked as canceled or no_show
+    },
+  },
+  payment_status: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Payment status must be specified",
+    },
+    isIn: {
+      options: [["pending", "canceled", "refunded", "paid", "partial"]],
+    },
+  },
+  total_price: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Total price must be provided",
+    },
+    isFloat: {
+      bail: true,
+      options: { min: 1 },
+      errorMessage: "Total price should be a decimal number",
+    },
+  },
+  currency: {
+    in: ["body"],
+    exist: {
+      bail: true,
+      errorMessage: "Currency must be provided",
+    },
+    trim: true,
+    escape: true,
+  },
+  booking_source: {
+    in: ["body"],
+    exist: {
+      bail: true,
+      errorMessage: "Booking source must be provided",
+    },
+    isIn: {
+      options: [["booking.com", "hostelWorld.com", "direct"]],
     },
   },
   special_request: {
@@ -176,6 +266,7 @@ const updatePaymentStatus = {
 
 module.exports = {
   reservationSchema,
+  updateReservationInfo,
   updateDateAndPriceSchema,
   updateReservationStatus,
   updatePaymentStatus,
