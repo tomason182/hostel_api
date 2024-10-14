@@ -126,7 +126,7 @@ const updateReservationInfo = {
       errorMessage: "Reservation status must be specified",
     },
     isIn: {
-      options: [["confirmed", "provisional"]], // Can not change status of reservation marked as canceled or no_show
+      options: [["confirmed", "provisional", "canceled", "no_show"]], // Can not change status of reservation marked as canceled or no_show
     },
   },
   payment_status: {
@@ -153,7 +153,7 @@ const updateReservationInfo = {
   },
   currency: {
     in: ["body"],
-    exist: {
+    exists: {
       bail: true,
       errorMessage: "Currency must be provided",
     },
@@ -162,7 +162,7 @@ const updateReservationInfo = {
   },
   booking_source: {
     in: ["body"],
-    exist: {
+    exists: {
       bail: true,
       errorMessage: "Booking source must be provided",
     },

@@ -148,6 +148,7 @@ exports.findReservationsByDateRange = async (
           guest_id: 1,
           number_of_guest: 1,
           total_price: 1,
+          currency: 1,
           reservation_status: 1,
           booking_source: 1,
           payment_status: 1,
@@ -343,5 +344,37 @@ exports.handleReservationPaymentStatus = async (
     return result;
   } catch (err) {
     throw new Error(err);
+  }
+};
+
+exports.updateReservationInfo = async (
+  client,
+  dbname,
+  propertyId,
+  reservationId,
+  data
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      _id: reservationId,
+      property_id: propertyId,
+    };
+    const options = {
+      upsert: false,
+    };
+    const updateDoc = {
+      $set: {
+        ...data,
+      },
+    };
+
+    const result = await reservationColl.updateOne(query, updateDoc, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err.message);
   }
 };

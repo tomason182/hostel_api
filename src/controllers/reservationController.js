@@ -1,5 +1,6 @@
 const {
   reservationSchema,
+  updateReservationInfo,
   updateDateAndPriceSchema,
   updateReservationStatus,
   updatePaymentStatus,
@@ -318,6 +319,39 @@ exports.reservation_update_payment_put = [
   },
 ];
 
+// @desc      Update an specific reservation
+// @route     PUT /api/v1/reservations/:id
+// @access    Private
+exports.reservation_update_info_put = [
+  checkSchema(updateReservationInfo),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const propertyId = req.user._id;
+
+      const { id, ...data } = matchedData(req);
+
+      const reservationId = ObjectId.createFromHexString(id);
+      const client = conn.getClient();
+      const result = await reservationHelper.updateReservationInfo(
+        client,
+        dbname,
+        propertyId,
+        reservationId,
+        data
+      );
+
+      return res.status(200).json(`${result.modifiedCount} document updated`);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
 // @desc      Get an specific reservation
 // @route     POST /api/v1/reservations/:id
 // @access    Private
@@ -328,10 +362,6 @@ exports.reservation_update_payment_put = [
 
 // @desc      Get reservations by room type
 // @route     GET /api/v1/reservations/:room-type
-// @access    Private
-
-// @desc      Update an specific reservation
-// @route     PUT /api/v1/reservations/:id
 // @access    Private
 
 // @desc      Delete an specific reservation

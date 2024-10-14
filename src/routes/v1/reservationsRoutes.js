@@ -62,4 +62,13 @@ router.put(
   reservationController.reservation_update_payment_put
 );
 
+// @desc    Update reservation info
+// @route   PUT /api/v1/reservations/update/:id
+// @access  Private
+router.put(
+  "/update/:id",
+  authMiddleware,
+  reservationController.reservation_update_info_put
+);
+
 module.exports = router;
