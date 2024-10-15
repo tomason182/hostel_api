@@ -1,7 +1,7 @@
 const {
   reservationSchema,
   updateReservationInfo,
-  updateDateAndPriceSchema,
+  updateDateAndGuestSchema,
   updateReservationStatus,
   updatePaymentStatus,
 } = require("../schemas/reservationSchema");
@@ -200,11 +200,11 @@ exports.reservation_get_date_range = [
   },
 ];
 
-// @desc      Update reservation dates & price
-// @route     PUT /api/v1/reservations/dates_and_price/:id
+// @desc      Update reservation dates & guest
+// @route     PUT /api/v1/reservations/dates_and_guest/:id
 // @access    Private
 exports.reservations_dates_and_numberOfGuest_update = [
-  checkSchema(updateDateAndPriceSchema),
+  checkSchema(updateDateAndGuestSchema),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -215,19 +215,26 @@ exports.reservations_dates_and_numberOfGuest_update = [
       const propertyId = req.user._id;
       const reservationId = ObjectId.createFromHexString(req.params.id);
 
-      const { check_in, check_out, number_of_guest } = matchedData(req);
+      const { check_in, check_out, number_of_guest, room_type_id } =
+        matchedData(req);
 
       const client = conn.getClient();
 
-      const reservationResult = await reservationHelper.findReservationById(
-        client,
-        dbname,
-        propertyId,
-        reservationId
-      );
+      const reservationResult =
+        await reservationHelper.findReservationByIdSimple(
+          client,
+          dbname,
+          propertyId,
+          reservationId
+        );
+
+      if (!reservationResult) {
+        throw new Error("Reservation id not found");
+      }
 
       // set reservation status to cancelled for check availability purpose
-      const reservationStatus = "cancelled";
+      const previousStatus = reservationResult.reservation_status;
+      const reservationStatus = "canceled";
       const result = await reservationHelper.handleReservationStatus(
         client,
         dbname,
@@ -236,15 +243,53 @@ exports.reservations_dates_and_numberOfGuest_update = [
         reservationStatus
       );
 
-      // Reservations dates
-      const reservationCheckIn = reservationResult.check_in;
-      const reservationCheckOut = reservationResult.check_out;
+      console.log(result);
 
-      // Formatting input dates
-      const formattedCheckIn = new Date(check_in);
-      const formattedCheckOut = new Date(check_out);
+      // Check availability for the new data
+      const roomTypeId = ObjectId.createFromHexString(room_type_id);
+      const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
+      const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
 
-      return res.status(200).json(reservationResult);
+      const availableBeds = await checkAvailability(
+        client,
+        dbname,
+        roomTypeId,
+        checkIn,
+        checkOut,
+        number_of_guest
+      );
+
+      if (availableBeds === false) {
+        await reservationHelper.handleReservationStatus(
+          client,
+          dbname,
+          propertyId,
+          reservationId,
+          previousStatus
+        );
+        throw new Error(
+          `No beds available for the selected dates. Please, check that reservation status is set up as ${previousStatus}`
+        );
+      }
+
+      const updatedReservation = new Reservation();
+      updatedReservation.setAssignedBeds(availableBeds, number_of_guest);
+      const assignedBeds = updatedReservation.getBeds();
+
+      const UpdatedReservationResult =
+        await reservationHelper.updateReservationDatesAndGuest(
+          client,
+          dbname,
+          propertyId,
+          reservationId,
+          checkIn,
+          checkOut,
+          number_of_guest,
+          previousStatus,
+          assignedBeds
+        );
+
+      return res.status(200).json(UpdatedReservationResult);
     } catch (err) {
       next(err);
     }

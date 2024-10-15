@@ -14,6 +14,29 @@ exports.insertNewReservation = async (client, dbname, reservation) => {
   }
 };
 
+exports.findReservationByIdSimple = async (
+  client,
+  dbname,
+  propertyId,
+  reservationId
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      _id: reservationId,
+      property_id: propertyId,
+    };
+
+    const result = await reservationColl.findOne(query);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
 exports.findReservationById = async (
   client,
   dbname,
@@ -268,55 +291,6 @@ exports.handleCalendarReservations = async (
   }
 };
 
-exports.updateDateAndNumberOfGuest = async (
-  client,
-  dbname,
-  reservationId,
-  propertyId,
-  roomTypeId,
-  checkIn,
-  checkOut,
-  numberOfGuest
-) => {
-  const session = client.startSession();
-  try {
-    session.startTransaction();
-    const db = client.db(dbname);
-    const reservationColl = db.collection("reservations");
-
-    // Modify reservation status to cancelled for check availability purpose only
-
-    const filter = {
-      _id: reservationId,
-      property_id: propertyId,
-    };
-
-    const options = {
-      upsert: false,
-    };
-
-    const updateDoc = {
-      $set: {
-        reservation_status: "cancelled",
-      },
-    };
-
-    const result = await reservationColl.updateOne(filter, updateDoc, options);
-
-    // Check availability for the selected dates
-    const availableBeds = checkAvailability(
-      client,
-      dbname,
-      roomTypeId,
-      checkIn,
-      checkOut,
-      numberOfGuest
-    );
-  } catch (err) {
-    throw new Error(err);
-  }
-};
-
 exports.handleReservationStatus = async (
   client,
   dbname,
@@ -412,5 +386,47 @@ exports.updateReservationInfo = async (
     return result;
   } catch (err) {
     throw new Error(err.message);
+  }
+};
+
+exports.updateReservationDatesAndGuest = async (
+  client,
+  dbname,
+  propertyId,
+  reservationId,
+  checkIn,
+  checkOut,
+  numberOfGuest,
+  status,
+  beds
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      _id: reservationId,
+      property_id: propertyId,
+    };
+
+    const options = {
+      upsert: false,
+    };
+
+    const updateDoc = {
+      $set: {
+        check_in: checkIn,
+        checkOut: checkOut,
+        number_of_guest: numberOfGuest,
+        reservation_status: status,
+        beds: beds,
+      },
+    };
+
+    const result = await reservationColl.updateOne(query, updateDoc, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
   }
 };
