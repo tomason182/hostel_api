@@ -71,4 +71,13 @@ router.put(
   reservationController.reservation_update_info_put
 );
 
+// @desc    Update reservation date and guest
+// @route   PUT /api/v1/reservations/update-dates-guest/:id
+// @access  Private
+router.put(
+  "/update-dates-guest/:id",
+  authMiddleware,
+  reservationController.reservation_dates_and_numberOfGuest_update
+);
+
 module.exports = router;

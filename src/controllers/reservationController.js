@@ -201,9 +201,9 @@ exports.reservation_get_date_range = [
 ];
 
 // @desc      Update reservation dates & guest
-// @route     PUT /api/v1/reservations/dates_and_guest/:id
+// @route     PUT /api/v1/reservations/dates-and-guest/:id
 // @access    Private
-exports.reservations_dates_and_numberOfGuest_update = [
+exports.reservation_dates_and_numberOfGuest_update = [
   checkSchema(updateDateAndGuestSchema),
   async (req, res, next) => {
     try {
