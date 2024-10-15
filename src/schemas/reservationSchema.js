@@ -184,7 +184,7 @@ const updateReservationInfo = {
   },
 };
 
-const updateDateAndPriceSchema = {
+const updateDateAndGuestSchema = {
   id: {
     in: ["params"],
     isMongoId: {
@@ -218,16 +218,28 @@ const updateDateAndPriceSchema = {
       errorMessage: "Check out date must be ISO8601 format",
     },
   },
-  total_price: {
+  number_of_guest: {
     in: ["body"],
     exists: {
       bail: true,
-      errorMessage: "Total price must be specified",
+      errorMessage: "Number of guest must be specified",
     },
-    isFloat: {
+    isInt: {
       bail: true,
       options: { min: 1 },
-      errorMessage: "Total price should be a decimal number",
+      errorMessage: "Number of guest must be a integer",
+    },
+  },
+  room_type_id: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Room type id must be provided",
+    },
+    trim: true,
+    isMongoId: {
+      bail: true,
+      errorMessage: "Reservation ID must be a valid mongoDB id",
     },
   },
 };
@@ -267,7 +279,7 @@ const updatePaymentStatus = {
 module.exports = {
   reservationSchema,
   updateReservationInfo,
-  updateDateAndPriceSchema,
+  updateDateAndGuestSchema,
   updateReservationStatus,
   updatePaymentStatus,
 };
