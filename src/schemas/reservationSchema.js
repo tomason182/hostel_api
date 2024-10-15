@@ -230,18 +230,6 @@ const updateDateAndGuestSchema = {
       errorMessage: "Number of guest must be a integer",
     },
   },
-  room_type_id: {
-    in: ["body"],
-    exists: {
-      bail: true,
-      errorMessage: "Room type id must be provided",
-    },
-    trim: true,
-    isMongoId: {
-      bail: true,
-      errorMessage: "Reservation ID must be a valid mongoDB id",
-    },
-  },
 };
 
 const updateReservationStatus = {
