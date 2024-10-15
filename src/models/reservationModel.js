@@ -38,13 +38,28 @@ class Reservation {
     }
   }
 
+  setNumberOfGuest(num) {
+    this.number_of_guest = num;
+  }
+
   setDates(checkIn, checkOut) {
     this.check_in = parseDateHelper.parseDateWithHyphen(checkIn);
     this.check_out = parseDateHelper.parseDateWithHyphen(checkOut);
   }
 
+  getDates() {
+    return {
+      checkIn: this.check_in,
+      checkOut: this.check_out,
+    };
+  }
+
   getGuestId() {
     return this.guest_id;
+  }
+
+  setRoomTypeId(room_type_id) {
+    this.room_type_id = ObjectId.createFromHexString(room_type_id);
   }
 
   getRoomTypeId() {
