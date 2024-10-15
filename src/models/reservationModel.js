@@ -38,6 +38,10 @@ class Reservation {
     }
   }
 
+  getBeds() {
+    return this.assigned_beds;
+  }
+
   setNumberOfGuest(num) {
     this.number_of_guest = num;
   }
