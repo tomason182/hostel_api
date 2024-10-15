@@ -29,7 +29,43 @@ exports.findReservationById = async (
       property_id: propertyId,
     };
 
-    const result = await reservationColl.findOne(query);
+    const aggregation = [
+      {
+        $match: query,
+      },
+      {
+        $lookup: {
+          from: "room_types",
+          localField: "room_type_id",
+          foreignField: "_id",
+          as: "room_type_info",
+        },
+      },
+      {
+        $unwind: "$room_type_info",
+      },
+      {
+        $project: {
+          _id: 1,
+          room_type_id: 1,
+          guest_id: 1,
+          number_of_guest: 1,
+          total_price: 1,
+          currency: 1,
+          reservation_status: 1,
+          booking_source: 1,
+          payment_status: 1,
+          special_request: 1,
+          assigned_beds: 1,
+          check_in: 1,
+          check_out: 1,
+          updated_At: 1,
+          "room_type_info.description": 1,
+        },
+      },
+    ];
+
+    const result = await reservationColl.aggregate(aggregation).toArray();
 
     if (!result) {
       throw new Error("Reservation not found");

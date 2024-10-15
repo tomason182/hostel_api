@@ -39,9 +39,9 @@ router.get(
 // @desc Get reservation by id
 // @router GET /api/v1/reservations/find/:id
 router.get(
-  "/find/:id",
+  "/find-by-id/:id",
   authMiddleware,
-  reservationController.reservations_dates_and_numberOfGuest_update
+  reservationController.reservation_find_by_id_get
 );
 
 // @desc      Update reservation status

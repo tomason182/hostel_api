@@ -353,7 +353,7 @@ exports.reservation_update_info_put = [
 ];
 
 // @desc      Get an specific reservation
-// @route     POST /api/v1/reservations/:id
+// @route     GET /api/v1/reservations/:id
 // @access    Private
 exports.reservation_find_by_id_get = [
   param("id")
@@ -380,7 +380,7 @@ exports.reservation_find_by_id_get = [
         reservationId
       );
 
-      return res.status(200).json(result);
+      return res.status(200).json(result[0]);
     } catch (err) {
       next(err);
     }
