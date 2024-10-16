@@ -81,7 +81,7 @@ exports.reservation_create = [
         number_of_guest
       );
 
-      if (availableBeds === false) {
+      if (availableBeds === 0) {
         throw new Error("No bed available for the selected dates");
       }
 
@@ -256,7 +256,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
         number_of_guest
       );
 
-      if (availableBeds === false) {
+      if (availableBeds === 0) {
         await reservationHelper.handleReservationStatus(
           client,
           dbname,
