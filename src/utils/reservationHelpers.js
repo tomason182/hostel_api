@@ -125,6 +125,7 @@ exports.findReservationByDateRangeSimple = async (
       number_of_guest: 1,
       check_in: 1,
       check_out: 1,
+      updated_At: 1,
     };
 
     const result = await reservationColl
