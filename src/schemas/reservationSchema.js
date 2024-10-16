@@ -1,16 +1,24 @@
 const reservationSchema = {
   guest_id: {
     in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Guest ID must be provided",
+    },
     isMongoId: {
       bail: true,
-      errorMessage: "Guest ID must be specified",
+      errorMessage: "Guest ID must be a valid mongoDb ID",
     },
   },
   room_type_id: {
     in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Room type ID must be provided",
+    },
     isMongoId: {
       bail: true,
-      errorMessage: "Room type ID must be specified",
+      errorMessage: "Room type ID must be a valid mongoDb ID",
     },
   },
   booking_source: {
@@ -68,7 +76,7 @@ const reservationSchema = {
     in: ["body"],
     exists: {
       bail: true,
-      errorMessage: "Currency myst be provided",
+      errorMessage: "Currency must be provided",
     },
     trim: true,
     escape: true,
