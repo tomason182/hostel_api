@@ -48,8 +48,8 @@ exports.checkAvailability = async (
     );
 
     // Iterar sobre cada una de las fechas de la reserva y verificar disponibilidad
-    const startDate = checkIn;
-    const endDate = checkOut;
+    const startDate = new Date(checkIn);
+    const endDate = new Date(checkOut);
 
     for (
       let date = startDate;
