@@ -215,8 +215,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
       const propertyId = req.user._id;
       const reservationId = ObjectId.createFromHexString(req.params.id);
 
-      const { check_in, check_out, number_of_guest, room_type_id } =
-        matchedData(req);
+      const { check_in, check_out, number_of_guest } = matchedData(req);
 
       const client = conn.getClient();
 
@@ -234,6 +233,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
 
       // set reservation status to cancelled for check availability purpose
       const previousStatus = reservationResult.reservation_status;
+      const roomTypeId = reservationResult.room_type_id;
       const reservationStatus = "canceled";
       const result = await reservationHelper.handleReservationStatus(
         client,
@@ -243,10 +243,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
         reservationStatus
       );
 
-      console.log(result);
-
       // Check availability for the new data
-      const roomTypeId = ObjectId.createFromHexString(room_type_id);
       const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
       const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
 

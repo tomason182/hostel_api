@@ -416,10 +416,10 @@ exports.updateReservationDatesAndGuest = async (
     const updateDoc = {
       $set: {
         check_in: checkIn,
-        checkOut: checkOut,
+        check_out: checkOut,
         number_of_guest: numberOfGuest,
         reservation_status: status,
-        beds: beds,
+        assigned_beds: beds,
       },
     };
 
