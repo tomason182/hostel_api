@@ -36,9 +36,13 @@ class Reservation {
       (this.updated_At = new Date());
   }
 
-  setAssignedBeds(availableBeds, numberOfGuest) {
-    for (let i = 0; i < numberOfGuest; i++) {
-      this.assigned_beds.push(availableBeds[i]);
+  setAssignedBeds(availableBeds, numberOfGuest, roomType) {
+    if (roomType === "dorm") {
+      for (let i = 0; i < numberOfGuest; i++) {
+        this.assigned_beds.push(availableBeds[i]);
+      }
+    } else {
+      this.assigned_beds.push(availableBeds[0]);
     }
   }
 

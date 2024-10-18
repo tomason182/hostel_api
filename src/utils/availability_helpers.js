@@ -68,6 +68,8 @@ exports.checkAvailability = async (
           new Date(r.end_date) >= currentDate
       );
 
+      /* console.log(filteredRooms); */
+
       // Obtenemos la cantidad total de huespedes en ese dia
       // Si cuarto compartido => se suman la cantida de huespedes totales
       // Si cuarto privado => La cantidad de reservas me da la cantidad de cuarto ocupados
@@ -79,6 +81,8 @@ exports.checkAvailability = async (
             )
           : filteredReservations.length;
 
+      /* console.log(totalGuest); */
+
       // Obtenemos la cantidad total de camas para esa fecha.
       const totalBedsAvailable =
         filteredRooms.length === 0
@@ -86,11 +90,11 @@ exports.checkAvailability = async (
           : filteredRooms[0].custom_availability;
 
       if (totalBedsAvailable === 0) {
-        return 0;
+        return { availableBeds: 0, roomType: roomType.type };
       }
 
       if (roomType.type === "dorm" && totalBedsAvailable - numberOfGuest < 0) {
-        return 0;
+        return { availableBeds: 0, roomType: roomType.type };
       }
     }
 
@@ -104,7 +108,7 @@ exports.checkAvailability = async (
 
     /* console.log("camas habilitadas: ", availableBeds); */
 
-    return availableBeds;
+    return { availableBeds, roomType: roomType.type };
   } catch (err) {
     throw err;
   }

@@ -72,7 +72,7 @@ exports.reservation_create = [
 
       const client = conn.getClient();
 
-      const availableBeds = await checkAvailability(
+      const { availableBeds, roomType } = await checkAvailability(
         client,
         dbname,
         roomTypeId,
@@ -81,11 +81,13 @@ exports.reservation_create = [
         number_of_guest
       );
 
+      console.log(availableBeds);
+
       if (availableBeds === 0) {
         throw new Error("No bed available for the selected dates");
       }
 
-      newReservation.setAssignedBeds(availableBeds, number_of_guest);
+      newReservation.setAssignedBeds(availableBeds, number_of_guest, roomType);
 
       const result = await reservationHelper.insertNewReservation(
         client,
