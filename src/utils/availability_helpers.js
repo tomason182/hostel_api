@@ -17,7 +17,7 @@ exports.checkAvailability = async (
       throw new Error("Room type not found");
     }
     // Usamos flatMap para obtener todas las camas pertenecientes al tipo de cuarto.
-    const totalBeds = roomType.products.flatMap(product => product.beds);
+    const totalBeds = roomType.products.flatMap((product) => product.beds);
     const maxOccupancy = totalBeds.length;
 
     // Filtramos las reservas para obtener solo las que caen dentro del rango check in - check out
@@ -44,7 +44,7 @@ exports.checkAvailability = async (
 
     // obtenemos rangos de rates and availability
     const ratesAndAvailabilityList = roomType.rates_and_availability.filter(
-      item => item.start_date < checkOut && item.end_date >= checkIn
+      (item) => item.start_date < checkOut && item.end_date >= checkIn
     );
 
     // Iterar sobre cada una de las fechas de la reserva y verificar disponibilidad
@@ -59,16 +59,14 @@ exports.checkAvailability = async (
       const currentDate = new Date(date);
 
       const filteredReservations = reservationsList.filter(
-        r => r.check_in <= currentDate && r.check_out > currentDate
+        (r) => r.check_in <= currentDate && r.check_out > currentDate
       );
 
-      const filteredRooms = ratesAndAvailabilityList.filter(
-        r =>
+      const filteredCustomAvailbility = ratesAndAvailabilityList.find(
+        (r) =>
           new Date(r.start_date) <= currentDate &&
           new Date(r.end_date) >= currentDate
       );
-
-      /* console.log(filteredRooms); */
 
       // Obtenemos la cantidad total de huespedes en ese dia
       // Si cuarto compartido => se suman la cantida de huespedes totales
@@ -84,31 +82,30 @@ exports.checkAvailability = async (
       /* console.log(totalGuest); */
 
       // Obtenemos la cantidad total de camas para esa fecha.
-      const totalBedsAvailable =
-        filteredRooms.length === 0
-          ? maxOccupancy - totalGuest
-          : filteredRooms[0].custom_availability;
+
+      let totalBedsAvailable = 0;
+      if (filteredCustomAvailbility.length === 0) {
+        totalBedsAvailable = maxOccupancy - totalGuest;
+      } else {
+        const newReservations = filteredReservations.filter(
+          (r) =>
+            new Date(r.updated_At) >
+            new Date(filteredCustomAvailbility.created_At)
+        );
+        totalBedsAvailable =
+          filteredCustomAvailbility.custom_availability - newReservations;
+      }
 
       if (totalBedsAvailable === 0) {
-        return { availableBeds: 0, roomType: roomType.type };
+        return false;
       }
 
       if (roomType.type === "dorm" && totalBedsAvailable - numberOfGuest < 0) {
-        return { availableBeds: 0, roomType: roomType.type };
+        return false;
       }
     }
 
-    const occupiedBeds = reservationsList.flatMap(
-      reservation => reservation.assigned_beds
-    );
-
-    /*     console.log("camas ocupadas: ", occupiedBeds); */
-
-    const availableBeds = bedAssignment(totalBeds, occupiedBeds);
-
-    /* console.log("camas habilitadas: ", availableBeds); */
-
-    return { availableBeds, roomType: roomType.type };
+    return true;
   } catch (err) {
     throw err;
   }
@@ -179,6 +176,6 @@ exports.pullOverlappingElementsFromArray = async (
 // Helper functions //
 
 function bedAssignment(totalBeds, occupiedBeds) {
-  const occupiedBedsIds = occupiedBeds.map(bed => bed.toString());
-  return totalBeds.filter(bed => !occupiedBedsIds.includes(bed.toString()));
+  const occupiedBedsIds = occupiedBeds.map((bed) => bed.toString());
+  return totalBeds.filter((bed) => !occupiedBedsIds.includes(bed.toString()));
 }
