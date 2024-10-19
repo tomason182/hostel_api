@@ -17,7 +17,7 @@ const {
 const { ObjectId } = require("mongodb");
 
 const conn = require("../config/db_config");
-const { checkAvailability } = require("../utils/availability_helpers");
+const availability_helpers = require("../utils/availability_helpers");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -72,7 +72,7 @@ exports.reservation_create = [
 
       const client = conn.getClient();
 
-      const isAvailable = await checkAvailability(
+      const isAvailable = await availability_helpers.checkAvailability(
         client,
         dbname,
         roomTypeId,
@@ -85,11 +85,14 @@ exports.reservation_create = [
         throw new Error("No bed available for the selected dates");
       }
 
+      // Si hay cama disponible creamos la reserva. Sin asignarle todavia una cama.
       const result = await reservationHelper.insertNewReservation(
         client,
         dbname,
         newReservation
       );
+
+      const assignedBeds = await availability_helpers.bedAssignment();
 
       return res.status(200).json(result);
     } catch (err) {
@@ -245,7 +248,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
       const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
       const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
 
-      const isAvailable = await checkAvailability(
+      const isAvailable = await availability_helpers.checkAvailability(
         client,
         dbname,
         roomTypeId,

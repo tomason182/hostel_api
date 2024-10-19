@@ -17,7 +17,7 @@ exports.checkAvailability = async (
       throw new Error("Room type not found");
     }
     // Usamos flatMap para obtener todas las camas pertenecientes al tipo de cuarto.
-    const totalBeds = roomType.products.flatMap((product) => product.beds);
+    const totalBeds = roomType.products.flatMap(product => product.beds);
     const maxOccupancy = totalBeds.length;
 
     // Filtramos las reservas para obtener solo las que caen dentro del rango check in - check out
@@ -44,7 +44,7 @@ exports.checkAvailability = async (
 
     // obtenemos rangos de rates and availability
     const ratesAndAvailabilityList = roomType.rates_and_availability.filter(
-      (item) => item.start_date < checkOut && item.end_date >= checkIn
+      item => item.start_date < checkOut && item.end_date >= checkIn
     );
 
     // Iterar sobre cada una de las fechas de la reserva y verificar disponibilidad
@@ -59,11 +59,11 @@ exports.checkAvailability = async (
       const currentDate = new Date(date);
 
       const filteredReservations = reservationsList.filter(
-        (r) => r.check_in <= currentDate && r.check_out > currentDate
+        r => r.check_in <= currentDate && r.check_out > currentDate
       );
 
       const filteredCustomAvailbility = ratesAndAvailabilityList.find(
-        (r) =>
+        r =>
           new Date(r.start_date) <= currentDate &&
           new Date(r.end_date) >= currentDate
       );
@@ -88,7 +88,7 @@ exports.checkAvailability = async (
         totalBedsAvailable = maxOccupancy - totalGuest;
       } else {
         const newReservations = filteredReservations.filter(
-          (r) =>
+          r =>
             new Date(r.updated_At) >
             new Date(filteredCustomAvailbility.created_At)
         );
@@ -110,6 +110,87 @@ exports.checkAvailability = async (
     throw err;
   }
 };
+
+/* exports.bedAssignment = async function (
+  client,
+  dbname,
+  roomTypeId,
+  checkIn,
+  checkOut,
+  numberOfGuest
+) {
+  try {
+    const db = client.db(dbname);
+    const roomTypeColl = db.collection("room-types");
+    const reservationColl = db.collection("reservations");
+
+    // Buscamos el tipo de cuarto al que va a ir asociada la reserva.
+    const roomType = await roomTypeColl.findOne({ _id: typeRoomId });
+
+    if (!roomType) {
+      throw new Error("Room type not found");
+    }
+
+    // Obtemenos la lista de camas correspondientes a ese cuarto
+    const totalBeds = roomType.products.flatMap(product => product.beds);
+
+    // Buscamos las reservas totales de hoy en adelante
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+    const day = new Date().getDate();
+
+    const today = new Date(year, month, day);
+
+    const filter = {
+      room_type_id: { $eq: roomTypeId },
+      reservation_status: { $nin: ["cancelled", "no_show"] },
+      check_out: { $gt: today },
+    };
+
+    const options = {
+      projection: {
+        check_in: 1,
+        check_out: 1,
+        number_of_guest: 1,
+        assigned_beds: 1,
+      },
+    };
+
+    const reservationsList = await reservationColl
+      .find(filter, options)
+      .toArray();
+
+    // Ordenamos la lista de reservas segun orden de llegada (check-in)
+    const reservationsListSorted = reservationsList.sort((a, b) => {
+      return new Date(a.checkIn) - new Date(b.checkIn);
+    });
+
+    let assignedBeds = [];
+
+    for (reservation in reservationsListSorted) {
+      const overlappingReservationsBeforeCurrent =
+        reservationsListSorted.filter(
+          r =>
+            new Date(reservation.check_in) < new Date(r.check_out) &&
+            new Date(reservation.check_out > r.check_in) &&
+            reservation.check_in >= r.check_in &&
+            r._id.toString() !== reservation._id.toString()
+        );
+
+      overlappingReservationsBeforeCurrent.forEach(r => {
+        const availableBeds = totalBeds.filter(
+          bed => !assignedBeds.includes(bed.toString())
+        );
+        assignedBeds.push({
+          _id: r._id,
+          assignedBeds: [],
+        });
+      });
+    }
+  } catch (err) {
+    throw new Error(err);
+  }
+}; */
 
 exports.pushNewDateRangeIntoArray = async (
   client,
@@ -172,10 +253,3 @@ exports.pullOverlappingElementsFromArray = async (
     throw new Error(err);
   }
 };
-
-// Helper functions //
-
-function bedAssignment(totalBeds, occupiedBeds) {
-  const occupiedBedsIds = occupiedBeds.map((bed) => bed.toString());
-  return totalBeds.filter((bed) => !occupiedBedsIds.includes(bed.toString()));
-}
