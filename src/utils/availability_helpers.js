@@ -177,7 +177,7 @@ exports.pullOverlappingElementsFromArray = async (
   }
 };
 
-exports.bedsAssignment = async (roomTypes, reservationsList) => {
+exports.bedsAssignment = (roomTypes, reservationsList) => {
   let reservationsToUpdate = [];
 
   for (let roomType of roomTypes) {

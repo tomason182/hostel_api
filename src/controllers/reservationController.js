@@ -428,37 +428,65 @@ exports.reservation_find_by_id_get = [
 // @route     PUT /api/v1/reservations/check-in/assign-beds
 // @access    Private
 exports.reservations_assign_beds_put = async (req, res, next) => {
-  const propertyId = req.user._id;
+  try {
+    const propertyId = req.user._id;
 
-  const client = conn.getClient();
-  const year = new Date().getUTCFullYear();
-  const month = new Date().getMonth();
-  const day = new Date().getDate();
-  const today = new Date(year, month, day);
+    const client = conn.getClient();
+    const year = new Date().getUTCFullYear();
+    const month = new Date().getMonth();
+    const day = new Date().getDate();
+    const today = new Date(year, month, day);
 
-  // Obtener los tipos de cuarto de la propiedad
-  const roomTypes = await crudOperations.findAllRoomTypesByPropertyId(
-    client,
-    dbname,
-    propertyId
-  );
-
-  // traemos todas las reservas que caigan en el rango de hoy.
-  const reservationsList =
-    await reservationHelper.findReservationByDateRangeSimple(
+    // Obtener los tipos de cuarto de la propiedad
+    const roomTypes = await crudOperations.findAllRoomTypesByPropertyId(
       client,
       dbname,
-      propertyId,
-      today,
-      today
+      propertyId
     );
 
-  const reservationsToUpdate = await availability_helpers.bedsAssignment(
-    roomTypes,
-    reservationsList
-  );
+    // traemos todas las reservas que caigan en el rango de hoy.
+    const reservationsList =
+      await reservationHelper.findReservationByDateRangeSimple(
+        client,
+        dbname,
+        propertyId,
+        today,
+        today
+      );
 
-  return res.status(200).json(reservationsToUpdate);
+    const reservationsToUpdate = availability_helpers.bedsAssignment(
+      roomTypes,
+      reservationsList
+    );
+
+    // actualizar las reservas.
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    try {
+      const updatePromises = reservationsToUpdate.map(reservation => {
+        const filter = {
+          _id: reservation._id,
+        };
+
+        const updateDoc = {
+          $set: {
+            assigned_beds: reservation.assigned_beds,
+          },
+        };
+
+        return reservationColl.updateOne(filter, updateDoc);
+      });
+
+      await Promise.all(updatePromises);
+
+      return res.status(200).json("Beds added successfully");
+    } catch (err) {
+      throw new Error("Error updating reservations:", err);
+    }
+  } catch (err) {
+    next(err);
+  }
 };
 
 // @desc      Get reservations by guest name
