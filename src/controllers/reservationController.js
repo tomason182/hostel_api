@@ -92,8 +92,6 @@ exports.reservation_create = [
         newReservation
       );
 
-      const assignedBeds = await availability_helpers.bedAssignment();
-
       return res.status(200).json(result);
     } catch (err) {
       next(err);

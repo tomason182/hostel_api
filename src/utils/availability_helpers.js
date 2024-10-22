@@ -86,7 +86,7 @@ exports.checkAvailability = async (
       // Obtenemos la cantidad total de camas para esa fecha.
 
       let totalBedsAvailable = 0;
-      if (filteredCustomAvailability.length === 0) {
+      if (filteredCustomAvailability === undefined) {
         totalBedsAvailable = maxOccupancy - totalGuest;
       } else {
         const newReservations = filteredReservations.filter(
