@@ -398,8 +398,7 @@ exports.updateReservationDatesAndGuest = async (
   checkIn,
   checkOut,
   numberOfGuest,
-  status,
-  beds
+  status
 ) => {
   try {
     const db = client.db(dbname);
@@ -420,7 +419,6 @@ exports.updateReservationDatesAndGuest = async (
         check_out: checkOut,
         number_of_guest: numberOfGuest,
         reservation_status: status,
-        assigned_beds: beds,
       },
     };
 
