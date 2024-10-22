@@ -423,6 +423,30 @@ exports.reservation_find_by_id_get = [
   },
 ];
 
+// @desc      Update reservations bed
+// @route     PUT /api/v1/reservations/check-in/assign-beds
+// @access    Private
+exports.reservations_assign_beds_put = async (req, res, next) => {
+  const propertyId = req.user._id;
+
+  const client = conn.getClient();
+  const year = new Date().getUTCFullYear();
+  const month = new Date().getMonth();
+  const day = new Date().getDate();
+  const today = new Date(year, month, day);
+
+  const reservationsList =
+    await reservationHelper.findReservationByDateRangeSimple(
+      client,
+      dbname,
+      propertyId,
+      today,
+      today
+    );
+
+  return res.status(200).json(reservationsList);
+};
+
 // @desc      Get reservations by guest name
 // @route     GET /api/v1/reservations/?name=value
 // @access    Private

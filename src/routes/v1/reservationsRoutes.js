@@ -80,4 +80,13 @@ router.put(
   reservationController.reservation_dates_and_numberOfGuest_update
 );
 
+// @desc      Update reservations bed
+// @route     PUT /api/v1/reservations/check-in/assign-beds
+// @access    Private
+router.put(
+  "/check-in/assign-beds",
+  authMiddleware,
+  reservationController.reservations_assign_beds_put
+);
+
 module.exports = router;

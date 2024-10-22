@@ -1,5 +1,3 @@
-const { checkAvailability } = require("./availability_helpers");
-
 exports.insertNewReservation = async (client, dbname, reservation) => {
   try {
     const db = client.db(dbname);
@@ -93,6 +91,34 @@ exports.findReservationById = async (
     if (!result) {
       throw new Error("Reservation not found");
     }
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.findReservationsForToday = async (client, dbname, propertyId, date) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      property_id: propertyId,
+      reservation_status: { $in: ["confirmed", "provisional"] },
+      check_in: { $eq: date },
+    };
+
+    const projection = {
+      room_type_id: 1,
+      number_of_guest: 1,
+      check_in: 1,
+      check_out: 1,
+    };
+    const result = await reservationColl
+      .find(query)
+      .project(projection)
+      .toArray();
 
     return result;
   } catch (err) {
