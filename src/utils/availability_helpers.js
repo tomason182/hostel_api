@@ -62,10 +62,12 @@ exports.checkAvailability = async (
         r => r.check_in <= currentDate && r.check_out > currentDate
       );
 
-      const filteredCustomAvailbility = ratesAndAvailabilityList.find(
+      // En los rangos de custom availability, el end date no es inclusive, porque si en ese mismo dia
+      // empieza otro rango, el start date de ese rango es ese dia.
+      const filteredCustomAvailability = ratesAndAvailabilityList.find(
         r =>
           new Date(r.start_date) <= currentDate &&
-          new Date(r.end_date) >= currentDate
+          new Date(r.end_date) > currentDate
       );
 
       // Obtenemos la cantidad total de huespedes en ese dia
@@ -84,16 +86,16 @@ exports.checkAvailability = async (
       // Obtenemos la cantidad total de camas para esa fecha.
 
       let totalBedsAvailable = 0;
-      if (filteredCustomAvailbility.length === 0) {
+      if (filteredCustomAvailability.length === 0) {
         totalBedsAvailable = maxOccupancy - totalGuest;
       } else {
         const newReservations = filteredReservations.filter(
           r =>
             new Date(r.updated_At) >
-            new Date(filteredCustomAvailbility.created_At)
+            new Date(filteredCustomAvailability.created_At)
         );
         totalBedsAvailable =
-          filteredCustomAvailbility.custom_availability - newReservations;
+          filteredCustomAvailability.custom_availability - newReservations;
       }
 
       if (totalBedsAvailable === 0) {
@@ -110,87 +112,6 @@ exports.checkAvailability = async (
     throw err;
   }
 };
-
-/* exports.bedAssignment = async function (
-  client,
-  dbname,
-  roomTypeId,
-  checkIn,
-  checkOut,
-  numberOfGuest
-) {
-  try {
-    const db = client.db(dbname);
-    const roomTypeColl = db.collection("room-types");
-    const reservationColl = db.collection("reservations");
-
-    // Buscamos el tipo de cuarto al que va a ir asociada la reserva.
-    const roomType = await roomTypeColl.findOne({ _id: typeRoomId });
-
-    if (!roomType) {
-      throw new Error("Room type not found");
-    }
-
-    // Obtemenos la lista de camas correspondientes a ese cuarto
-    const totalBeds = roomType.products.flatMap(product => product.beds);
-
-    // Buscamos las reservas totales de hoy en adelante
-    const year = new Date().getFullYear();
-    const month = new Date().getMonth();
-    const day = new Date().getDate();
-
-    const today = new Date(year, month, day);
-
-    const filter = {
-      room_type_id: { $eq: roomTypeId },
-      reservation_status: { $nin: ["cancelled", "no_show"] },
-      check_out: { $gt: today },
-    };
-
-    const options = {
-      projection: {
-        check_in: 1,
-        check_out: 1,
-        number_of_guest: 1,
-        assigned_beds: 1,
-      },
-    };
-
-    const reservationsList = await reservationColl
-      .find(filter, options)
-      .toArray();
-
-    // Ordenamos la lista de reservas segun orden de llegada (check-in)
-    const reservationsListSorted = reservationsList.sort((a, b) => {
-      return new Date(a.checkIn) - new Date(b.checkIn);
-    });
-
-    let assignedBeds = [];
-
-    for (reservation in reservationsListSorted) {
-      const overlappingReservationsBeforeCurrent =
-        reservationsListSorted.filter(
-          r =>
-            new Date(reservation.check_in) < new Date(r.check_out) &&
-            new Date(reservation.check_out > r.check_in) &&
-            reservation.check_in >= r.check_in &&
-            r._id.toString() !== reservation._id.toString()
-        );
-
-      overlappingReservationsBeforeCurrent.forEach(r => {
-        const availableBeds = totalBeds.filter(
-          bed => !assignedBeds.includes(bed.toString())
-        );
-        assignedBeds.push({
-          _id: r._id,
-          assignedBeds: [],
-        });
-      });
-    }
-  } catch (err) {
-    throw new Error(err);
-  }
-}; */
 
 exports.pushNewDateRangeIntoArray = async (
   client,
