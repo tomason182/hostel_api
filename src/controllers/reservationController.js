@@ -8,6 +8,7 @@ const {
 const Reservation = require("../models/reservationModel");
 const reservationHelper = require("../utils/reservationHelpers");
 const parseDateHelper = require("../utils/parseDateHelper");
+const crudOperations = require("../utils/crud_operations");
 const {
   checkSchema,
   validationResult,
@@ -435,6 +436,14 @@ exports.reservations_assign_beds_put = async (req, res, next) => {
   const day = new Date().getDate();
   const today = new Date(year, month, day);
 
+  // Obtener los tipos de cuarto de la propiedad
+  const roomTypes = await crudOperations.findAllRoomTypesByPropertyId(
+    client,
+    dbname,
+    propertyId
+  );
+
+  // traemos todas las reservas que caigan en el rango de hoy.
   const reservationsList =
     await reservationHelper.findReservationByDateRangeSimple(
       client,
@@ -444,7 +453,12 @@ exports.reservations_assign_beds_put = async (req, res, next) => {
       today
     );
 
-  return res.status(200).json(reservationsList);
+  const reservationsToUpdate = await availability_helpers.bedsAssignment(
+    roomTypes,
+    reservationsList
+  );
+
+  return res.status(200).json(reservationsToUpdate);
 };
 
 // @desc      Get reservations by guest name

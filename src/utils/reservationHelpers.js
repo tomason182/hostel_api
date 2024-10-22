@@ -151,6 +151,7 @@ exports.findReservationByDateRangeSimple = async (
       number_of_guest: 1,
       check_in: 1,
       check_out: 1,
+      assigned_beds: 1,
       updated_At: 1,
     };
 

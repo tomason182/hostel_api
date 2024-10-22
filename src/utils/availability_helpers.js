@@ -176,3 +176,64 @@ exports.pullOverlappingElementsFromArray = async (
     throw new Error(err);
   }
 };
+
+exports.bedsAssignment = async (roomTypes, reservationsList) => {
+  let reservationsToUpdate = [];
+
+  for (let roomType of roomTypes) {
+    const totalBeds = roomType.products.flatMap(product => product.beds);
+
+    // Obtener las reservas para este tipo de cuarto
+    const reservationsByRoomType = reservationsList.filter(r =>
+      r.room_type_id.equals(roomType._id)
+    );
+
+    // Obtener las reservas que NO tienen cama asignada
+    const reservationsWithNoBedsAssigned = reservationsByRoomType.filter(
+      r => r.assigned_beds.length === 0
+    );
+
+    // Obtener las camas ocupadas
+    const occupiedBeds = reservationsByRoomType.flatMap(r => r.assigned_beds);
+
+    // Camas disponibles
+    let availableBeds = totalBeds.filter(
+      bed => !occupiedBeds.some(occupied => occupied.equals(bed))
+    );
+
+    if (roomType.type === "dorm") {
+      // Asignar camas a reservas de dormitorios
+      const updateDormReservations = reservationsWithNoBedsAssigned.map(r => {
+        const numberOfGuest = r.number_of_guest;
+        if (availableBeds.length >= numberOfGuest) {
+          r.assigned_beds = availableBeds.slice(0, numberOfGuest);
+          availableBeds = availableBeds.slice(numberOfGuest); // Remover las camas asignadas
+        }
+
+        return r;
+      });
+      reservationsToUpdate = [
+        ...reservationsToUpdate,
+        ...updateDormReservations,
+      ];
+    } else {
+      // Asignar camas a habitaciones privadas
+      const updatePrivateReservations = reservationsWithNoBedsAssigned.map(
+        r => {
+          if (availableBeds.length > 0) {
+            r.assigned_beds.push(availableBeds[0]);
+            availableBeds = availableBeds.slice(1);
+          }
+
+          return r;
+        }
+      );
+      reservationsToUpdate = [
+        ...reservationsToUpdate,
+        ...updatePrivateReservations,
+      ];
+    }
+  }
+
+  return reservationsToUpdate;
+};
