@@ -24,7 +24,7 @@ exports.checkAvailability = async (
 
     const filter = {
       room_type_id: { $eq: typeRoomId },
-      reservation_status: { $nin: ["cancelled", "no_show"] },
+      reservation_status: { $nin: ["canceled", "no_show"] },
       check_in: { $lt: checkOut },
       check_out: { $gt: checkIn },
     };
@@ -41,6 +41,8 @@ exports.checkAvailability = async (
     const reservationsList = await reservationsColl
       .find(filter, options)
       .toArray();
+
+    console.log(reservationsList);
 
     // obtenemos rangos de rates and availability
     const ratesAndAvailabilityList = roomType.rates_and_availability.filter(

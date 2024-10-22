@@ -268,10 +268,6 @@ exports.reservation_dates_and_numberOfGuest_update = [
         );
       }
 
-      const updatedReservation = new Reservation();
-      updatedReservation.setAssignedBeds(availableBeds, number_of_guest);
-      const assignedBeds = updatedReservation.getBeds();
-
       const UpdatedReservationResult =
         await reservationHelper.updateReservationDatesAndGuest(
           client,
@@ -281,8 +277,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
           checkIn,
           checkOut,
           number_of_guest,
-          previousStatus,
-          assignedBeds
+          previousStatus
         );
 
       return res.status(200).json(UpdatedReservationResult);
