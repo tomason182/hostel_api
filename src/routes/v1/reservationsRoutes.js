@@ -81,9 +81,9 @@ router.put(
 );
 
 // @desc      Update reservations bed
-// @route     PUT /api/v1/reservations/check-in/assign-beds
+// @route     GET /api/v1/reservations/check-in/assign-beds
 // @access    Private
-router.put(
+router.get(
   "/check-in/assign-beds",
   authMiddleware,
   reservationController.reservations_assign_beds_put

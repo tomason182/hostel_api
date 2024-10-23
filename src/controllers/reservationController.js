@@ -92,7 +92,6 @@ exports.reservation_create = [
         dbname,
         newReservation
       );
-
       return res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -425,7 +424,7 @@ exports.reservation_find_by_id_get = [
 ];
 
 // @desc      Update reservations bed
-// @route     PUT /api/v1/reservations/check-in/assign-beds
+// @route     GET /api/v1/reservations/check-in/assign-beds
 // @access    Private
 exports.reservations_assign_beds_put = async (req, res, next) => {
   try {
