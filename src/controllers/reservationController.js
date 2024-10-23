@@ -454,36 +454,15 @@ exports.reservations_assign_beds_put = async (req, res, next) => {
         today
       );
 
-    const reservationsToUpdate = availability_helpers.bedsAssignment(
+    // Asignarmos las camas a las reservas que no tienen asignacion.
+    const response = availability_helpers.bedsAssignment(
+      client,
+      dbname,
       roomTypes,
       reservationsList
     );
 
-    // actualizar las reservas.
-    const db = client.db(dbname);
-    const reservationColl = db.collection("reservations");
-
-    try {
-      const updatePromises = reservationsToUpdate.map(reservation => {
-        const filter = {
-          _id: reservation._id,
-        };
-
-        const updateDoc = {
-          $set: {
-            assigned_beds: reservation.assigned_beds,
-          },
-        };
-
-        return reservationColl.updateOne(filter, updateDoc);
-      });
-
-      await Promise.all(updatePromises);
-
-      return res.status(200).json("Beds added successfully");
-    } catch (err) {
-      throw new Error("Error updating reservations:", err);
-    }
+    return res.status(200).json(response.msg);
   } catch (err) {
     next(err);
   }

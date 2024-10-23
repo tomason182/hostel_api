@@ -177,63 +177,92 @@ exports.pullOverlappingElementsFromArray = async (
   }
 };
 
-exports.bedsAssignment = (roomTypes, reservationsList) => {
-  let reservationsToUpdate = [];
+exports.bedsAssignment = async (
+  client,
+  dbname,
+  roomTypes,
+  reservationsList
+) => {
+  try {
+    let reservationsToUpdate = [];
 
-  for (let roomType of roomTypes) {
-    const totalBeds = roomType.products.flatMap(product => product.beds);
+    for (let roomType of roomTypes) {
+      const totalBeds = roomType.products.flatMap(product => product.beds);
 
-    // Obtener las reservas para este tipo de cuarto
-    const reservationsByRoomType = reservationsList.filter(r =>
-      r.room_type_id.equals(roomType._id)
-    );
+      // Obtener las reservas para este tipo de cuarto
+      const reservationsByRoomType = reservationsList.filter(r =>
+        r.room_type_id.equals(roomType._id)
+      );
 
-    // Obtener las reservas que NO tienen cama asignada
-    const reservationsWithNoBedsAssigned = reservationsByRoomType.filter(
-      r => r.assigned_beds.length === 0
-    );
+      // Obtener las reservas que NO tienen cama asignada
+      const reservationsWithNoBedsAssigned = reservationsByRoomType.filter(
+        r => r.assigned_beds.length === 0
+      );
 
-    // Obtener las camas ocupadas
-    const occupiedBeds = reservationsByRoomType.flatMap(r => r.assigned_beds);
+      // Obtener las camas ocupadas
+      const occupiedBeds = reservationsByRoomType.flatMap(r => r.assigned_beds);
 
-    // Camas disponibles
-    let availableBeds = totalBeds.filter(
-      bed => !occupiedBeds.some(occupied => occupied.equals(bed))
-    );
+      // Camas disponibles
+      let availableBeds = totalBeds.filter(
+        bed => !occupiedBeds.some(occupied => occupied.equals(bed))
+      );
 
-    if (roomType.type === "dorm") {
-      // Asignar camas a reservas de dormitorios
-      const updateDormReservations = reservationsWithNoBedsAssigned.map(r => {
-        const numberOfGuest = r.number_of_guest;
-        if (availableBeds.length >= numberOfGuest) {
-          r.assigned_beds = availableBeds.slice(0, numberOfGuest);
-          availableBeds = availableBeds.slice(numberOfGuest); // Remover las camas asignadas
-        }
-
-        return r;
-      });
-      reservationsToUpdate = [
-        ...reservationsToUpdate,
-        ...updateDormReservations,
-      ];
-    } else {
-      // Asignar camas a habitaciones privadas
-      const updatePrivateReservations = reservationsWithNoBedsAssigned.map(
-        r => {
-          if (availableBeds.length > 0) {
-            r.assigned_beds.push(availableBeds[0]);
-            availableBeds = availableBeds.slice(1);
+      if (roomType.type === "dorm") {
+        // Asignar camas a reservas de dormitorios
+        const updateDormReservations = reservationsWithNoBedsAssigned.map(r => {
+          const numberOfGuest = r.number_of_guest;
+          if (availableBeds.length >= numberOfGuest) {
+            r.assigned_beds = availableBeds.slice(0, numberOfGuest);
+            availableBeds = availableBeds.slice(numberOfGuest); // Remover las camas asignadas
           }
 
           return r;
-        }
-      );
-      reservationsToUpdate = [
-        ...reservationsToUpdate,
-        ...updatePrivateReservations,
-      ];
-    }
-  }
+        });
+        reservationsToUpdate = [
+          ...reservationsToUpdate,
+          ...updateDormReservations,
+        ];
+      } else {
+        // Asignar camas a habitaciones privadas
+        const updatePrivateReservations = reservationsWithNoBedsAssigned.map(
+          r => {
+            if (availableBeds.length > 0) {
+              r.assigned_beds.push(availableBeds[0]);
+              availableBeds = availableBeds.slice(1);
+            }
 
-  return reservationsToUpdate;
+            return r;
+          }
+        );
+        reservationsToUpdate = [
+          ...reservationsToUpdate,
+          ...updatePrivateReservations,
+        ];
+      }
+    }
+
+    // actualizar las reservas.
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const updatePromises = reservationsToUpdate.map(reservation => {
+      const filter = {
+        _id: reservation._id,
+      };
+
+      const updateDoc = {
+        $set: {
+          assigned_beds: reservation.assigned_beds,
+        },
+      };
+
+      return reservationColl.updateOne(filter, updateDoc);
+    });
+
+    await Promise.all(updatePromises);
+
+    return { msg: "Beds added successfully" };
+  } catch (err) {
+    throw new Error(err);
+  }
 };
