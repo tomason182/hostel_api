@@ -319,11 +319,27 @@ exports.user_edit_profile = [
         throw new Error("Params is not a valid mongo ID");
       }
 
-      console.log(req.params.id);
       const userId = ObjectId.createFromHexString(req.params.id);
       const data = matchedData(req);
 
       const client = conn.getClient();
+
+      const userInfo = await crudOperations.findOneUserById(
+        client,
+        dbname,
+        userId
+      );
+
+      if (!userInfo) {
+        throw new Error("Unable to find User's ID");
+      }
+
+      if (userInfo.role === "admin") {
+        throw new Error(
+          "Admin accounts cannot be updated here. Please go to Account Settings to delete an admin user."
+        );
+      }
+
       const result = await crudOperations.updateOneUser(
         client,
         dbname,
