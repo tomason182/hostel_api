@@ -132,7 +132,6 @@ exports.user_create = [
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
-      console.log(errors.array());
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
@@ -141,6 +140,10 @@ exports.user_create = [
         matchedData(req);
 
       const propertyId = req.user._id;
+
+      if (role === "admin") {
+        throw new Error("Admin users can not be created");
+      }
 
       // Check if user exist in the database
       const client = conn.getClient();
