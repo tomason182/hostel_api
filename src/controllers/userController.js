@@ -401,6 +401,23 @@ exports.user_profile_delete = async (req, res, next) => {
     const userId = ObjectId.createFromHexString(req.params.id);
     const propertyId = req.user._id;
     const client = conn.getClient();
+
+    const userInfo = await crudOperations.findOneUserById(
+      client,
+      dbname,
+      userId
+    );
+    console.log(userInfo);
+
+    if (!userInfo) {
+      throw new Error("Unable to find User id");
+    }
+
+    if (userInfo.role === "admin") {
+      throw new Error(
+        "Admin accounts cannot be deleted here. Please go to Account Settings to delete an admin user."
+      );
+    }
     const result = await transactionsOperations.deleteUser(
       client,
       dbname,
