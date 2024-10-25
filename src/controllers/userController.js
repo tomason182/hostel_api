@@ -322,6 +322,8 @@ exports.user_edit_profile = [
       const userId = ObjectId.createFromHexString(req.params.id);
       const data = matchedData(req);
 
+      console.log(data);
+
       const client = conn.getClient();
 
       const userInfo = await crudOperations.findOneUserById(
@@ -338,6 +340,10 @@ exports.user_edit_profile = [
         throw new Error(
           "Admin accounts cannot be updated here. Please go to Account Settings to delete an admin user."
         );
+      }
+
+      if (data.role === "admin") {
+        throw new Error("Admin role can not be set up from here");
       }
 
       const result = await crudOperations.updateOneUser(
