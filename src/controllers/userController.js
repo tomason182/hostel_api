@@ -322,8 +322,6 @@ exports.user_edit_profile = [
       const userId = ObjectId.createFromHexString(req.params.id);
       const data = matchedData(req);
 
-      console.log(data);
-
       const client = conn.getClient();
 
       const userInfo = await crudOperations.findOneUserById(
