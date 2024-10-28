@@ -11,6 +11,8 @@ const {
   userUpdateSchema,
   userCreationSchema,
   userChangePassSchema,
+  userChangePassSchema2,
+  usernameSchema,
   sanitizeRegisterBody,
   sanitizeLoginBody,
   sanitizeUpdateBody,
@@ -340,3 +342,101 @@ exports.user_profile_delete = (req, res, next) => {
   // documentos asociados
   res.status(200).json({ msg: `Delete user ${req.params.id} profile` });
 };
+
+
+// @desc    forgotten user password
+// @route   POST /api/v1/users/forgotten-password/init-change-pass/
+// @access  Public
+exports.forgotten_user_password = [
+  checkSchema(usernameSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      };
+
+      const { username } = matchedData(req);
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
+
+      if (user === null) {
+        res.status(401);
+        throw new Error("Invalid username");
+      };
+      
+      const token = jwtTokenGeneratorCE(user.username);
+      const confirmEmailLink = `${process.env.API_URL}/users/forgotten-password/continue-change-pass/${token}`;
+      sendConfirmationMail(user, confirmEmailLink);
+
+      res.status(200).json({ msg: "An email has been sent to the user so they can continue with the password change process." });
+
+    } catch (err) {
+      next(err);
+    }
+  }
+];
+
+exports.continue_forgotten_user_password =
+  async (req, res, next) => {
+    try {
+      const token = req.params.token;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const username = decoded.sub;
+      const linkButton = `${process.env.API_URL}/users/forgotten-password/finish-change-pass/${token}`;
+    
+      res.status(200).json({username, linkButton, msg: "User enabled to change their password"});
+    } catch (err) {
+      next(err);
+    }
+  };
+
+exports.finish_forgotten_user_password = [
+  checkSchema(userChangePassSchema2),
+  async (req, res, next) => {
+    try {
+      const token = req.params.token;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const username = decoded.sub;
+
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+      
+      const { newPassword, repeatNewPassword } = matchedData(req);
+    
+      if (newPassword !== repeatNewPassword) {
+        res.status(401);
+        throw new Error("The new password entered for the second time does not match the one entered for the first time.");
+      }
+
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
+
+      if (user === null) {
+        res.status(401);
+        throw new Error("Invalid username");
+      }
+
+      const objUser = new User();
+      await objUser.setHashPassword(newPassword);
+      const hashedPassword = objUser.getHashedPassword();
+      const resultUpdate = await crudOperations.updateOneUserPass(client, dbname, user._id, hashedPassword);
+
+      return res.status(200).json({ msg: "Change password", resultUpdate });
+    } catch (err) {
+      next(err);
+    }
+  }
+];
+  
