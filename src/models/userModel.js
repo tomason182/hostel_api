@@ -14,7 +14,8 @@ class User {
       (this.last_name = last_name),
       (this.hashed_password = hashed_password),
       (this.role = role),
-      (this.isValidEmail = isValidEmail)((this.createdAt = new Date())),
+      (this.isValidEmail = isValidEmail),
+      (this.createdAt = new Date()),
       (this.updatedAt = new Date());
   }
 

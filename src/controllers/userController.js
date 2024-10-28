@@ -5,7 +5,6 @@ const {
   param,
   validationResult,
   matchedData,
-  param,
 } = require("express-validator");
 const {
   userRegisterSchema,
@@ -22,16 +21,10 @@ const {
   jwtTokenValidation,
   jwtTokenGeneratorCE,
 } = require("../utils/tokenGenerator");
-
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
-const {
-  deleteUserByLocalId,
-  insertUserInLocalDB,
-  deleteUserByLocalIdWithDelay,
-} = require("../utils/crud_operations_local_db.js");
 const {
   deleteUserByLocalId,
   insertUserInLocalDB,
@@ -64,18 +57,35 @@ exports.user_register = [
       // Extract req values
       const { username, password, firstName, propertyName } = matchedData(req);
 
-      const userLocalID = new ObjectId().toString();
-      const currUser = new User();
-      await currUser.setHashPassword(password);
-      const userJson = {
-        userLocalID: userLocalID,
-        username: username,
-        hashedPassword: currUser.getHashedPassword(),
-        firstName: firstName,
-        propertyName: propertyName,
-      };
+      const user = new User(username, firstName);
+      const role = "admin";
+      user.setRole(role);
+      await user.setHashPassword(password);
 
-      await insertUserInLocalDB(userJson);
+      const property = new Property(propertyName);
+
+      const client = conn.getClient();
+
+      const userExist = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
+
+      if (userExist !== null) {
+        return res.status(400).json({ msg: "Username already exist" });
+      }
+
+      const result = await transactionsOperations.createUser(
+        client,
+        dbname,
+        user,
+        property
+      );
+
+      console.log(result);
+      return res.status(200).json("ok");
+
       const token = jwtTokenGeneratorCE(userJson.userLocalID);
       const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
       sendConfirmationMail(userJson, confirmEmailLink);
@@ -521,7 +531,7 @@ exports.forgotten_user_password = [
 ];
 
 exports.continue_forgotten_user_password = [
-  param(token).trim().escape().isJWT(),
+  param("token").trim().escape().isJWT(),
   async (req, res, next) => {
     try {
       const errors = matchedData(req);
