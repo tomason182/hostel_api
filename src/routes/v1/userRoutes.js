@@ -71,4 +71,14 @@ router.put(
   user_controller.user_changePasswd_put
 );
 
+// Update forgotten user password
+router.post(
+  "/forgotten-password/init-change-pass/",
+  user_controller.forgotten_user_password
+);
+
+router.get('/forgotten-password/continue-change-pass/:token', user_controller.continue_forgotten_user_password);
+
+router.put('/forgotten-password/finish-change-pass/:token', user_controller.finish_forgotten_user_password);
+
 module.exports = router;
