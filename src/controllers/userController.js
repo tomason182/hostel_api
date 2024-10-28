@@ -5,6 +5,7 @@ const {
   param,
   validationResult,
   matchedData,
+  param,
 } = require("express-validator");
 const {
   userRegisterSchema,
@@ -12,6 +13,8 @@ const {
   userUpdateSchema,
   userCreationSchema,
   userChangePassSchema,
+  userChangePassSchema2,
+  usernameSchema,
 } = require("../schemas/userSchemas");
 const conn = require("../config/db_config");
 const {
@@ -24,6 +27,11 @@ const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
+const {
+  deleteUserByLocalId,
+  insertUserInLocalDB,
+  deleteUserByLocalIdWithDelay,
+} = require("../utils/crud_operations_local_db.js");
 const {
   deleteUserByLocalId,
   insertUserInLocalDB,
@@ -413,7 +421,7 @@ exports.user_changePasswd_put = [
 ];
 
 // @desc    Delete user profile
-// @route   DELETE /api/v1/users/profile/
+// @route   DELETE /api/v1/users/profile/:id
 // @access  Private
 exports.user_profile_delete = async (req, res, next) => {
   try {
@@ -430,7 +438,6 @@ exports.user_profile_delete = async (req, res, next) => {
       dbname,
       userId
     );
-    console.log(userInfo);
 
     if (!userInfo) {
       throw new Error("Unable to find User id");
@@ -474,3 +481,117 @@ exports.user_get_all = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    forgotten user password
+// @route   POST /api/v1/users/forgotten-password/init-change-pass/
+// @access  Public
+exports.forgotten_user_password = [
+  checkSchema(usernameSchema),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const { username } = matchedData(req);
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
+
+      if (user === null) {
+        res.status(401);
+        throw new Error("Invalid username");
+      }
+
+      const token = jwtTokenGeneratorCE(user.username);
+      const confirmEmailLink = `${process.env.API_URL}/users/forgotten-password/continue-change-pass/${token}`;
+      sendConfirmationMail(user, confirmEmailLink);
+
+      res.status(200).json({
+        msg: "An email has been sent to the user so they can continue with the password change process.",
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+exports.continue_forgotten_user_password = [
+  param(token).trim().escape().isJWT(),
+  async (req, res, next) => {
+    try {
+      const errors = matchedData(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+      const token = req.params.token;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const username = decoded.sub;
+      const linkButton = `${process.env.API_URL}/users/forgotten-password/finish-change-pass/${token}`;
+
+      res.status(200).json({
+        username,
+        linkButton,
+        msg: "User enabled to change their password",
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+exports.finish_forgotten_user_password = [
+  checkSchema(userChangePassSchema2),
+  async (req, res, next) => {
+    try {
+      const token = req.params.token;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const username = decoded.sub;
+
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const { newPassword, repeatNewPassword } = matchedData(req);
+
+      if (newPassword !== repeatNewPassword) {
+        res.status(401);
+        throw new Error(
+          "The new password entered for the second time does not match the one entered for the first time."
+        );
+      }
+
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
+
+      if (user === null) {
+        res.status(401);
+        throw new Error("Invalid username");
+      }
+
+      const objUser = new User();
+      await objUser.setHashPassword(newPassword);
+      const hashedPassword = objUser.getHashedPassword();
+      const resultUpdate = await crudOperations.updateOneUserPass(
+        client,
+        dbname,
+        user._id,
+        hashedPassword
+      );
+
+      return res.status(200).json({ msg: "Change password", resultUpdate });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
