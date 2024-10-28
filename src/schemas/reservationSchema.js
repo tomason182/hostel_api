@@ -1,16 +1,24 @@
 const reservationSchema = {
   guest_id: {
     in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Guest ID must be provided",
+    },
     isMongoId: {
       bail: true,
-      errorMessage: "Guest ID must be specified",
+      errorMessage: "Guest ID must be a valid mongoDb ID",
     },
   },
   room_type_id: {
     in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Room type ID must be provided",
+    },
     isMongoId: {
       bail: true,
-      errorMessage: "Room type ID must be specified",
+      errorMessage: "Room type ID must be a valid mongoDb ID",
     },
   },
   booking_source: {
@@ -54,11 +62,24 @@ const reservationSchema = {
   },
   total_price: {
     in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Total price must be provided",
+    },
     isFloat: {
       bail: true,
       options: { min: 1 },
       errorMessage: "Total price should be a decimal number",
     },
+  },
+  currency: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Currency must be provided",
+    },
+    trim: true,
+    escape: true,
   },
   reservation_status: {
     in: ["body"],
@@ -94,7 +115,84 @@ const reservationSchema = {
   },
 };
 
-const updateDateAndPriceSchema = {
+const updateReservationInfo = {
+  id: {
+    in: ["params"],
+    isMongoId: {
+      bail: true,
+      errorMessage: "Reservation ID must be a valid mongoDB id",
+    },
+    exists: {
+      bail: true,
+      errorMessage: "Reservation ID must be provided",
+    },
+  },
+  reservation_status: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Reservation status must be specified",
+    },
+    isIn: {
+      options: [["confirmed", "provisional", "canceled", "no_show"]], // Can not change status of reservation marked as canceled or no_show
+    },
+  },
+  payment_status: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Payment status must be specified",
+    },
+    isIn: {
+      options: [["pending", "canceled", "refunded", "paid", "partial"]],
+    },
+  },
+  total_price: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Total price must be provided",
+    },
+    isFloat: {
+      bail: true,
+      options: { min: 1 },
+      errorMessage: "Total price should be a decimal number",
+    },
+  },
+  currency: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Currency must be provided",
+    },
+    trim: true,
+    escape: true,
+  },
+  booking_source: {
+    in: ["body"],
+    exists: {
+      bail: true,
+      errorMessage: "Booking source must be provided",
+    },
+    isIn: {
+      options: [["booking.com", "hostelWorld.com", "direct"]],
+    },
+  },
+  special_request: {
+    in: ["body"],
+    optional: true,
+    trim: true,
+    escape: true,
+    isLength: {
+      options: {
+        max: 50,
+      },
+      errorMessage: "Special request maximum length is 50 characters",
+    },
+  },
+};
+
+const updateDateAndGuestSchema = {
   id: {
     in: ["params"],
     isMongoId: {
@@ -128,16 +226,16 @@ const updateDateAndPriceSchema = {
       errorMessage: "Check out date must be ISO8601 format",
     },
   },
-  total_price: {
+  number_of_guest: {
     in: ["body"],
     exists: {
       bail: true,
-      errorMessage: "Total price must be specified",
+      errorMessage: "Number of guest must be specified",
     },
-    isFloat: {
+    isInt: {
       bail: true,
       options: { min: 1 },
-      errorMessage: "Total price should be a decimal number",
+      errorMessage: "Number of guest must be a integer",
     },
   },
 };
@@ -176,7 +274,8 @@ const updatePaymentStatus = {
 
 module.exports = {
   reservationSchema,
-  updateDateAndPriceSchema,
+  updateReservationInfo,
+  updateDateAndGuestSchema,
   updateReservationStatus,
   updatePaymentStatus,
 };

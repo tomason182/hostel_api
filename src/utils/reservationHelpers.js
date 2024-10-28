@@ -1,5 +1,3 @@
-const { checkAvailability } = require("./availability_helpers");
-
 exports.insertNewReservation = async (client, dbname, reservation) => {
   try {
     const db = client.db(dbname);
@@ -11,6 +9,29 @@ exports.insertNewReservation = async (client, dbname, reservation) => {
     throw new Error(
       `An error ocurred inserting the reservation. ${err.message}`
     );
+  }
+};
+
+exports.findReservationByIdSimple = async (
+  client,
+  dbname,
+  propertyId,
+  reservationId
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      _id: reservationId,
+      property_id: propertyId,
+    };
+
+    const result = await reservationColl.findOne(query);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
   }
 };
 
@@ -29,11 +50,75 @@ exports.findReservationById = async (
       property_id: propertyId,
     };
 
-    const result = await reservationColl.findOne(query);
+    const aggregation = [
+      {
+        $match: query,
+      },
+      {
+        $lookup: {
+          from: "room_types",
+          localField: "room_type_id",
+          foreignField: "_id",
+          as: "room_type_info",
+        },
+      },
+      {
+        $unwind: "$room_type_info",
+      },
+      {
+        $project: {
+          _id: 1,
+          room_type_id: 1,
+          guest_id: 1,
+          number_of_guest: 1,
+          total_price: 1,
+          currency: 1,
+          reservation_status: 1,
+          booking_source: 1,
+          payment_status: 1,
+          special_request: 1,
+          assigned_beds: 1,
+          check_in: 1,
+          check_out: 1,
+          updated_At: 1,
+          "room_type_info.description": 1,
+        },
+      },
+    ];
+
+    const result = await reservationColl.aggregate(aggregation).toArray();
 
     if (!result) {
       throw new Error("Reservation not found");
     }
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.findReservationsForToday = async (client, dbname, propertyId, date) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      property_id: propertyId,
+      reservation_status: { $in: ["confirmed", "provisional"] },
+      check_in: { $eq: date },
+    };
+
+    const projection = {
+      room_type_id: 1,
+      number_of_guest: 1,
+      check_in: 1,
+      check_out: 1,
+    };
+    const result = await reservationColl
+      .find(query)
+      .project(projection)
+      .toArray();
 
     return result;
   } catch (err) {
@@ -66,6 +151,8 @@ exports.findReservationByDateRangeSimple = async (
       number_of_guest: 1,
       check_in: 1,
       check_out: 1,
+      assigned_beds: 1,
+      updated_At: 1,
     };
 
     const result = await reservationColl
@@ -148,6 +235,7 @@ exports.findReservationsByDateRange = async (
           guest_id: 1,
           number_of_guest: 1,
           total_price: 1,
+          currency: 1,
           reservation_status: 1,
           booking_source: 1,
           payment_status: 1,
@@ -155,6 +243,7 @@ exports.findReservationsByDateRange = async (
           assigned_beds: 1,
           check_in: 1,
           check_out: 1,
+          updated_At: 1,
           "guest_info.full_name": {
             $concat: ["$guest_info.first_name", " ", "$guest_info.last_name"],
           },
@@ -230,55 +319,6 @@ exports.handleCalendarReservations = async (
   }
 };
 
-exports.updateDateAndNumberOfGuest = async (
-  client,
-  dbname,
-  reservationId,
-  propertyId,
-  roomTypeId,
-  checkIn,
-  checkOut,
-  numberOfGuest
-) => {
-  const session = client.startSession();
-  try {
-    session.startTransaction();
-    const db = client.db(dbname);
-    const reservationColl = db.collection("reservations");
-
-    // Modify reservation status to cancelled for check availability purpose only
-
-    const filter = {
-      _id: reservationId,
-      property_id: propertyId,
-    };
-
-    const options = {
-      upsert: false,
-    };
-
-    const updateDoc = {
-      $set: {
-        reservation_status: "cancelled",
-      },
-    };
-
-    const result = await reservationColl.updateOne(filter, updateDoc, options);
-
-    // Check availability for the selected dates
-    const availableBeds = checkAvailability(
-      client,
-      dbname,
-      roomTypeId,
-      checkIn,
-      checkOut,
-      numberOfGuest
-    );
-  } catch (err) {
-    throw new Error(err);
-  }
-};
-
 exports.handleReservationStatus = async (
   client,
   dbname,
@@ -339,6 +379,78 @@ exports.handleReservationPaymentStatus = async (
     };
 
     const result = await reservationColl.updateOne(query, updateDoc, options);
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.updateReservationInfo = async (
+  client,
+  dbname,
+  propertyId,
+  reservationId,
+  data
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      _id: reservationId,
+      property_id: propertyId,
+    };
+    const options = {
+      upsert: false,
+    };
+    const updateDoc = {
+      $set: {
+        ...data,
+      },
+    };
+
+    const result = await reservationColl.updateOne(query, updateDoc, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
+
+exports.updateReservationDatesAndGuest = async (
+  client,
+  dbname,
+  propertyId,
+  reservationId,
+  checkIn,
+  checkOut,
+  numberOfGuest,
+  status
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      _id: reservationId,
+      property_id: propertyId,
+    };
+
+    const options = {
+      upsert: false,
+    };
+
+    const updateDoc = {
+      $set: {
+        check_in: checkIn,
+        check_out: checkOut,
+        number_of_guest: numberOfGuest,
+        reservation_status: status,
+      },
+    };
+
+    const result = await reservationColl.updateOne(query, updateDoc, options);
+
     return result;
   } catch (err) {
     throw new Error(err);

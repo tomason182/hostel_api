@@ -87,7 +87,7 @@ exports.finish_user_register = [
     try {
       const errors = validationResult(req);
 
-      if (!errors.empty()) {
+      if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
       const token = req.params.token;
@@ -132,7 +132,6 @@ exports.user_create = [
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
-      console.log(errors.array());
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
@@ -141,6 +140,10 @@ exports.user_create = [
         matchedData(req);
 
       const propertyId = req.user._id;
+
+      if (role === "admin") {
+        throw new Error("Admin users can not be created");
+      }
 
       // Check if user exist in the database
       const client = conn.getClient();
@@ -319,11 +322,31 @@ exports.user_edit_profile = [
         throw new Error("Params is not a valid mongo ID");
       }
 
-      console.log(req.params.id);
       const userId = ObjectId.createFromHexString(req.params.id);
       const data = matchedData(req);
 
       const client = conn.getClient();
+
+      const userInfo = await crudOperations.findOneUserById(
+        client,
+        dbname,
+        userId
+      );
+
+      if (!userInfo) {
+        throw new Error("Unable to find User's ID");
+      }
+
+      if (userInfo.role === "admin") {
+        throw new Error(
+          "Admin accounts cannot be updated here. Please go to Account Settings to delete an admin user."
+        );
+      }
+
+      if (data.role === "admin") {
+        throw new Error("Admin role can not be set up from here");
+      }
+
       const result = await crudOperations.updateOneUser(
         client,
         dbname,
@@ -370,9 +393,7 @@ exports.user_changePasswd_put = [
 
       if (newPassword !== repeatNewPassword) {
         res.status(401);
-        throw new Error(
-          "The new password entered for the second time does not match the one entered for the first time."
-        );
+        throw new Error("Confirm password does not match");
       }
       const objUser = new User();
       await objUser.setHashPassword(newPassword);
@@ -384,7 +405,7 @@ exports.user_changePasswd_put = [
         hashedPassword
       );
 
-      return res.status(200).json({ msg: "Change password", resultUpdate });
+      return res.status(200).json(resultUpdate.matchedCount);
     } catch (error) {
       next(error);
     }
@@ -403,6 +424,23 @@ exports.user_profile_delete = async (req, res, next) => {
     const userId = ObjectId.createFromHexString(req.params.id);
     const propertyId = req.user._id;
     const client = conn.getClient();
+
+    const userInfo = await crudOperations.findOneUserById(
+      client,
+      dbname,
+      userId
+    );
+    console.log(userInfo);
+
+    if (!userInfo) {
+      throw new Error("Unable to find User id");
+    }
+
+    if (userInfo.role === "admin") {
+      throw new Error(
+        "Admin accounts cannot be deleted here. Please go to Account Settings to delete an admin user."
+      );
+    }
     const result = await transactionsOperations.deleteUser(
       client,
       dbname,
