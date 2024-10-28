@@ -19,7 +19,7 @@ exports.findOneUserById = async (client, dbname, userId) => {
 
     const query = { _id: userId };
     const result = usersColl.findOne(query);
-    
+
     return result;
   } catch (err) {
     throw new Error(err);
@@ -42,10 +42,32 @@ exports.updateOneUserPass = async (client, dbname, userId, hashedPassword) => {
     const result = await usersColl.updateOne(filter, updateUserPass);
     return result;
   } catch (err) {
-    throw new Error(
-      "An error ocurred while updating the user password",
-      err
-    );
+    throw new Error("An error ocurred while updating the user password", err);
+  }
+};
+
+exports.editUserProfile = async (client, dbname, userId, data) => {
+  try {
+    const db = client.db(dbname);
+    const userColl = db.collection("users");
+
+    const filter = { _id: userId };
+    const options = {
+      upsert: false,
+    };
+    const updateUser = {
+      $set: {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        updatedAt: new Date(),
+      },
+    };
+
+    const result = await userColl.updateOne(filter, updateUser, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
   }
 };
 

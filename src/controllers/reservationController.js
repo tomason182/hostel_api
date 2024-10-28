@@ -1,12 +1,14 @@
 const {
   reservationSchema,
-  updateDateAndPriceSchema,
+  updateReservationInfo,
+  updateDateAndGuestSchema,
   updateReservationStatus,
   updatePaymentStatus,
 } = require("../schemas/reservationSchema");
 const Reservation = require("../models/reservationModel");
 const reservationHelper = require("../utils/reservationHelpers");
 const parseDateHelper = require("../utils/parseDateHelper");
+const crudOperations = require("../utils/crud_operations");
 const {
   checkSchema,
   validationResult,
@@ -16,7 +18,7 @@ const {
 const { ObjectId } = require("mongodb");
 
 const conn = require("../config/db_config");
-const { checkAvailability } = require("../utils/availability_helpers");
+const availability_helpers = require("../utils/availability_helpers");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -71,7 +73,7 @@ exports.reservation_create = [
 
       const client = conn.getClient();
 
-      const availableBeds = await checkAvailability(
+      const isAvailable = await availability_helpers.checkAvailability(
         client,
         dbname,
         roomTypeId,
@@ -80,18 +82,16 @@ exports.reservation_create = [
         number_of_guest
       );
 
-      if (availableBeds === false) {
+      if (isAvailable === false) {
         throw new Error("No bed available for the selected dates");
       }
 
-      newReservation.setAssignedBeds(availableBeds, number_of_guest);
-
+      // Si hay cama disponible creamos la reserva. Sin asignarle todavia una cama.
       const result = await reservationHelper.insertNewReservation(
         client,
         dbname,
         newReservation
       );
-
       return res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -199,11 +199,11 @@ exports.reservation_get_date_range = [
   },
 ];
 
-// @desc      Update reservation dates & price
-// @route     PUT /api/v1/reservations/dates_and_price/:id
+// @desc      Update reservation dates & guest
+// @route     PUT /api/v1/reservations/dates-and-guest/:id
 // @access    Private
-exports.reservations_dates_and_numberOfGuest_update = [
-  checkSchema(updateDateAndPriceSchema),
+exports.reservation_dates_and_numberOfGuest_update = [
+  checkSchema(updateDateAndGuestSchema),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -218,15 +218,22 @@ exports.reservations_dates_and_numberOfGuest_update = [
 
       const client = conn.getClient();
 
-      const reservationResult = await reservationHelper.findReservationById(
-        client,
-        dbname,
-        propertyId,
-        reservationId
-      );
+      const reservationResult =
+        await reservationHelper.findReservationByIdSimple(
+          client,
+          dbname,
+          propertyId,
+          reservationId
+        );
+
+      if (!reservationResult) {
+        throw new Error("Reservation id not found");
+      }
 
       // set reservation status to cancelled for check availability purpose
-      const reservationStatus = "cancelled";
+      const previousStatus = reservationResult.reservation_status;
+      const roomTypeId = reservationResult.room_type_id;
+      const reservationStatus = "canceled";
       const result = await reservationHelper.handleReservationStatus(
         client,
         dbname,
@@ -235,15 +242,45 @@ exports.reservations_dates_and_numberOfGuest_update = [
         reservationStatus
       );
 
-      // Reservations dates
-      const reservationCheckIn = reservationResult.check_in;
-      const reservationCheckOut = reservationResult.check_out;
+      // Check availability for the new data
+      const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
+      const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
 
-      // Formatting input dates
-      const formattedCheckIn = new Date(check_in);
-      const formattedCheckOut = new Date(check_out);
+      const isAvailable = await availability_helpers.checkAvailability(
+        client,
+        dbname,
+        roomTypeId,
+        checkIn,
+        checkOut,
+        number_of_guest
+      );
 
-      return res.status(200).json(reservationResult);
+      if (isAvailable === false) {
+        await reservationHelper.handleReservationStatus(
+          client,
+          dbname,
+          propertyId,
+          reservationId,
+          previousStatus
+        );
+        throw new Error(
+          `No beds available for the selected dates. Please, check that reservation status is set up as ${previousStatus}`
+        );
+      }
+
+      const UpdatedReservationResult =
+        await reservationHelper.updateReservationDatesAndGuest(
+          client,
+          dbname,
+          propertyId,
+          reservationId,
+          checkIn,
+          checkOut,
+          number_of_guest,
+          previousStatus
+        );
+
+      return res.status(200).json(UpdatedReservationResult);
     } catch (err) {
       next(err);
     }
@@ -318,9 +355,117 @@ exports.reservation_update_payment_put = [
   },
 ];
 
-// @desc      Get an specific reservation
-// @route     POST /api/v1/reservations/:id
+// @desc      Update an specific reservation
+// @route     PUT /api/v1/reservations/:id
 // @access    Private
+exports.reservation_update_info_put = [
+  checkSchema(updateReservationInfo),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const propertyId = req.user._id;
+
+      const { id, ...data } = matchedData(req);
+
+      const reservationId = ObjectId.createFromHexString(id);
+      const client = conn.getClient();
+      const result = await reservationHelper.updateReservationInfo(
+        client,
+        dbname,
+        propertyId,
+        reservationId,
+        data
+      );
+
+      return res.status(200).json(`${result.modifiedCount} document updated`);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc      Get an specific reservation
+// @route     GET /api/v1/reservations/:id
+// @access    Private
+exports.reservation_find_by_id_get = [
+  param("id")
+    .trim()
+    .escape()
+    .isMongoId()
+    .withMessage("Param is not a valid mongoID"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(200).json(errors.array());
+      }
+
+      const propertyId = req.user._id;
+      const id = req.params.id;
+      const reservationId = ObjectId.createFromHexString(id);
+
+      const client = conn.getClient();
+      const result = await reservationHelper.findReservationById(
+        client,
+        dbname,
+        propertyId,
+        reservationId
+      );
+
+      return res.status(200).json(result[0]);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc      Update reservations bed
+// @route     GET /api/v1/reservations/check-in/assign-beds
+// @access    Private
+exports.reservations_assign_beds_put = async (req, res, next) => {
+  try {
+    const propertyId = req.user._id;
+
+    const client = conn.getClient();
+    const year = new Date().getUTCFullYear();
+    const month = new Date().getMonth();
+    const day = new Date().getDate();
+    const today = new Date(year, month, day);
+
+    // Obtener los tipos de cuarto de la propiedad
+    const roomTypes = await crudOperations.findAllRoomTypesByPropertyId(
+      client,
+      dbname,
+      propertyId
+    );
+
+    // traemos todas las reservas que caigan en el rango de hoy.
+    const reservationsList =
+      await reservationHelper.findReservationByDateRangeSimple(
+        client,
+        dbname,
+        propertyId,
+        today,
+        today
+      );
+
+    // Asignarmos las camas a las reservas que no tienen asignacion.
+    const response = availability_helpers.bedsAssignment(
+      client,
+      dbname,
+      roomTypes,
+      reservationsList
+    );
+
+    return res.status(200).json(response.msg);
+  } catch (err) {
+    next(err);
+  }
+};
 
 // @desc      Get reservations by guest name
 // @route     GET /api/v1/reservations/?name=value
@@ -328,10 +473,6 @@ exports.reservation_update_payment_put = [
 
 // @desc      Get reservations by room type
 // @route     GET /api/v1/reservations/:room-type
-// @access    Private
-
-// @desc      Update an specific reservation
-// @route     PUT /api/v1/reservations/:id
 // @access    Private
 
 // @desc      Delete an specific reservation

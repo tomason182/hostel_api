@@ -39,9 +39,9 @@ router.get(
 // @desc Get reservation by id
 // @router GET /api/v1/reservations/find/:id
 router.get(
-  "/find/:id",
+  "/find-by-id/:id",
   authMiddleware,
-  reservationController.reservations_dates_and_numberOfGuest_update
+  reservationController.reservation_find_by_id_get
 );
 
 // @desc      Update reservation status
@@ -60,6 +60,33 @@ router.put(
   "/payment_status/:id",
   authMiddleware,
   reservationController.reservation_update_payment_put
+);
+
+// @desc    Update reservation info
+// @route   PUT /api/v1/reservations/update/:id
+// @access  Private
+router.put(
+  "/update/:id",
+  authMiddleware,
+  reservationController.reservation_update_info_put
+);
+
+// @desc    Update reservation date and guest
+// @route   PUT /api/v1/reservations/update-dates-guest/:id
+// @access  Private
+router.put(
+  "/update-dates-guest/:id",
+  authMiddleware,
+  reservationController.reservation_dates_and_numberOfGuest_update
+);
+
+// @desc      Update reservations bed
+// @route     GET /api/v1/reservations/check-in/assign-beds
+// @access    Private
+router.get(
+  "/check-in/assign-beds",
+  authMiddleware,
+  reservationController.reservations_assign_beds_put
 );
 
 module.exports = router;

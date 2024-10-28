@@ -3,9 +3,9 @@ const parseDateHelper = require("../utils/parseDateHelper");
 
 class Reservation {
   constructor(
-    guest_id,
+    guest_id = null,
     property_id,
-    room_type_id,
+    room_type_id = null,
     booking_source,
     number_of_guest,
     total_price,
@@ -15,9 +15,13 @@ class Reservation {
     special_request,
     assigned_beds = []
   ) {
-    (this.guest_id = ObjectId.createFromHexString(guest_id)),
+    (this.guest_id =
+      guest_id === null ? null : ObjectId.createFromHexString(guest_id)),
       (this.property_id = property_id),
-      (this.room_type_id = ObjectId.createFromHexString(room_type_id)),
+      (this.room_type_id =
+        room_type_id === null
+          ? null
+          : ObjectId.createFromHexString(room_type_id)),
       (this.booking_source = booking_source),
       this.check_in,
       this.check_out,
@@ -32,10 +36,22 @@ class Reservation {
       (this.updated_At = new Date());
   }
 
-  setAssignedBeds(availableBeds, numberOfGuest) {
-    for (let i = 0; i < numberOfGuest; i++) {
-      this.assigned_beds.push(availableBeds[i]);
+  setAssignedBeds(availableBeds, numberOfGuest, roomType) {
+    if (roomType === "dorm") {
+      for (let i = 0; i < numberOfGuest; i++) {
+        this.assigned_beds.push(availableBeds[i]);
+      }
+    } else {
+      this.assigned_beds.push(availableBeds[0]);
     }
+  }
+
+  getBeds() {
+    return this.assigned_beds;
+  }
+
+  setNumberOfGuest(num) {
+    this.number_of_guest = num;
   }
 
   setDates(checkIn, checkOut) {
@@ -43,8 +59,19 @@ class Reservation {
     this.check_out = parseDateHelper.parseDateWithHyphen(checkOut);
   }
 
+  getDates() {
+    return {
+      checkIn: this.check_in,
+      checkOut: this.check_out,
+    };
+  }
+
   getGuestId() {
     return this.guest_id;
+  }
+
+  setRoomTypeId(room_type_id) {
+    this.room_type_id = ObjectId.createFromHexString(room_type_id);
   }
 
   getRoomTypeId() {
