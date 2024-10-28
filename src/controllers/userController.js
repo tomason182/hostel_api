@@ -392,7 +392,7 @@ exports.user_changePasswd_put = [
 ];
 
 // @desc    Delete user profile
-// @route   DELETE /api/v1/users/profile/
+// @route   DELETE /api/v1/users/profile/:id
 // @access  Private
 exports.user_profile_delete = async (req, res, next) => {
   try {
