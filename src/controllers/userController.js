@@ -4,6 +4,7 @@ const {
   body,
   validationResult,
   matchedData,
+  param,
 } = require("express-validator");
 const {
   userRegisterSchema,
@@ -19,15 +20,22 @@ const {
   sanitizeCreateBody,
 } = require("../schemas/userSchemas");
 const conn = require("../config/db_config");
-const { jwtTokenGenerator, jwtTokenGeneratorCE } = require("../utils/tokenGenerator");
+const {
+  jwtTokenGenerator,
+  jwtTokenGeneratorCE,
+} = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
-const { deleteUserByLocalId, insertUserInLocalDB, deleteUserByLocalIdWithDelay } = require("../utils/crud_operations_local_db.js");
+const {
+  deleteUserByLocalId,
+  insertUserInLocalDB,
+  deleteUserByLocalIdWithDelay,
+} = require("../utils/crud_operations_local_db.js");
 const transactionsOperations = require("../utils/transactions_operations");
 const sendConfirmationMail = require("../config/transactional_email");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -77,7 +85,7 @@ exports.user_register = [
         hashedPassword: currUser.getHashedPassword(),
         firstName: firstName,
         lastName: lastName,
-        propertyName: propertyName
+        propertyName: propertyName,
       };
 
       await insertUserInLocalDB(userJson);
@@ -85,47 +93,53 @@ exports.user_register = [
       const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
       sendConfirmationMail(userJson, confirmEmailLink);
       deleteUserByLocalIdWithDelay(userJson.userLocalID);
-      res.status(200).json({ msg: "The e-mail has been sent for the user to confirm their electronic mail address." });
-
-    }  catch (err) {
+      res.status(200).json({
+        msg: "The e-mail has been sent for the user to confirm their electronic mail address.",
+      });
+    } catch (err) {
       next(err);
     }
   },
 ];
 
+exports.finish_user_register = async (req, res, next) => {
+  try {
+    const token = req.params.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userLocalID = decoded.sub;
+    const currUser = await deleteUserByLocalId(userLocalID);
 
-exports.finish_user_register =
-  async (req, res, next) => {
-    try {
-      const token = req.params.token;
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLocalID = decoded.sub;
-      const currUser = await deleteUserByLocalId(userLocalID);
-    
-      const client = conn.getClient();
+    const client = conn.getClient();
 
-      // create User, Property & Access Control objects
-      const user = new User(currUser.username, currUser.firstName, currUser.lastName, currUser.hashedPassword);
+    // create User, Property & Access Control objects
+    const user = new User(
+      currUser.username,
+      currUser.firstName,
+      currUser.lastName,
+      currUser.hashedPassword
+    );
 
-      const property = new Property(currUser.propertyName);
+    const property = new Property(currUser.propertyName);
 
-      const property_id = new ObjectId();
+    const property_id = new ObjectId();
 
-      property.set_ID(property_id);
+    property.set_ID(property_id);
 
-      const result =
-        await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
-          client,
-          dbname,
-          user,
-          property
-        );
-      console.log(result);
-      return res.status(200).json({ msg: "The user has successfully registered on the website." });
-    } catch (err) {
-      next(err);
-    }
-  };
+    const result =
+      await transactionsOperations.insertUserPropertyAndAccessControlOnRegister(
+        client,
+        dbname,
+        user,
+        property
+      );
+    console.log(result);
+    return res
+      .status(200)
+      .json({ msg: "The user has successfully registered on the website." });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // @desc    Create a new User
 // @route   POST /api/v1/users/create
@@ -296,15 +310,12 @@ exports.user_changePasswd_put = [
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
-      const { currentPassword, newPassword, repeatNewPassword } = matchedData(req);
+      const { currentPassword, newPassword, repeatNewPassword } =
+        matchedData(req);
       const userId = req.user.access_control[0].user_id;
 
       const client = conn.getClient();
-      const user = await crudOperations.findOneUserById(
-        client,
-        dbname,
-        userId
-      );
+      const user = await crudOperations.findOneUserById(client, dbname, userId);
 
       const result = await new User().comparePasswords(
         currentPassword,
@@ -318,15 +329,21 @@ exports.user_changePasswd_put = [
 
       if (newPassword !== repeatNewPassword) {
         res.status(401);
-        throw new Error("The new password entered for the second time does not match the one entered for the first time.");
+        throw new Error(
+          "The new password entered for the second time does not match the one entered for the first time."
+        );
       }
       const objUser = new User();
       await objUser.setHashPassword(newPassword);
       const hashedPassword = objUser.getHashedPassword();
-      const resultUpdate = await crudOperations.updateOneUserPass(client, dbname, userId, hashedPassword);
+      const resultUpdate = await crudOperations.updateOneUserPass(
+        client,
+        dbname,
+        userId,
+        hashedPassword
+      );
 
       return res.status(200).json({ msg: "Change password", resultUpdate });
-      
     } catch (error) {
       next(error);
     }
@@ -343,7 +360,6 @@ exports.user_profile_delete = (req, res, next) => {
   res.status(200).json({ msg: `Delete user ${req.params.id} profile` });
 };
 
-
 // @desc    forgotten user password
 // @route   POST /api/v1/users/forgotten-password/init-change-pass/
 // @access  Public
@@ -354,7 +370,7 @@ exports.forgotten_user_password = [
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
-      };
+      }
 
       const { username } = matchedData(req);
       const client = conn.getClient();
@@ -367,33 +383,44 @@ exports.forgotten_user_password = [
       if (user === null) {
         res.status(401);
         throw new Error("Invalid username");
-      };
-      
+      }
+
       const token = jwtTokenGeneratorCE(user.username);
       const confirmEmailLink = `${process.env.API_URL}/users/forgotten-password/continue-change-pass/${token}`;
       sendConfirmationMail(user, confirmEmailLink);
 
-      res.status(200).json({ msg: "An email has been sent to the user so they can continue with the password change process." });
-
+      res.status(200).json({
+        msg: "An email has been sent to the user so they can continue with the password change process.",
+      });
     } catch (err) {
       next(err);
     }
-  }
+  },
 ];
 
-exports.continue_forgotten_user_password =
+exports.continue_forgotten_user_password = [
+  param(token).escape().isJWT(token),
   async (req, res, next) => {
     try {
+      const errors = matchedData(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
       const token = req.params.token;
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const username = decoded.sub;
       const linkButton = `${process.env.API_URL}/users/forgotten-password/finish-change-pass/${token}`;
-    
-      res.status(200).json({username, linkButton, msg: "User enabled to change their password"});
+
+      res.status(200).json({
+        username,
+        linkButton,
+        msg: "User enabled to change their password",
+      });
     } catch (err) {
       next(err);
     }
-  };
+  },
+];
 
 exports.finish_forgotten_user_password = [
   checkSchema(userChangePassSchema2),
@@ -408,12 +435,14 @@ exports.finish_forgotten_user_password = [
       if (!errors.isEmpty()) {
         return res.status(400).json(errors.array());
       }
-      
+
       const { newPassword, repeatNewPassword } = matchedData(req);
-    
+
       if (newPassword !== repeatNewPassword) {
         res.status(401);
-        throw new Error("The new password entered for the second time does not match the one entered for the first time.");
+        throw new Error(
+          "The new password entered for the second time does not match the one entered for the first time."
+        );
       }
 
       const client = conn.getClient();
@@ -431,12 +460,16 @@ exports.finish_forgotten_user_password = [
       const objUser = new User();
       await objUser.setHashPassword(newPassword);
       const hashedPassword = objUser.getHashedPassword();
-      const resultUpdate = await crudOperations.updateOneUserPass(client, dbname, user._id, hashedPassword);
+      const resultUpdate = await crudOperations.updateOneUserPass(
+        client,
+        dbname,
+        user._id,
+        hashedPassword
+      );
 
       return res.status(200).json({ msg: "Change password", resultUpdate });
     } catch (err) {
       next(err);
     }
-  }
+  },
 ];
-  
