@@ -83,15 +83,16 @@ exports.user_register = [
         property
       );
 
-      console.log(result);
-      return res.status(200).json("ok");
+      const token = jwtTokenGeneratorCE(result.userId);
+      const userData = {
+        username,
+        firstName,
+      };
 
-      const token = jwtTokenGeneratorCE(userJson.userLocalID);
       const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
       sendConfirmationMail(userJson, confirmEmailLink);
-      deleteUserByLocalIdWithDelay(userJson.userLocalID);
       res.status(200).json({
-        msg: "The e-mail has been sent for the user to confirm their electronic mail address.",
+        msg: "Confirmation email sent",
       });
     } catch (err) {
       next(err);
