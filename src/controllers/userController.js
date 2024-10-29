@@ -111,28 +111,14 @@ exports.finish_user_register = [
       }
       const token = req.params.token;
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLocalID = decoded.sub;
-      const currUser = await deleteUserByLocalId(userLocalID);
-
-      // create User, Property & Access Control objects
-      const role = "admin"; // We assign role admin when user register
-      const user = new User(currUser.username, currUser.firstName);
-      user.setRole(role);
-      user.setPasswordHashed(currUser.hashedPassword);
-
-      const property = new Property(currUser.propertyName);
-
-      const property_id = new ObjectId();
-
-      property.set_ID(property_id);
+      const userId = decoded.sub;
 
       const client = conn.getClient();
 
-      const result = await transactionsOperations.createUser(
+      const result = await crudOperations.validateUserEmail(
         client,
         dbname,
-        user,
-        property
+        userId
       );
 
       return res.status(200).json(result);
