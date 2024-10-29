@@ -78,7 +78,7 @@ router.post(
 );
 
 router.put(
-  "/forgotten-password/finish-change-pass/:token",
+  "/reset-password/finish-change-pass/:token",
   user_controller.finish_forgotten_user_password
 );
 
