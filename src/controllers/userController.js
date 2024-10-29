@@ -110,6 +110,7 @@ exports.finish_user_register = [
         return res.status(400).json(errors.array());
       }
       const token = req.params.token;
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const userId = decoded.sub;
 
