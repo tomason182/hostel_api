@@ -31,7 +31,7 @@ async function sendConfirmationMail(userData, confirmEmailLink) {
         <p>Hi ${userData.firstName},</p>
         <p>Welcome to SimpleHostel! To complete your account setup, please confirm your email address.</p>
         <p style="text-align: center; margin: 20px 0;">
-          <a href=${confirmEmailLink} style="display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #007BFF; border-radius: 4px; text-decoration: none; font-weight: bold;">Verify My Email</a>
+          <a href=${confirmEmailLink} target="_blank" style="display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #007BFF; border-radius: 4px; text-decoration: none; font-weight: bold;">Verify My Email</a>
         </p>
         <p>If you didn&apos;t create an account with SimpleHostel, you can ignore this email.</p>
         <p>Thank you for joining us!<br>The SimpleHostel Team</p>
