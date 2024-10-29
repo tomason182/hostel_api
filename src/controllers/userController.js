@@ -90,7 +90,7 @@ exports.user_register = [
       };
 
       const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
-      sendConfirmationMail(userJson, confirmEmailLink);
+      sendConfirmationMail(userData, confirmEmailLink);
       res.status(200).json({
         msg: "Confirmation email sent",
       });
