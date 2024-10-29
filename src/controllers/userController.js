@@ -26,7 +26,10 @@ const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
 const transactionsOperations = require("../utils/transactions_operations");
-const sendConfirmationMail = require("../config/transactional_email");
+const {
+  sendConfirmationMail,
+  sendResetPasswordMail,
+} = require("../config/transactional_email");
 const jwt = require("jsonwebtoken");
 
 // Enviroment variables
@@ -84,7 +87,8 @@ exports.user_register = [
         firstName,
       };
 
-      const confirmEmailLink = process.env.API_URL + token;
+      const confirmEmailLink =
+        process.env.API_URL + "accounts/email-validation/" + token;
       sendConfirmationMail(userData, confirmEmailLink);
       res.status(200).json({
         msg: "Confirmation email sent",
@@ -492,7 +496,7 @@ exports.user_get_all = async (req, res, next) => {
 };
 
 // @desc    forgotten user password
-// @route   POST /api/v1/users/forgotten-password/init-change-pass/
+// @route   POST /api/v1/users/reset-password/init-change-pass/
 // @access  Public
 exports.forgotten_user_password = [
   checkSchema(usernameSchema),
@@ -517,11 +521,12 @@ exports.forgotten_user_password = [
       }
 
       const token = jwtTokenGeneratorCE(user.username);
-      const confirmEmailLink = `${process.env.API_URL}/users/forgotten-password/continue-change-pass/${token}`;
-      sendConfirmationMail(user, confirmEmailLink);
+      const resetLink =
+        process.env.API_URL + "accounts/reset-password/new/" + token;
+      sendResetPasswordMail(user, resetLink);
 
       res.status(200).json({
-        msg: "An email has been sent to the user so they can continue with the password change process.",
+        msg: "email sent",
       });
     } catch (err) {
       next(err);

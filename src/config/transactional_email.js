@@ -44,4 +44,43 @@ async function sendConfirmationMail(userData, confirmEmailLink) {
   console.log("Message sent: %s", info.messageId);
 }
 
-module.exports = sendConfirmationMail;
+async function sendResetPasswordMail(userData, resetPassLink) {
+  const info = await transporter.sendMail({
+    from: `"Simple Hostel" <${process.env.ACCOUNT_USER}>`,
+    to: `${userData.username}`,
+    subject: "Reset Your Password for SimpleHostel",
+    text: "Reset your password",
+    html: `<table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; margin: 20px auto; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); font-family: Arial, sans-serif; color: #333;">
+    <tbody>
+      <tr>
+        <td colspan="3" height="60" style="text-align: center; background-color: #007bff; color: #ffffff; border-radius: 8px 8px 0 0;">
+          <h1 style="font-size: 1.8rem; font-weight: bold;">Simple Hostel</h1>
+        </td>
+      </tr>      
+      <tr>
+        <td colspan="3" height="20"></td>
+      </tr>
+      <tr>
+        <td colspan="3">
+          <h4 style="color: #222; font-size: 0.75rem; margin-bottom: 10px; font-weight: bold">Reset Password</h4>
+          <p style="font-size: 0.75rem; line-height: 1.5;">
+            A password reset link was requested for this email. This link is limited for 15 minutes
+            <br /><br />
+            If you do not reset your password withing 15 minutes, you will need to request a new link.
+            <br /><br />
+            To complete the password reset process, please visit the following link:
+            <br /><br />
+            <a href=${resetPassLink} target="_blank" style="color: #007bff; text-decoration: none;">Reset your password</a>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3 height="20"></td>
+      </tr>  
+    </tbody>
+  </table>
+  `,
+  });
+}
+
+module.exports = { sendConfirmationMail, sendResetPasswordMail };
