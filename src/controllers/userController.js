@@ -198,7 +198,9 @@ exports.user_auth = [
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         res.status(401);
-        throw new Error("Invalid username or password");
+        throw new Error(
+          "We couldn't sign you in. Please check your credentials or complete email confirmation if required"
+        );
       }
       const { username, password } = matchedData(req);
 
@@ -210,8 +212,19 @@ exports.user_auth = [
       );
       if (user === null) {
         res.status(401);
-        throw new Error("Invalid username or password");
+        throw new Error(
+          "We couldn't sign you in. Please check your username, password or verify your email"
+        );
       }
+
+      if (user.isValidEmail === false) {
+        res.status(401);
+        throw new Error(
+          "We couldn't sign you in. Please check your username, password or verify your email"
+        );
+      }
+
+      console.log(user);
 
       const result = await new User().comparePasswords(
         password,
@@ -220,7 +233,9 @@ exports.user_auth = [
 
       if (!result) {
         res.status(401);
-        throw new Error("Invalid username or password");
+        throw new Error(
+          "We couldn't sign you in. Please check your username, password or verify your email"
+        );
       }
 
       jwtTokenGenerator(res, user._id);
