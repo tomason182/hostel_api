@@ -25,11 +25,6 @@ const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
-const {
-  deleteUserByLocalId,
-  insertUserInLocalDB,
-  deleteUserByLocalIdWithDelay,
-} = require("../utils/crud_operations_local_db.js");
 const transactionsOperations = require("../utils/transactions_operations");
 const sendConfirmationMail = require("../config/transactional_email");
 const jwt = require("jsonwebtoken");
