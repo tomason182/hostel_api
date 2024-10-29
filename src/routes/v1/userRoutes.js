@@ -77,11 +77,6 @@ router.post(
   user_controller.forgotten_user_password
 );
 
-router.get(
-  "/forgotten-password/continue-change-pass/:token",
-  user_controller.continue_forgotten_user_password
-);
-
 router.put(
   "/forgotten-password/finish-change-pass/:token",
   user_controller.finish_forgotten_user_password

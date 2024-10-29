@@ -536,30 +536,6 @@ exports.forgotten_user_password = [
   },
 ];
 
-exports.continue_forgotten_user_password = [
-  param("token").trim().escape().isJWT(),
-  async (req, res, next) => {
-    try {
-      const errors = matchedData(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json(errors.array());
-      }
-      const token = req.params.token;
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const username = decoded.sub;
-      const linkButton = `${process.env.API_URL}/users/forgotten-password/finish-change-pass/${token}`;
-
-      res.status(200).json({
-        username,
-        linkButton,
-        msg: "User enabled to change their password",
-      });
-    } catch (err) {
-      next(err);
-    }
-  },
-];
-
 exports.finish_forgotten_user_password = [
   checkSchema(userChangePassSchema2),
   async (req, res, next) => {
@@ -578,9 +554,7 @@ exports.finish_forgotten_user_password = [
 
       if (newPassword !== repeatNewPassword) {
         res.status(401);
-        throw new Error(
-          "The new password entered for the second time does not match the one entered for the first time."
-        );
+        throw new Error("Passwords do not match");
       }
 
       const client = conn.getClient();
