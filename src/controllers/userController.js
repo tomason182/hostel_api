@@ -517,7 +517,9 @@ exports.forgotten_user_password = [
 
       if (user === null) {
         res.status(401);
-        throw new Error("Invalid username");
+        throw new Error(
+          "We couldn't find a matching account for the email address you entered. Please check the email address and try again."
+        );
       }
 
       const token = jwtTokenGeneratorCE(user.username);
