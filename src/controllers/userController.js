@@ -114,12 +114,13 @@ exports.finish_user_register = [
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const userId = decoded.sub;
 
+      const userMongoID = ObjectId.createFromHexString(userId);
       const client = conn.getClient();
 
       const result = await crudOperations.validateUserEmail(
         client,
         dbname,
-        userId
+        userMongoID
       );
 
       return res.status(200).json(result);
