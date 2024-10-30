@@ -61,6 +61,13 @@ exports.room_type_create = [
         throw new Error("Room Type name already exist");
       }
 
+      // Limit roomType creation
+      const roomTypeList = await crudOperations.findAllRoomTypesByPropertyId(
+        client,
+        dbname,
+        property_id
+      );
+
       // create roomType object
       const roomType = new RoomType(
         description,
@@ -71,6 +78,22 @@ exports.room_type_create = [
         base_rate,
         currency
       );
+
+      roomTypeList.push(roomType);
+
+      const numberOfGuest = roomTypeList.reduce(
+        (acc, currentValue) =>
+          acc + currentValue.max_occupancy * currentValue.inventory,
+        0
+      );
+
+      console.log(numberOfGuest);
+      if (numberOfGuest > 25) {
+        res.status(403);
+        throw new Error(
+          "Maximum number of beds reached. You can not create more than 25 beds"
+        );
+      }
       const room_type_id = new ObjectId();
       roomType.setPropertyID(property_id);
       roomType.set_ID(room_type_id);
