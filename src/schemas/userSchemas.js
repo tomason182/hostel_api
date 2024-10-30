@@ -226,7 +226,7 @@ const userChangePassSchema = {
       },
     },
     errorMessage:
-      "Password should contain at least 14 characters, 4 lowercase, 2 uppercase, 2 numbers and 2 symbols ",
+      "Password should contain at least 14 characters, 4 lowercase, 2 uppercase, 2 numbers and 2 symbols",
   },
 };
 
@@ -265,8 +265,25 @@ const userChangePassSchema2 = {
   },
   repeatNewPassword: {
     in: ["body"],
-    trim: true,
-    escape: true,
+    isStrongPassword: {
+      options: {
+        minLength: 14,
+        minLowerCase: 4,
+        minUppercase: 2,
+        minNumbers: 2,
+        minSymbols: 2,
+      },
+    },
+    custom: {
+      options: value => {
+        if (/\s/.test(value)) {
+          throw new Error("Password should not contain white spaces");
+        }
+        return true;
+      },
+    },
+    errorMessage:
+      "Password should contain at least 14 characters, 4 lowercase, 2 uppercase, 2 numbers and 2 symbols ",
   },
 };
 
