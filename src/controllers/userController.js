@@ -162,7 +162,7 @@ exports.resend_email_verification = [
 
       const userData = {
         username: email,
-        firstName: user.firstName,
+        firstName: user.first_name,
       };
 
       const confirmEmailLink =
