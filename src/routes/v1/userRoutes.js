@@ -13,6 +13,12 @@ router.post("/register", user_controller.user_register);
 
 router.get("/confirm-email/:token", user_controller.finish_user_register);
 
+// Resend email
+router.post(
+  "/resend-email-verification",
+  user_controller.resend_email_verification
+);
+
 // Create a new user
 router.post(
   "/create",
