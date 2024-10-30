@@ -133,7 +133,7 @@ exports.finish_user_register = [
 // @route   POST /api/v1/users/resend-email-verification
 // @access  Public
 exports.resend_email_verification = [
-  param("email").trim().isEmail().withMessage("Not a valid email address"),
+  body("email").trim().isEmail().withMessage("Not a valid email address"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -143,7 +143,7 @@ exports.resend_email_verification = [
 
       const client = conn.getClient();
 
-      const email = req.params.email;
+      const { email } = req.body;
       const user = await crudOperations.findOneUserByUsername(
         client,
         dbname,
