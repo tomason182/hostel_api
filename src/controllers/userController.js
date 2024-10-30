@@ -129,6 +129,52 @@ exports.finish_user_register = [
   },
 ];
 
+// @desc    Resend email
+// @route   POST /api/v1/users/resend-email-verification
+// @access  Public
+exports.resend_email_verification = [
+  param("email").trim().isEmail().withMessage("Not a valid email address"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json(errors.array());
+      }
+
+      const client = conn.getClient();
+
+      const email = req.params.email;
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        email
+      );
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      if (user.isValidEmail === true) {
+        throw new Error("Email already verified");
+      }
+
+      const verificationToken = jwtTokenGeneratorCE(user._id);
+
+      const userData = {
+        username: email,
+        firstName: user.firstName,
+      };
+
+      const confirmEmailLink =
+        process.env.API_URL + "accounts/email-validation/" + verificationToken;
+      sendConfirmationMail(userData, confirmEmailLink);
+      res.status(200).json({ msg: "Verification email resent" });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
 // @desc    Create a new User
 // @route   POST /api/v1/users/create
 // @access  Private
