@@ -158,6 +158,15 @@ exports.resend_email_verification = [
         throw new Error("Email already verified");
       }
 
+      const waitingPeriod = 5 * 60 * 1000; // min * 60 seg/min * 1000 ms/seg
+
+      if (Date.now() - user.lastResendEmail < waitingPeriod) {
+        res.status(429);
+        throw new Error("Please wait 5 minutes before requesting a new email");
+      }
+
+      await crudOperations.updateResendEmailTime(client, dbname, user._id);
+
       const verificationToken = jwtTokenGeneratorCE(user._id);
 
       const userData = {

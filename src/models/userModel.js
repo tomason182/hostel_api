@@ -15,6 +15,7 @@ class User {
       (this.hashed_password = hashed_password),
       (this.role = role),
       (this.isValidEmail = isValidEmail),
+      (this.lastResendEmail = Date.now()),
       (this.createdAt = new Date()),
       (this.updatedAt = new Date());
   }
