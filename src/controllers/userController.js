@@ -224,9 +224,24 @@ exports.user_create = [
         return res.status(400).json({ error: "invalid propertyId" });
       }
 
+      // Check if users list is 5 or more
+      const allUser = await crudOperations.findAllPropertyUsers(
+        client,
+        dbname,
+        propertyId
+      );
+
+      if (allUser.length >= 5) {
+        res.status(403);
+        throw new Error(
+          "Team members creation limited reached. You can not create more than 5 team members"
+        );
+      }
+
       // create User, Property & Access Control objects
       const user = new User(username, firstName, lastName);
       user.setRole(role);
+      user.setValidEmail(true);
 
       await user.setHashPassword(password);
 
