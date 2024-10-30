@@ -246,7 +246,7 @@ exports.user_auth = [
       if (!errors.isEmpty()) {
         res.status(401);
         throw new Error(
-          "We couldn't sign you in. Please check your credentials or complete email confirmation if required"
+          "We couldn't sign you in. Please check your username, password or verify your email"
         );
       }
       const { username, password } = matchedData(req);
