@@ -2,7 +2,6 @@ require("dotenv").config();
 const {
   checkSchema,
   body,
-  param,
   validationResult,
   matchedData,
 } = require("express-validator");
@@ -536,6 +535,58 @@ exports.user_profile_delete = async (req, res, next) => {
       dbname,
       userId,
       propertyId
+    );
+
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Delete account
+// @route   DELETE /api/v1/users/account/delete/
+// @access  Private
+exports.delete_account = async (req, res, next) => {
+  try {
+    const userId = req.user.user_info._id;
+    const propertyId = req.user._id;
+
+    const client = conn.getClient();
+
+    const userInfo = await crudOperations.findOneUserById(
+      client,
+      dbname,
+      userId
+    );
+
+    if (!userInfo) {
+      res.status(404);
+      throw new Error("Unable to find User id");
+    }
+
+    if (userInfo.role !== "admin") {
+      res.status(403);
+      throw new Error("You do not have permission to delete the account.");
+    }
+
+    const propertyInfo = await crudOperations.findPropertyById(
+      client,
+      dbname,
+      propertyId
+    );
+
+    if (!propertyInfo) {
+      res.status(404);
+      throw new Error("Unable to find property id");
+    }
+
+    const listUsersId = propertyInfo.access_control;
+
+    const result = await transactionsOperations.deleteAccount(
+      client,
+      dbname,
+      propertyId,
+      listUsersId
     );
 
     return res.status(200).json(result);
