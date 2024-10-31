@@ -2,6 +2,7 @@ require("dotenv").config();
 const {
   checkSchema,
   body,
+  param,
   validationResult,
   matchedData,
 } = require("express-validator");
