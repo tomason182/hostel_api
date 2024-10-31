@@ -23,7 +23,9 @@ exports.createUser = async (client, dbname, user, property) => {
 
     await session.commitTransaction();
     return {
-      msg: `User Created successfully. Property id: ${propertyResult.insertedId}`,
+      msg: "User Created successfully.",
+      PropertyId: propertyResult.insertedId,
+      userId,
     };
   } catch (err) {
     console.error("transaction error", err.message);

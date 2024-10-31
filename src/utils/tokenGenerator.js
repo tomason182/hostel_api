@@ -31,9 +31,9 @@ exports.jwtTokenValidation = function (token) {
   }
 };
 
-exports.jwtTokenGeneratorCE = function (userLocalID) {
+exports.jwtTokenGeneratorCE = function (userId) {
   const payload = {
-    sub: userLocalID,
+    sub: userId,
   };
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "900000",

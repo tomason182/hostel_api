@@ -6,13 +6,16 @@ class User {
     first_name,
     last_name = null,
     hashed_password = null,
-    role
+    role,
+    isValidEmail = false
   ) {
     (this.username = username),
       (this.first_name = first_name),
       (this.last_name = last_name),
       (this.hashed_password = hashed_password),
       (this.role = role),
+      (this.isValidEmail = isValidEmail),
+      (this.lastResendEmail = Date.now()),
       (this.createdAt = new Date()),
       (this.updatedAt = new Date());
   }
@@ -44,6 +47,10 @@ class User {
 
   setRole(role) {
     this.role = role;
+  }
+
+  setValidEmail(isValid) {
+    this.isValidEmail = isValid;
   }
 }
 

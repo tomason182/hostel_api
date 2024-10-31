@@ -26,6 +26,52 @@ exports.findOneUserById = async (client, dbname, userId) => {
   }
 };
 
+exports.validateUserEmail = async (client, dbname, userId) => {
+  try {
+    const db = client.db(dbname);
+    const userColl = db.collection("users");
+
+    const filter = { _id: userId };
+    const updateDoc = {
+      $set: {
+        isValidEmail: true,
+      },
+    };
+    const options = {
+      upsert: false,
+    };
+
+    const result = await userColl.updateOne(filter, updateDoc, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.updateResendEmailTime = async (client, dbname, userId) => {
+  try {
+    const db = client.db(dbname);
+    const userColl = db.collection("users");
+
+    const filter = { _id: userId };
+    const updateDoc = {
+      $set: {
+        lastResendEmail: Date.now(),
+      },
+    };
+    const options = {
+      upsert: false,
+    };
+
+    const result = await userColl.updateOne(filter, updateDoc, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
 exports.updateOneUserPass = async (client, dbname, userId, hashedPassword) => {
   try {
     const db = client.db(dbname);

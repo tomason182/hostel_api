@@ -4,7 +4,6 @@ const {
   body,
   validationResult,
   matchedData,
-  param,
 } = require("express-validator");
 const {
   userRegisterSchema,
@@ -21,18 +20,15 @@ const {
   jwtTokenValidation,
   jwtTokenGeneratorCE,
 } = require("../utils/tokenGenerator");
-
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
-const {
-  deleteUserByLocalId,
-  insertUserInLocalDB,
-  deleteUserByLocalIdWithDelay,
-} = require("../utils/crud_operations_local_db.js");
 const transactionsOperations = require("../utils/transactions_operations");
-const sendConfirmationMail = require("../config/transactional_email");
+const {
+  sendConfirmationMail,
+  sendResetPasswordMail,
+} = require("../config/transactional_email");
 const jwt = require("jsonwebtoken");
 
 // Enviroment variables
@@ -58,24 +54,43 @@ exports.user_register = [
       // Extract req values
       const { username, password, firstName, propertyName } = matchedData(req);
 
-      const userLocalID = new ObjectId().toString();
-      const currUser = new User();
-      await currUser.setHashPassword(password);
-      const userJson = {
-        userLocalID: userLocalID,
-        username: username,
-        hashedPassword: currUser.getHashedPassword(),
-        firstName: firstName,
-        propertyName: propertyName,
+      const user = new User(username, firstName);
+      const role = "admin";
+      user.setRole(role);
+      await user.setHashPassword(password);
+
+      const property = new Property(propertyName);
+
+      const client = conn.getClient();
+
+      const userExist = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
+
+      if (userExist !== null) {
+        return res.status(400).json({ msg: "Username already exist" });
+      }
+
+      const result = await transactionsOperations.createUser(
+        client,
+        dbname,
+        user,
+        property
+      );
+
+      const token = jwtTokenGeneratorCE(result.userId);
+      const userData = {
+        username,
+        firstName,
       };
 
-      await insertUserInLocalDB(userJson);
-      const token = jwtTokenGeneratorCE(userJson.userLocalID);
-      const confirmEmailLink = `${process.env.API_URL}/users/confirm-email/${token}`;
-      sendConfirmationMail(userJson, confirmEmailLink);
-      deleteUserByLocalIdWithDelay(userJson.userLocalID);
+      const confirmEmailLink =
+        process.env.API_URL + "accounts/email-validation/" + token;
+      sendConfirmationMail(userData, confirmEmailLink);
       res.status(200).json({
-        msg: "The e-mail has been sent for the user to confirm their electronic mail address.",
+        msg: "Confirmation email sent",
       });
     } catch (err) {
       next(err);
@@ -93,32 +108,75 @@ exports.finish_user_register = [
         return res.status(400).json(errors.array());
       }
       const token = req.params.token;
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userLocalID = decoded.sub;
-      const currUser = await deleteUserByLocalId(userLocalID);
+      const userId = decoded.sub;
 
-      // create User, Property & Access Control objects
-      const role = "admin"; // We assign role admin when user register
-      const user = new User(currUser.username, currUser.firstName);
-      user.setRole(role);
-      user.setPasswordHashed(currUser.hashedPassword);
-
-      const property = new Property(currUser.propertyName);
-
-      const property_id = new ObjectId();
-
-      property.set_ID(property_id);
-
+      const userMongoID = ObjectId.createFromHexString(userId);
       const client = conn.getClient();
 
-      const result = await transactionsOperations.createUser(
+      const result = await crudOperations.validateUserEmail(
         client,
         dbname,
-        user,
-        property
+        userMongoID
       );
 
       return res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// @desc    Resend email
+// @route   POST /api/v1/users/resend-email-verification
+// @access  Public
+exports.resend_email_verification = [
+  body("email").trim().isEmail().withMessage("Not a valid email address"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json(errors.array());
+      }
+
+      const client = conn.getClient();
+
+      const { email } = req.body;
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        email
+      );
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      if (user.isValidEmail === true) {
+        throw new Error("Email already verified");
+      }
+
+      const waitingPeriod = 5 * 60 * 1000; // min * 60 seg/min * 1000 ms/seg
+
+      if (Date.now() - user.lastResendEmail < waitingPeriod) {
+        res.status(429);
+        throw new Error("Please wait 5 minutes before requesting a new email");
+      }
+
+      await crudOperations.updateResendEmailTime(client, dbname, user._id);
+
+      const verificationToken = jwtTokenGeneratorCE(user._id);
+
+      const userData = {
+        username: email,
+        firstName: user.first_name,
+      };
+
+      const confirmEmailLink =
+        process.env.API_URL + "accounts/email-validation/" + verificationToken;
+      sendConfirmationMail(userData, confirmEmailLink);
+      res.status(200).json({ msg: "Verification email resent" });
     } catch (err) {
       next(err);
     }
@@ -165,9 +223,24 @@ exports.user_create = [
         return res.status(400).json({ error: "invalid propertyId" });
       }
 
+      // Check if users list is 5 or more
+      const allUser = await crudOperations.findAllPropertyUsers(
+        client,
+        dbname,
+        propertyId
+      );
+
+      if (allUser.length >= 5) {
+        res.status(403);
+        throw new Error(
+          "Team members creation limited reached. You can not create more than 5 team members"
+        );
+      }
+
       // create User, Property & Access Control objects
       const user = new User(username, firstName, lastName);
       user.setRole(role);
+      user.setValidEmail(true);
 
       await user.setHashPassword(password);
 
@@ -195,7 +268,9 @@ exports.user_auth = [
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         res.status(401);
-        throw new Error("Invalid username or password");
+        throw new Error(
+          "We couldn't sign you in. Please check your username, password or verify your email"
+        );
       }
       const { username, password } = matchedData(req);
 
@@ -207,8 +282,19 @@ exports.user_auth = [
       );
       if (user === null) {
         res.status(401);
-        throw new Error("Invalid username or password");
+        throw new Error(
+          "We couldn't sign you in. Please check your username, password or verify your email"
+        );
       }
+
+      if (user.isValidEmail === false) {
+        res.status(401);
+        throw new Error(
+          "We couldn't sign you in. Please check your username, password or verify your email"
+        );
+      }
+
+      console.log(user);
 
       const result = await new User().comparePasswords(
         password,
@@ -217,7 +303,9 @@ exports.user_auth = [
 
       if (!result) {
         res.status(401);
-        throw new Error("Invalid username or password");
+        throw new Error(
+          "We couldn't sign you in. Please check your username, password or verify your email"
+        );
       }
 
       jwtTokenGenerator(res, user._id);
@@ -529,7 +617,7 @@ exports.user_get_all = async (req, res, next) => {
 };
 
 // @desc    forgotten user password
-// @route   POST /api/v1/users/forgotten-password/init-change-pass/
+// @route   POST /api/v1/users/reset-password/init-change-pass/
 // @access  Public
 exports.forgotten_user_password = [
   checkSchema(usernameSchema),
@@ -550,46 +638,24 @@ exports.forgotten_user_password = [
 
       if (user === null) {
         res.status(401);
-        throw new Error("Invalid username");
+        throw new Error(
+          "We couldn't find a matching account for the email address you entered. Please check the email address and try again."
+        );
       }
 
       const token = jwtTokenGeneratorCE(user.username);
-      const confirmEmailLink = `${process.env.API_URL}/users/forgotten-password/continue-change-pass/${token}`;
-      sendConfirmationMail(user, confirmEmailLink);
+      const resetLink =
+        process.env.API_URL + "accounts/reset-password/new/" + token;
+      sendResetPasswordMail(user, resetLink);
 
       res.status(200).json({
-        msg: "An email has been sent to the user so they can continue with the password change process.",
+        msg: "email sent",
       });
     } catch (err) {
       next(err);
     }
   },
 ];
-
-exports.continue_forgotten_user_password =
-  /*[ *********** Acomodar esto xq token solo vive dentro del obj req que en este punto no existe.
-  param(token).trim().escape().isJWT(),*/
-  async (req, res, next) => {
-    try {
-      const errors = matchedData(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json(errors.array());
-      }
-      const token = req.params.token;
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const username = decoded.sub;
-      const linkButton = `${process.env.API_URL}/users/forgotten-password/finish-change-pass/${token}`;
-
-      res.status(200).json({
-        username,
-        linkButton,
-        msg: "User enabled to change their password",
-      });
-    } catch (err) {
-      next(err);
-    }
-  } /*,
-]*/;
 
 exports.finish_forgotten_user_password = [
   checkSchema(userChangePassSchema2),
@@ -609,9 +675,7 @@ exports.finish_forgotten_user_password = [
 
       if (newPassword !== repeatNewPassword) {
         res.status(401);
-        throw new Error(
-          "The new password entered for the second time does not match the one entered for the first time."
-        );
+        throw new Error("Passwords do not match");
       }
 
       const client = conn.getClient();

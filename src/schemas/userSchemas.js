@@ -36,18 +36,12 @@ const userRegisterSchema = {
       bail: true,
       errorMessage: "First name must not be empty",
     },
-    isAlpha: {
-      errorMessage: "First name must contain only alphabetic characters",
-    },
   },
   lastName: {
     in: ["body"],
     optional: true,
     trim: true,
     escape: true,
-    isAlpha: {
-      errorMessage: "Last name must contain only alphabetic characters",
-    },
   },
 };
 
@@ -92,18 +86,12 @@ const userUpdateSchema = {
       bail: true,
       errorMessage: "First name must not be empty",
     },
-    isAlpha: {
-      errorMessage: "First name must contain only alphabetic characters",
-    },
   },
   lastName: {
     in: ["body"],
     optional: true,
     trim: true,
     escape: true,
-    isAlpha: {
-      errorMessage: "Last name must contain only alphabetic characters",
-    },
   },
   role: {
     in: ["body"],
@@ -155,18 +143,12 @@ const userCreationSchema = {
       bail: true,
       errorMessage: "First name must not be empty",
     },
-    isAlpha: {
-      errorMessage: "First name must contain only alphabetic characters",
-    },
   },
   lastName: {
     in: ["body"],
     optional: true,
     trim: true,
     escape: true,
-    isAlpha: {
-      errorMessage: "Last name must contain only alphabetic characters",
-    },
   },
   role: {
     in: ["body"],
@@ -244,10 +226,9 @@ const userChangePassSchema = {
       },
     },
     errorMessage:
-      "Password should contain at least 14 characters, 4 lowercase, 2 uppercase, 2 numbers and 2 symbols ",
+      "Password should contain at least 14 characters, 4 lowercase, 2 uppercase, 2 numbers and 2 symbols",
   },
 };
-
 
 const usernameSchema = {
   username: {
@@ -258,7 +239,6 @@ const usernameSchema = {
     },
   },
 };
-
 
 const userChangePassSchema2 = {
   newPassword: {
