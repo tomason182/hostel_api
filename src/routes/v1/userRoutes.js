@@ -69,7 +69,7 @@ router.delete(
 
 // Delete account
 router.delete(
-  "/account/delete/",
+  "/accounts/delete/",
   authMiddleware,
   rbacMiddleware.checkPermission("delete_account"),
   user_controller.delete_account
