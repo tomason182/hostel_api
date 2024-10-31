@@ -184,10 +184,10 @@ exports.deleteAccount = async (client, dbname, propertyId, usersList) => {
 
     const userColl = client.db(dbname).collection("users");
 
-    const query = { _id: usersList };
-    const resultUser = await userColl.deleteOne(query, { session });
-    if (resultUser.deletedCount !== 1) {
-      throw new Error("No documents matched the query. Deleted 0 documents");
+    const query = { _id: { $in: usersList } };
+    const resultUser = await userColl.deleteMany(query, { session });
+    if (resultUser.deletedCount === 0) {
+      throw new Error("An error occurred deleting the users");
     }
 
     await session.commitTransaction();
