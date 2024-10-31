@@ -2,7 +2,6 @@ require("dotenv").config();
 const {
   checkSchema,
   body,
-  param,
   validationResult,
   matchedData,
   param,
@@ -27,11 +26,6 @@ const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
 const { ObjectId } = require("mongodb");
 const crudOperations = require("../utils/crud_operations");
-const {
-  deleteUserByLocalId,
-  insertUserInLocalDB,
-  deleteUserByLocalIdWithDelay,
-} = require("../utils/crud_operations_local_db.js");
 const {
   deleteUserByLocalId,
   insertUserInLocalDB,
@@ -461,6 +455,58 @@ exports.user_profile_delete = async (req, res, next) => {
   }
 };
 
+// @desc    Delete account
+// @route   DELETE /api/v1/users/account/delete/
+// @access  Private
+exports.delete_account = async (req, res, next) => {
+  try {
+    
+    const userId = req.user.user_info._id;
+    const propertyId = req.user._id;
+
+    const client = conn.getClient();
+
+    const userInfo = await crudOperations.findOneUserById(
+      client,
+      dbname,
+      userId
+    );
+
+    if (!userInfo) {
+      throw new Error("Unable to find User id");
+    }
+
+    if (userInfo.role !== "admin") {
+      throw new Error(
+        "You do not have permission to delete the account."
+      );
+    }
+
+    const propertyInfo = await crudOperations.findPropertyById(
+      client,
+      dbname,
+      propertyId
+    );
+
+    if (!propertyInfo) {
+      throw new Error("Unable to find property id");
+    }
+
+    const list_usersId = propertyInfo.access_control;
+    
+    const result = await transactionsOperations.deleteAccount(
+      client,
+      dbname,
+      propertyId,
+      list_usersId
+    );
+
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc Get all property users
 // @route GET /api/v1/users/all
 // @access Private
@@ -520,8 +566,8 @@ exports.forgotten_user_password = [
   },
 ];
 
-exports.continue_forgotten_user_password = [
-  param(token).trim().escape().isJWT(),
+exports.continue_forgotten_user_password = /*[ *********** Acomodar esto xq token solo vive dentro del obj req que en este punto no existe.
+  param(token).trim().escape().isJWT(),*/
   async (req, res, next) => {
     try {
       const errors = matchedData(req);
@@ -541,8 +587,8 @@ exports.continue_forgotten_user_password = [
     } catch (err) {
       next(err);
     }
-  },
-];
+  }/*,
+]*/;
 
 exports.finish_forgotten_user_password = [
   checkSchema(userChangePassSchema2),

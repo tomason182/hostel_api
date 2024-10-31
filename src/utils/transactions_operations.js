@@ -145,3 +145,52 @@ exports.insertRoomType = async (
     await session.endSession();
   }
 };
+
+exports.deleteAccount = async (client, dbname, propertyId, list_usersId) => {
+  const session = client.startSession();
+  try {
+    session.startTransaction();
+
+    // Search property id in property collection
+    const propertyColl = client.db(dbname).collection("properties");
+    const filter_1 = { _id: propertyId };
+    const resultProp = await propertyColl.deleteOne(filter_1, { session });
+    if (resultProp.deletedCount !== 1) {
+      throw new Error("Property not found. Deleted 0 documents");
+    }
+
+    const roomTypesColl = client.db(dbname).collection("room_types");
+    const filter_2 = { property_id: propertyId };
+    const resultRoomTypes = await roomTypesColl.deleteMany(filter_2, { session });
+    if (resultRoomTypes.deletedCount === 0) {
+      throw new Error("types of rooms not eliminated. Deleted 0 documents");
+    }
+
+    const reservationsColl = client.db(dbname).collection("reservations");
+    const resultReserv = await reservationsColl.deleteMany(filter_2, { session });
+    if (resultReserv.deletedCount === 0) {
+      throw new Error("Reservations not eliminated. Deleted 0 documents");
+    }
+
+    const guestsColl = client.db(dbname).collection("guests");
+    const resultGuests= await guestsColl.deleteMany(filter_2, { session });
+    if (resultGuests.deletedCount === 0) {
+      throw new Error("Guests not eliminated. Deleted 0 documents");
+    }
+
+    const userColl = client.db(dbname).collection("users");
+    const query = { _id: list_usersId };   // ****************************  Aquí hay un problema: debo ver cómo armo una "query" 
+    const resultUser = await userColl.deleteOne(query, { session }); // **  donde "_id" vaya tomando los valores de todos los 
+    if (resultUser.deletedCount !== 1) {   // ****************************  elementos del vector "list_usersId", para así borrar
+      throw new Error("No documents matched the query. Deleted 0 documents"); //  todos los usuarios vinculados a una propiedad.
+    }
+
+    await session.commitTransaction();
+    return { msg: "Account deleted successfully" };
+  } catch (err) {
+    await session.abortTransaction();
+    throw new Error(`Error During transaction, ${err.message}`);
+  } finally {
+    await session.endSession();
+  }
+};
