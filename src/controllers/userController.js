@@ -460,7 +460,6 @@ exports.user_profile_delete = async (req, res, next) => {
 // @access  Private
 exports.delete_account = async (req, res, next) => {
   try {
-    
     const userId = req.user.user_info._id;
     const propertyId = req.user._id;
 
@@ -473,13 +472,13 @@ exports.delete_account = async (req, res, next) => {
     );
 
     if (!userInfo) {
+      res.status(404);
       throw new Error("Unable to find User id");
     }
 
     if (userInfo.role !== "admin") {
-      throw new Error(
-        "You do not have permission to delete the account."
-      );
+      res.status(403);
+      throw new Error("You do not have permission to delete the account.");
     }
 
     const propertyInfo = await crudOperations.findPropertyById(
@@ -489,16 +488,17 @@ exports.delete_account = async (req, res, next) => {
     );
 
     if (!propertyInfo) {
+      res.status(404);
       throw new Error("Unable to find property id");
     }
 
-    const list_usersId = propertyInfo.access_control;
-    
+    const listUsersId = propertyInfo.access_control;
+
     const result = await transactionsOperations.deleteAccount(
       client,
       dbname,
       propertyId,
-      list_usersId
+      listUsersId
     );
 
     return res.status(200).json(result);
@@ -566,7 +566,8 @@ exports.forgotten_user_password = [
   },
 ];
 
-exports.continue_forgotten_user_password = /*[ *********** Acomodar esto xq token solo vive dentro del obj req que en este punto no existe.
+exports.continue_forgotten_user_password =
+  /*[ *********** Acomodar esto xq token solo vive dentro del obj req que en este punto no existe.
   param(token).trim().escape().isJWT(),*/
   async (req, res, next) => {
     try {
@@ -587,7 +588,7 @@ exports.continue_forgotten_user_password = /*[ *********** Acomodar esto xq toke
     } catch (err) {
       next(err);
     }
-  }/*,
+  } /*,
 ]*/;
 
 exports.finish_forgotten_user_password = [
