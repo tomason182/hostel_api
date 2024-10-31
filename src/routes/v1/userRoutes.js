@@ -61,6 +61,14 @@ router.delete(
   user_controller.user_profile_delete
 );
 
+// Delete account
+router.delete(
+  "/account/delete/",
+  authMiddleware,
+  rbacMiddleware.checkPermission("delete_account"),
+  user_controller.delete_account
+);
+
 router.get("/all", authMiddleware, user_controller.user_get_all);
 
 // Update user password
