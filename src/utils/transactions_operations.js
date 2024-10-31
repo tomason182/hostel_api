@@ -146,7 +146,7 @@ exports.insertRoomType = async (
   }
 };
 
-exports.deleteAccount = async (client, dbname, propertyId, list_usersId) => {
+exports.deleteAccount = async (client, dbname, propertyId, usersList) => {
   const session = client.startSession();
   try {
     session.startTransaction();
@@ -161,28 +161,33 @@ exports.deleteAccount = async (client, dbname, propertyId, list_usersId) => {
 
     const roomTypesColl = client.db(dbname).collection("room_types");
     const filter_2 = { property_id: propertyId };
-    const resultRoomTypes = await roomTypesColl.deleteMany(filter_2, { session });
+    const resultRoomTypes = await roomTypesColl.deleteMany(filter_2, {
+      session,
+    });
     if (resultRoomTypes.deletedCount === 0) {
-      throw new Error("types of rooms not eliminated. Deleted 0 documents");
+      console.log("No room types where deleted");
     }
 
     const reservationsColl = client.db(dbname).collection("reservations");
-    const resultReserv = await reservationsColl.deleteMany(filter_2, { session });
+    const resultReserv = await reservationsColl.deleteMany(filter_2, {
+      session,
+    });
     if (resultReserv.deletedCount === 0) {
-      throw new Error("Reservations not eliminated. Deleted 0 documents");
+      console.log("No reservations where deleted");
     }
 
     const guestsColl = client.db(dbname).collection("guests");
-    const resultGuests= await guestsColl.deleteMany(filter_2, { session });
+    const resultGuests = await guestsColl.deleteMany(filter_2, { session });
     if (resultGuests.deletedCount === 0) {
-      throw new Error("Guests not eliminated. Deleted 0 documents");
+      console.log("No guest where deleted");
     }
 
     const userColl = client.db(dbname).collection("users");
-    const query = { _id: list_usersId };   // ****************************  Aquí hay un problema: debo ver cómo armo una "query" 
-    const resultUser = await userColl.deleteOne(query, { session }); // **  donde "_id" vaya tomando los valores de todos los 
-    if (resultUser.deletedCount !== 1) {   // ****************************  elementos del vector "list_usersId", para así borrar
-      throw new Error("No documents matched the query. Deleted 0 documents"); //  todos los usuarios vinculados a una propiedad.
+
+    const query = { _id: usersList };
+    const resultUser = await userColl.deleteOne(query, { session });
+    if (resultUser.deletedCount !== 1) {
+      throw new Error("No documents matched the query. Deleted 0 documents");
     }
 
     await session.commitTransaction();
