@@ -20,18 +20,16 @@ router.post(
   room_type_controller.room_type_create
 );
 // Read room types
-router.get(
-  "/",
-  authMiddleware,
-  rbacMiddleware.checkPermission("read_room_type"),
-  room_type_controller.room_types_read
-);
+router.get("/", authMiddleware, room_type_controller.room_types_read);
+
+// Parece que no se esta usando (VER)
 router.get(
   "/:id",
   authMiddleware,
   rbacMiddleware.checkPermission("read_room_type"),
   room_type_controller.room_type_read
 );
+
 // Update room types
 router.put(
   "/update/:id",

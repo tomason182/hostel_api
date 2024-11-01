@@ -32,6 +32,11 @@ router.put("/update/:id", authMiddleware, guestController.guest_update_one);
 // @desc    Delete a guest
 // @route   DELETE /api/v1/guests/:id
 // @access  Private
-router.delete("/:id", authMiddleware, guestController.guest_delete_one);
+router.delete(
+  "/:id",
+  authMiddleware,
+  rbacMiddleware.checkPermission("delete_guest"),
+  guestController.guest_delete_one
+);
 
 module.exports = router;

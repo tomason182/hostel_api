@@ -160,7 +160,6 @@ exports.room_type_read = async (req, res, next) => {
     }
 
     const roomTypeId = ObjectId.createFromHexString(capId);
-    console.log(roomTypeId);
 
     // Brings the MongoDB client
     const client = conn.getClient();
