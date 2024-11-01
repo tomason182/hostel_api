@@ -107,7 +107,7 @@ exports.user_register = [
 ];
 
 exports.finish_user_register = [
-  param("token").trim().escape().isJWT().withMessage("Invalid JWT token"),
+  param("token").isJWT().withMessage("Invalid JWT token"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -666,6 +666,7 @@ exports.forgotten_user_password = [
 ];
 
 exports.finish_forgotten_user_password = [
+  param("token").isJWT().withMessage("Invalid JWT token"),
   checkSchema(userChangePassSchema2),
   async (req, res, next) => {
     try {

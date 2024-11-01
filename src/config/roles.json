@@ -3,40 +3,27 @@
     {
       "name": "admin",
       "permissions": [
-        "create_profile",
-        "read_profile",
-        "update_profile",
-        "delete_profile",
-        "update_password",
-        "create_property",
-        "update_property",
         "create_user",
-        "create_room_type",
-        "read_room_type",
-        "update_room_type",
-        "delete_room_type",
-        "create_reservation",
-        "delete_account"
+        "update_profile",
+        "edit_profile",
+        "delete_profile",
+        "delete_account",
+        "update_password"
       ]
     },
     {
       "name": "manager",
       "permissions": [
-        "create_profile",
-        "read_profile",
+        "create_user",
         "update_profile",
+        "edit_profile",
+        "delete_profile",
         "update_password"
       ]
     },
     {
       "name": "employee",
-      "permissions": [
-        "get_property",
-        "update_profile",
-        "read_profile",
-        "update_password",
-        "read_room_type"
-      ]
+      "permissions": ["update_profile", "update_password"]
     }
   ]
 }
