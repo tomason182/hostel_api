@@ -1,5 +1,3 @@
-const logger = require("./logger");
-
 exports.createUser = async (client, dbname, user, property) => {
   const session = client.startSession();
   try {
@@ -25,7 +23,6 @@ exports.createUser = async (client, dbname, user, property) => {
       userId,
     };
   } catch (err) {
-    logger.error("transaction error", err.message);
     await session.abortTransaction();
     throw new Error(err.message);
   } finally {
