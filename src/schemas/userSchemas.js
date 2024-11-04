@@ -5,8 +5,8 @@ const userRegisterSchema = {
       bail: true,
       errorMessage: "username is not a valid email",
     },
+    normalizeEmail: true,
     trim: true,
-    escape: true,
   },
   password: {
     in: ["body"],
@@ -55,7 +55,7 @@ const userLoginSchema = {
       errorMessage: "username is not a valid email",
     },
     trim: true,
-    escape: true,
+    normalizeEmail: true,
   },
   password: {
     in: ["body"],
@@ -117,7 +117,7 @@ const userCreationSchema = {
       errorMessage: "username is not a valid email",
     },
     trim: true,
-    escape: true,
+    normalizeEmail: true,
   },
   password: {
     in: ["body"],
@@ -245,7 +245,7 @@ const usernameSchema = {
       errorMessage: "username is not a valid email",
     },
     trim: true,
-    escape: true,
+    normalizeEmail: true,
   },
 };
 
