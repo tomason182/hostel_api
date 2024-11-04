@@ -18,7 +18,7 @@ const userRegisterSchema = {
       },
     },
     custom: {
-      options: value => {
+      options: (value) => {
         if (/\s/.test(value)) {
           throw new Error("Password should not contain white spaces");
         }
@@ -39,9 +39,28 @@ const userRegisterSchema = {
   },
   lastName: {
     in: ["body"],
+    trim: true,
+    escape: true,
+    notEmpty: {
+      bail: true,
+      errorMessage: "Last name is required",
+    },
+    isAlpha: {
+      errorMessage: "Last name must contain only alphabetic characters",
+    },
+  },
+  phoneNumber: {
+    in: ["body"],
     optional: true,
     trim: true,
     escape: true,
+<<<<<<< HEAD
+=======
+    isMobilePhone: {
+      options: ["any"],
+      errorMessage: "Phone number must be a valid mobile phone number",
+    },
+>>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
   },
 };
 
@@ -65,7 +84,7 @@ const userLoginSchema = {
       },
     },
     custom: {
-      options: value => {
+      options: (value) => {
         if (/\s/.test(value)) {
           throw new Error("Password should not contain white spaces");
         }
@@ -89,9 +108,9 @@ const userUpdateSchema = {
   },
   lastName: {
     in: ["body"],
-    optional: true,
     trim: true,
     escape: true,
+<<<<<<< HEAD
   },
   role: {
     in: ["body"],
@@ -101,18 +120,34 @@ const userUpdateSchema = {
       options: [["admin", "manager", "employee"]],
       errorMessage:
         "Role must be one of the followings: admin, manager, employee",
+=======
+    notEmpty: {
+      bail: true,
+      errorMessage: "Last name is required",
+    },
+    isAlpha: {
+      errorMessage: "Last name must contain only alphabetic characters",
+>>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
     },
   },
-};
-
-const userCreationSchema = {
-  username: {
+  phoneNumber: {
+    in: ["body"],
+    optional: true,
+    trim: true,
+    escape: true,
+    isMobilePhone: {
+      options: ["any"],
+      errorMessage: "Phone number must be a valid mobile phone number",
+    },
+  },
+  email: {
     in: ["body"],
     isEmail: {
       bail: true,
       errorMessage: "username is not a valid email",
     },
   },
+<<<<<<< HEAD
   password: {
     in: ["body"],
     isStrongPassword: {
@@ -159,6 +194,8 @@ const userCreationSchema = {
         "Role must be one of the followings: admin, manager, employee",
     },
   },
+=======
+>>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
 };
 
 const userChangePassSchema = {
@@ -289,26 +326,14 @@ const userChangePassSchema2 = {
 
 // Middleware to sanitize body
 const sanitizeRegisterBody = function (req, res, next) {
-  const allowedFields = ["username", "password", "firstName", "lastName"];
-  Object.keys(req.body).forEach(key => {
-    if (!allowedFields.includes(key)) {
-      delete req.body[key];
-      res.status(400);
-      throw new Error("not valid body field");
-    }
-  });
-  next();
-};
-
-const sanitizeCreateBody = function (req, res, next) {
   const allowedFields = [
     "username",
     "password",
     "firstName",
     "lastName",
-    "role",
+    "phoneNumber",
   ];
-  Object.keys(req.body).forEach(key => {
+  Object.keys(req.body).forEach((key) => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
       res.status(400);
@@ -320,7 +345,7 @@ const sanitizeCreateBody = function (req, res, next) {
 
 const sanitizeLoginBody = function (req, res, next) {
   const allowedFields = ["username", "password"];
-  Object.keys(req.body).forEach(key => {
+  Object.keys(req.body).forEach((key) => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
       res.status(400);
@@ -331,8 +356,8 @@ const sanitizeLoginBody = function (req, res, next) {
 };
 
 const sanitizeUpdateBody = function (req, res, next) {
-  const allowedFields = ["firstName", "lastName"];
-  Object.keys(req.body).forEach(key => {
+  const allowedFields = ["firstName", "lastName", "phoneNumber", "email"];
+  Object.keys(req.body).forEach((key) => {
     if (!allowedFields.includes(key)) {
       delete req.body[key];
       res.status(400);
@@ -346,12 +371,14 @@ module.exports = {
   userRegisterSchema,
   userLoginSchema,
   userUpdateSchema,
+<<<<<<< HEAD
   userCreationSchema,
   userChangePassSchema,
   userChangePassSchema2,
   usernameSchema,
+=======
+>>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
   sanitizeRegisterBody,
   sanitizeLoginBody,
   sanitizeUpdateBody,
-  sanitizeCreateBody,
 };
