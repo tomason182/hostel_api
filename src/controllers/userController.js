@@ -45,6 +45,7 @@ exports.user_register = [
     .escape()
     .isLength({ min: 1, max: 100 })
     .withMessage("Property name maximum length is 100 characters"),
+  body("acceptTerms").isBoolean().withMessage("Accept terms must be boolean"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -53,7 +54,13 @@ exports.user_register = [
       }
 
       // Extract req values
-      const { username, password, firstName, propertyName } = matchedData(req);
+      const { username, password, firstName, propertyName, acceptTerms } =
+        matchedData(req);
+
+      console.log(acceptTerms);
+      if (acceptTerms !== true) {
+        throw new Error("Terms must be accepted before registration");
+      }
 
       const user = new User(username, firstName);
       const role = "admin";
@@ -100,7 +107,7 @@ exports.user_register = [
 ];
 
 exports.finish_user_register = [
-  param("token").trim().escape().isJWT().withMessage("Invalid JWT token"),
+  param("token").isJWT().withMessage("Invalid JWT token"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -659,6 +666,7 @@ exports.forgotten_user_password = [
 ];
 
 exports.finish_forgotten_user_password = [
+  param("token").isJWT().withMessage("Invalid JWT token"),
   checkSchema(userChangePassSchema2),
   async (req, res, next) => {
     try {

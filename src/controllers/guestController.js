@@ -87,7 +87,6 @@ exports.guest_by_id_get = [
       }
 
       const guestId = ObjectId.createFromHexString(req.params.id);
-      console.log(guestId);
 
       const client = conn.getClient();
 

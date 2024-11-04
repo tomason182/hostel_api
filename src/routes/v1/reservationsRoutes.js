@@ -50,6 +50,7 @@ router.get(
 router.put(
   "/status/:id",
   authMiddleware,
+  rbacMiddleware.checkPermission("update_reservation_status"),
   reservationController.reservations_update_status_put
 );
 
@@ -59,6 +60,7 @@ router.put(
 router.put(
   "/payment_status/:id",
   authMiddleware,
+  rbacMiddleware.checkPermission("update_reservation_payment"),
   reservationController.reservation_update_payment_put
 );
 
@@ -68,6 +70,7 @@ router.put(
 router.put(
   "/update/:id",
   authMiddleware,
+  rbacMiddleware.checkPermission("update_reservation_info"),
   reservationController.reservation_update_info_put
 );
 
@@ -77,6 +80,7 @@ router.put(
 router.put(
   "/update-dates-guest/:id",
   authMiddleware,
+  rbacMiddleware.checkPermission("update_reservation_date_guest"),
   reservationController.reservation_dates_and_numberOfGuest_update
 );
 

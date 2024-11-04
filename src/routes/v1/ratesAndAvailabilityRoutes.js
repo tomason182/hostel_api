@@ -15,6 +15,7 @@ const ratesAndAvailabilityController = require("../../controllers/ratesAndAvaila
 router.post(
   "/create/:id",
   authMiddleware,
+  rbacMiddleware.checkPermission("create_rates_availability"),
   ratesAndAvailabilityController.rates_and_availability_new_post
 );
 

@@ -36,13 +36,8 @@ router.get("/validate", user_controller.user_validate);
 // Logout a user
 router.get("/logout", user_controller.user_logout);
 
-// Get user profile --> hay que corregir
-router.get(
-  "/profile/",
-  authMiddleware,
-  rbacMiddleware.checkPermission("read_profile"),
-  user_controller.user_profile_get
-);
+// Get user profile
+router.get("/profile/", authMiddleware, user_controller.user_profile_get);
 
 // Update user profile
 router.put(
@@ -56,6 +51,7 @@ router.put(
 router.put(
   "/profile/edit/:id",
   authMiddleware,
+  rbacMiddleware.checkPermission("edit_profile"),
   user_controller.user_edit_profile
 );
 
@@ -69,7 +65,7 @@ router.delete(
 
 // Delete account
 router.delete(
-  "/account/delete/",
+  "/accounts/delete/",
   authMiddleware,
   rbacMiddleware.checkPermission("delete_account"),
   user_controller.delete_account

@@ -203,6 +203,7 @@ exports.reservation_get_date_range = [
 // @route     PUT /api/v1/reservations/dates-and-guest/:id
 // @access    Private
 exports.reservation_dates_and_numberOfGuest_update = [
+  param("id").isMongoId().withMessage("Not a valid MongoDB id"),
   checkSchema(updateDateAndGuestSchema),
   async (req, res, next) => {
     try {

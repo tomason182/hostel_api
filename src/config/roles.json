@@ -3,39 +3,59 @@
     {
       "name": "admin",
       "permissions": [
-        "create_profile",
-        "read_profile",
-        "update_profile",
-        "delete_profile",
-        "update_password",
-        "create_property",
-        "update_property",
         "create_user",
+        "update_profile",
+        "edit_profile",
+        "delete_profile",
+        "delete_account",
+        "update_password",
         "create_room_type",
         "read_room_type",
         "update_room_type",
         "delete_room_type",
         "create_reservation",
-        "delete_account"
+        "update_reservation_status",
+        "update_reservation_payment",
+        "update_reservation_info",
+        "update_reservation_date_guest",
+        "create_rates_availability",
+        "update_property",
+        "delete_guest"
       ]
     },
     {
       "name": "manager",
       "permissions": [
-        "create_profile",
-        "read_profile",
+        "create_user",
         "update_profile",
-        "update_password"
+        "edit_profile",
+        "delete_profile",
+        "update_password",
+        "create_room_type",
+        "read_room_type",
+        "update_room_type",
+        "delete_room_type",
+        "create_reservation",
+        "update_reservation_status",
+        "update_reservation_payment",
+        "update_reservation_info",
+        "update_reservation_date_guest",
+        "create_rates_availability",
+        "update_property",
+        "delete_guest"
       ]
     },
     {
       "name": "employee",
       "permissions": [
-        "get_property",
         "update_profile",
-        "read_profile",
         "update_password",
-        "read_room_type"
+        "read_room_type",
+        "create_reservation",
+        "update_reservation_status",
+        "update_reservation_payment",
+        "update_reservation_info",
+        "update_reservation_date_guest"
       ]
     }
   ]
