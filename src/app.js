@@ -7,6 +7,11 @@ const logger = require("../src/utils/logger");
 const passport = require("passport");
 const cors = require("cors");
 
+// Disable console.log in production
+if (process.env.NODE_ENV === "production") {
+  console.log = function () {};
+}
+
 // Require Errors middleware
 const {
   notFound,
