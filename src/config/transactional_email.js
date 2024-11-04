@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const logger = require("../utils/logger");
 require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
@@ -41,7 +42,9 @@ async function sendConfirmationMail(userData, confirmEmailLink) {
   `,
   });
 
-  console.log("Message sent: %s", info.messageId);
+  logger.info(
+    `Message sent to ${userData.username}, messageId: ${info.messageId}`
+  );
 }
 
 async function sendResetPasswordMail(userData, resetPassLink) {
@@ -81,6 +84,10 @@ async function sendResetPasswordMail(userData, resetPassLink) {
   </table>
   `,
   });
+
+  logger.info(
+    `Message sent to ${userData.username}, messageId: ${info.messageId}`
+  );
 }
 
 module.exports = { sendConfirmationMail, sendResetPasswordMail };

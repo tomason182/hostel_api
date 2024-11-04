@@ -244,6 +244,8 @@ const usernameSchema = {
       bail: true,
       errorMessage: "username is not a valid email",
     },
+    trim: true,
+    escape: true,
   },
 };
 
