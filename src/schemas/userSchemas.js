@@ -5,6 +5,8 @@ const userRegisterSchema = {
       bail: true,
       errorMessage: "username is not a valid email",
     },
+    trim: true,
+    escape: true,
   },
   password: {
     in: ["body"],
@@ -30,12 +32,12 @@ const userRegisterSchema = {
   },
   firstName: {
     in: ["body"],
-    trim: true,
-    escape: true,
     notEmpty: {
       bail: true,
       errorMessage: "First name must not be empty",
     },
+    trim: true,
+    escape: true,
   },
   lastName: {
     in: ["body"],
@@ -52,6 +54,8 @@ const userLoginSchema = {
       bail: true,
       errorMessage: "username is not a valid email",
     },
+    trim: true,
+    escape: true,
   },
   password: {
     in: ["body"],
@@ -80,12 +84,12 @@ const userLoginSchema = {
 const userUpdateSchema = {
   firstName: {
     in: ["body"],
-    trim: true,
-    escape: true,
     notEmpty: {
       bail: true,
       errorMessage: "First name must not be empty",
     },
+    trim: true,
+    escape: true,
   },
   lastName: {
     in: ["body"],
@@ -112,6 +116,8 @@ const userCreationSchema = {
       bail: true,
       errorMessage: "username is not a valid email",
     },
+    trim: true,
+    escape: true,
   },
   password: {
     in: ["body"],
@@ -137,12 +143,12 @@ const userCreationSchema = {
   },
   firstName: {
     in: ["body"],
-    trim: true,
-    escape: true,
     notEmpty: {
       bail: true,
       errorMessage: "First name must not be empty",
     },
+    trim: true,
+    escape: true,
   },
   lastName: {
     in: ["body"],
@@ -153,6 +159,7 @@ const userCreationSchema = {
   role: {
     in: ["body"],
     trim: true,
+    escape: true,
     isIn: {
       options: [["admin", "manager", "employee"]],
       errorMessage:
