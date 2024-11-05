@@ -405,7 +405,7 @@ exports.user_profile_put = [
 // @route PUT /api/v1/users/profile/:id
 // @access Private
 exports.user_edit_profile = [
-  param("id").trim().escape().withMessage("not a valid mongo id"),
+  param("id").trim().isMongoId().withMessage("not a valid mongo id"),
   checkSchema(userUpdateSchema),
   async (req, res, next) => {
     try {

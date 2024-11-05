@@ -67,7 +67,6 @@ app.use("/api/v1/reservations", reservationRoutes);
 app.use("/api/v1/rates-and-availability", ratesAndAvailabilityRoutes);
 
 // Use Error middleware
-app.use();
 app.use(notFound);
 app.use(errorLog);
 app.use(errorHandler);

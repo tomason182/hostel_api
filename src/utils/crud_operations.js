@@ -256,12 +256,11 @@ exports.findOneRoomTypeByDescription = async (
 exports.findAllRoomTypesByPropertyId = async (client, dbname, propertyId) => {
   try {
     const db = client.db(dbname);
-    const result = db
+    const result = await db
       .collection("room_types")
       .find({ property_id: propertyId })
       .toArray();
 
-    console.log(result);
     return result;
   } catch (err) {
     throw new Error(err);
