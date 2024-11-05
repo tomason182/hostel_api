@@ -210,8 +210,9 @@ exports.reservation_get_date_range = [
 // @desc      Update reservation dates & guest
 // @route     PUT /api/v1/reservations/dates-and-guest/:id
 // @access    Private
+
+/// ESTE CONTROLADOR ESTA MAL, DEBERIA MANEJAR UNA TRANSACCION ///
 exports.reservation_dates_and_numberOfGuest_update = [
-  param("id").isMongoId().withMessage("Not a valid MongoDB id"),
   checkSchema(updateDateAndGuestSchema),
   async (req, res, next) => {
     try {
@@ -224,6 +225,13 @@ exports.reservation_dates_and_numberOfGuest_update = [
       const reservationId = ObjectId.createFromHexString(req.params.id);
 
       const { check_in, check_out, number_of_guest } = matchedData(req);
+
+      const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
+      const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
+
+      if (checkOut < checkIn) {
+        throw new Error("Check in can not be greater than check out");
+      }
 
       const client = conn.getClient();
 
@@ -252,8 +260,6 @@ exports.reservation_dates_and_numberOfGuest_update = [
       );
 
       // Check availability for the new data
-      const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
-      const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
 
       const isAvailable = await availability_helpers.checkAvailability(
         client,
@@ -310,8 +316,6 @@ exports.reservations_update_status_put = [
 
       const propertyId = req.user._id;
       const { id, reservation_status } = matchedData(req);
-
-      console.log(reservation_status);
 
       const reservationId = ObjectId.createFromHexString(id);
 
