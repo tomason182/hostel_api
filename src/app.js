@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const logger = require("../src/utils/logger");
 const passport = require("passport");
 const cors = require("cors");
+const compression = require("compression");
 
 // Disable console.log in production
 if (process.env.NODE_ENV === "production") {
@@ -35,6 +36,9 @@ const stream = {
 };
 
 const app = express();
+
+// Compress all response
+app.use(compression());
 
 require("./config/passport")(passport);
 
