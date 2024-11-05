@@ -313,7 +313,6 @@ exports.updateRoomTypeById = async (
       options
     );
 
-    console.log(`${updatedResult.modifiedCount} document(s) updated`);
     return updatedResult.modifiedCount;
   } catch (err) {
     throw new Error(
@@ -329,36 +328,12 @@ exports.deleteRoomTypeById = async (client, dbname, roomTypeId) => {
 
     const query = { _id: roomTypeId };
 
-    // find the room type to get all beds
-    const roomTypeObj = await roomTypesColl.findOne(query);
-
     // delete the room type from the roomType collection
     const result = await roomTypesColl.deleteOne(query);
 
     if (result.deletedCount === 0) {
       throw new Error("Unable to delete room type");
     }
-
-    // delete the roomType from the rates_and_availability collection
-    const ratesQuery = {
-      room_type_id: roomTypeId,
-    };
-    const ratesAndAvailabilityColl = db.collection("rates_and_availability");
-    const ratesAndAvailabilityResult = await ratesAndAvailabilityColl.deleteOne(
-      ratesQuery
-    );
-
-    // delete all beds form Calendar collection
-    const calendarColl = db.collection("calendar");
-    const bedsList = roomTypeObj.products;
-
-    const bedsQuery = {
-      _id: { $in: bedsList },
-    };
-
-    const calendarResult = await calendarColl.deleteMany(bedsQuery);
-    console.log(ratesAndAvailabilityResult.deletedCount + "room type deleted");
-    console.log(calendarResult.deletedCount + "beds deleted");
 
     return result.deletedCount;
   } catch (err) {
