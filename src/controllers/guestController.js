@@ -7,7 +7,6 @@ const {
   matchedData,
   query,
   param,
-  body,
 } = require("express-validator");
 const { ObjectId } = require("mongodb");
 const conn = require("../config/db_config");
