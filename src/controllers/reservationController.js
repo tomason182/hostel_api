@@ -8,6 +8,7 @@ const {
 const Reservation = require("../models/reservationModel");
 const reservationHelper = require("../utils/reservationHelpers");
 const parseDateHelper = require("../utils/parseDateHelper");
+const availability_helpers = require("../utils/availability_helpers");
 const crudOperations = require("../utils/crud_operations");
 const {
   checkSchema,
@@ -18,7 +19,6 @@ const {
 const { ObjectId } = require("mongodb");
 
 const conn = require("../config/db_config");
-const availability_helpers = require("../utils/availability_helpers");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -70,6 +70,10 @@ exports.reservation_create = [
 
       const checkIn = parseDateHelper.parseDateWithHyphen(check_in);
       const checkOut = parseDateHelper.parseDateWithHyphen(check_out);
+
+      if (checkOut < checkIn) {
+        throw new Error("Check out can not be less than check in");
+      }
 
       const client = conn.getClient();
 
@@ -179,6 +183,10 @@ exports.reservation_get_date_range = [
 
       const fromDate = parseDateHelper.parseDateOnlyNumbers(from);
       const toDate = parseDateHelper.parseDateOnlyNumbers(to);
+
+      if (fromDate > toDate) {
+        throw new Error("Dates are in reverse order");
+      }
 
       const client = conn.getClient();
 
