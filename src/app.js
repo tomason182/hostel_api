@@ -8,6 +8,7 @@ const passport = require("passport");
 const cors = require("cors");
 const compression = require("compression");
 const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
 // Disable console.log in production
 if (process.env.NODE_ENV === "production") {
@@ -43,6 +44,15 @@ app.use(compression());
 
 // Set up headers
 app.use(helmet());
+
+// set rate limit
+// Limit each IP to 100 request per window.
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+
+app.use(limiter);
 
 require("./config/passport")(passport);
 
