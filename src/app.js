@@ -7,6 +7,7 @@ const logger = require("../src/utils/logger");
 const passport = require("passport");
 const cors = require("cors");
 const compression = require("compression");
+const helmet = require("helmet");
 
 // Disable console.log in production
 if (process.env.NODE_ENV === "production") {
@@ -39,6 +40,9 @@ const app = express();
 
 // Compress all response
 app.use(compression());
+
+// Set up headers
+app.use(helmet());
 
 require("./config/passport")(passport);
 
