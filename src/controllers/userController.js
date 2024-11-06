@@ -1,11 +1,8 @@
 require("dotenv").config();
 const {
   checkSchema,
-<<<<<<< HEAD
   body,
   param,
-=======
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
   validationResult,
   matchedData,
 } = require("express-validator");
@@ -13,7 +10,6 @@ const {
   userRegisterSchema,
   userLoginSchema,
   userUpdateSchema,
-<<<<<<< HEAD
   userCreationSchema,
   userChangePassSchema,
   userChangePassSchema2,
@@ -35,31 +31,21 @@ const {
   sendResetPasswordMail,
 } = require("../config/transactional_email");
 const jwt = require("jsonwebtoken");
-=======
-  sanitizeRegisterBody,
-  sanitizeLoginBody,
-  sanitizeUpdateBody,
-} = require("../schemas/userSchemas");
-const { getDb } = require("../config/db_config");
-const { saltGenerator, hashGenerator } = require("../utils/hash");
-const { jwtTokenGenerator } = require("../utils/tokenGenerator");
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
 
-// @desc    Create a new User
-// @route   POST /api/v1/users
+// Enviroment variables
+const dbname = process.env.DB_NAME;
+
+// @desc    Register new User
+// @route   POST /api/v1/users/register
 // @access  Public
-exports.user_create = [
-  sanitizeRegisterBody,
+exports.user_register = [
   checkSchema(userRegisterSchema),
-<<<<<<< HEAD
   body("propertyName")
     .trim()
     .escape()
     .isLength({ min: 1, max: 100 })
     .withMessage("Property name maximum length is 100 characters"),
   body("acceptTerms").isBoolean().withMessage("Accept terms must be boolean"),
-=======
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -75,7 +61,6 @@ exports.user_create = [
       }
 
       // Extract req values
-<<<<<<< HEAD
       const { username, password, firstName, propertyName, acceptTerms } =
         matchedData(req);
 
@@ -234,25 +219,24 @@ exports.user_create = [
         throw new Error("Admin users can not be created");
       }
 
-=======
-      const { username, password, firstName, lastName, phoneNumber } =
-        matchedData(req);
-
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
       // Check if user exist in the database
-      const db = getDb();
-      const usersCollection = await db.collection("users");
-      const userExist = await usersCollection.findOne({
-        username,
-      });
+      const client = conn.getClient();
+      const userExist = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
 
       // If user exist in the db, throw an error
       if (userExist !== null) {
         res.status(400);
         throw new Error("User already exist");
       }
+      // Check if propertyId is valid
+      if (!ObjectId.isValid(req.user._id)) {
+        return res.status(400).json({ error: "invalid propertyId" });
+      }
 
-<<<<<<< HEAD
       // Check if users list is 5 or more
       const allUser = await crudOperations.findAllPropertyUsers(
         client,
@@ -272,42 +256,17 @@ exports.user_create = [
       user.setRole(role);
       // Aca se setea el email como valido de entrada, pero seria conveniente enviar email a usuario tipo invitacion
       user.setValidEmail(true);
-=======
-      // Create salt and hash the password
-      const salt = saltGenerator(32);
-      const hashedPassword = hashGenerator(password, salt);
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
 
-      // Create the User object according to db structure
+      await user.setHashPassword(password);
 
-<<<<<<< HEAD
       const result = await transactionsOperations.insertUserToProperty(
         client,
         dbname,
         user,
         propertyId
       );
-=======
-      const User = {
-        username: username,
-        hashedPassword: hashedPassword,
-        salt: salt,
-        firstName: firstName,
-        lastName: lastName,
-        contactDetails: {
-          email: username,
-          phoneNumber: phoneNumber,
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
 
-      const result = await usersCollection.insertOne(User);
-
-      return res
-        .status(200)
-        .json({ msg: `User created id: ${result.insertedId}` });
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
@@ -318,27 +277,24 @@ exports.user_create = [
 // @route   POST /api/v1/users/auth
 // @access  Public
 exports.user_auth = [
-  sanitizeLoginBody,
   checkSchema(userLoginSchema),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-<<<<<<< HEAD
         res.status(401);
         throw new Error(
           "We couldn't sign you in. Please check your username, password or verify your email"
         );
-=======
-        return res.status(400).json(errors.array());
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
       }
       const { username, password } = matchedData(req);
 
-      // Get database and collection
-      const db = getDb();
-      const usersCollection = db.collection("users");
-      const user = await usersCollection.findOne({ username });
+      const client = conn.getClient();
+      const user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        username
+      );
       if (user === null) {
         res.status(401);
         throw new Error(
@@ -346,7 +302,6 @@ exports.user_auth = [
         );
       }
 
-<<<<<<< HEAD
       if (user.isValidEmail === false) {
         res.status(401);
         throw new Error(
@@ -358,11 +313,8 @@ exports.user_auth = [
         password,
         user.hashed_password
       );
-=======
-      const passwdHash = hashGenerator(password, user.salt);
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
 
-      if (passwdHash !== user.hashedPassword) {
+      if (!result) {
         res.status(401);
         throw new Error(
           "We couldn't sign you in. Please check your username, password or verify your email"
@@ -428,7 +380,6 @@ exports.user_profile_get = (req, res, next) => {
 // @route   PUT /api/v1/users/profile/
 // @access  Private
 exports.user_profile_put = [
-  sanitizeUpdateBody,
   checkSchema(userUpdateSchema),
   async (req, res, next) => {
     try {
@@ -437,7 +388,6 @@ exports.user_profile_put = [
         return res.status(400).json(errors.array());
       }
 
-<<<<<<< HEAD
       const data = matchedData(req);
       const userId = req.user.user_info._id;
 
@@ -507,28 +457,6 @@ exports.user_edit_profile = [
         userId,
         data
       );
-=======
-      const { firstName, lastName, phoneNumber, email } = matchedData(req);
-
-      const filter = { _id: req.user._id };
-
-      const updateUser = {
-        $set: {
-          firstName: firstName,
-          lastName: lastName,
-          contactDetails: {
-            phoneNumber: phoneNumber,
-            email: email,
-          },
-          updatedAt: new Date(),
-        },
-      };
-
-      const db = getDb();
-      const usersCollection = db.collection("users");
-
-      const result = await usersCollection.updateOne(filter, updateUser);
->>>>>>> fbfc4858153da5a894a3b2f36c3301326045a3fb
 
       return res.status(200).json({
         msg: `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount}`,
