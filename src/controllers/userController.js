@@ -67,12 +67,18 @@ exports.user_create = [
         return res.status(400).json(errors.array());
       }
 
+      if (process.env.NEW_USERS !== "accept") {
+        res.status(503);
+        throw new Error(
+          "User registration is currently closed. Please check back soon!"
+        );
+      }
+
       // Extract req values
 <<<<<<< HEAD
       const { username, password, firstName, propertyName, acceptTerms } =
         matchedData(req);
 
-      console.log(acceptTerms);
       if (acceptTerms !== true) {
         throw new Error("Terms must be accepted before registration");
       }
@@ -264,6 +270,7 @@ exports.user_create = [
       // create User, Property & Access Control objects
       const user = new User(username, firstName, lastName);
       user.setRole(role);
+      // Aca se setea el email como valido de entrada, pero seria conveniente enviar email a usuario tipo invitacion
       user.setValidEmail(true);
 =======
       // Create salt and hash the password
@@ -346,8 +353,6 @@ exports.user_auth = [
           "We couldn't sign you in. Please check your username, password or verify your email"
         );
       }
-
-      console.log(user);
 
       const result = await new User().comparePasswords(
         password,
@@ -457,6 +462,7 @@ exports.user_profile_put = [
 // @route PUT /api/v1/users/profile/:id
 // @access Private
 exports.user_edit_profile = [
+  param("id").trim().isMongoId().withMessage("not a valid mongo id"),
   checkSchema(userUpdateSchema),
   async (req, res, next) => {
     try {
@@ -473,6 +479,10 @@ exports.user_edit_profile = [
       const userId = ObjectId.createFromHexString(req.params.id);
       const data = matchedData(req);
 
+      if (data.role === "admin") {
+        throw new Error("Admin role can not be set up from here");
+      }
+
       const client = conn.getClient();
 
       const userInfo = await crudOperations.findOneUserById(
@@ -487,12 +497,8 @@ exports.user_edit_profile = [
 
       if (userInfo.role === "admin") {
         throw new Error(
-          "Admin accounts cannot be updated here. Please go to Account Settings to delete an admin user."
+          "Admin accounts cannot be updated here. Please go to Account Settings to edit an admin user."
         );
-      }
-
-      if (data.role === "admin") {
-        throw new Error("Admin role can not be set up from here");
       }
 
       const result = await crudOperations.updateOneUser(

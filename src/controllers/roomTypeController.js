@@ -10,11 +10,8 @@ const {
 } = require("../schemas/room_typeSchema");
 const conn = require("../config/db_config");
 const RoomType = require("../models/roomTypeModel");
-const RatesAndAvailability = require("../models/ratesAndAvailabilityModel");
 const crudOperations = require("../utils/crud_operations");
-const transactionOperations = require("../utils/transactions_operations");
 const { ObjectId } = require("mongodb");
-const Calendar = require("../models/calendarModel");
 
 // Environment variables
 const dbname = process.env.DB_NAME;
@@ -87,7 +84,6 @@ exports.room_type_create = [
         0
       );
 
-      console.log(numberOfGuest);
       if (numberOfGuest > 25) {
         res.status(403);
         throw new Error(
@@ -220,8 +216,6 @@ exports.room_type_update = [
         propertyId
       );
 
-      console.log(!roomTypeId.equals(roomTypeExist._id));
-
       // If room type exist in the db, throw an error
       if (roomTypeExist !== null && !roomTypeId.equals(roomTypeExist._id)) {
         res.status(400);
@@ -239,7 +233,7 @@ exports.room_type_update = [
         currency
       );
 
-      if (updatedRoomType === 0 || updateRoomTypeSchema === null) {
+      if (updatedRoomType === 0 || updatedRoomType === null) {
         res.status(400);
         throw new Error("Room type update could not be done");
       }
@@ -275,13 +269,6 @@ exports.room_type_delete = async (req, res, next) => {
       dbname,
       roomTypeId
     );
-
-    if (roomTypeDeletedResult === null) {
-      res.status(400);
-      throw new Error(
-        "The required room type could not be deleted because it does not exist in the Database"
-      );
-    }
 
     return res.status(200).json(roomTypeDeletedResult);
   } catch (err) {

@@ -162,14 +162,3 @@ exports.property_details_update = [
     }
   },
 ];
-
-// @desc    Delete a property
-// @route   DELETE /api/v1/property/:id_property
-// @access  Private
-exports.property_delete = async (req, res, next) => {
-  try {
-    res.status(200).json({ msg: "Update property details" });
-  } catch (err) {
-    next(err);
-  }
-};

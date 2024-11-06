@@ -21,7 +21,6 @@ exports.findGuestByPhoneNumber = async (client, dbname, propertyId, num) => {
     const db = client.db(dbname);
     const guestColl = db.collection("guests");
 
-    console.log(num);
     const query = {
       property_id: propertyId,
       "contact_info.phone_number": { $regex: num },
@@ -79,7 +78,6 @@ exports.updateGuestInfo = async (client, dbname, guestId, guestData) => {
     };
 
     const result = await guestColl.updateOne(query, updateDoc, options);
-    console.log(result);
 
     return `${result.matchedCount} document(s) match the filter, updated ${result.modifiedCount} document(s)`;
   } catch (err) {

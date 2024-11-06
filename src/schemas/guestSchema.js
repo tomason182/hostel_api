@@ -57,14 +57,15 @@ const guestSchema = {
     },
     isLength: {
       options: {
-        max: 50,
+        max: 100,
       },
-      errorMessage: "Email maximum length is 50 characters",
+      errorMessage: "Email maximum length is 100 characters",
     },
   },
   phoneNumber: {
     in: ["body"],
     optional: true,
+    trim: true,
     isMobilePhone: {
       options: "any",
       errorMessage: "invalid phone number",
@@ -77,9 +78,9 @@ const guestSchema = {
     escape: true,
     isLength: {
       options: {
-        max: 50,
+        max: 100,
       },
-      errorMessage: "City maximum length is 50 characters",
+      errorMessage: "City maximum length is 100 characters",
     },
   },
   street: {
@@ -97,6 +98,7 @@ const guestSchema = {
   postalCode: {
     in: ["body"],
     optional: true,
+    trim: true,
     isPostalCode: {
       options: "any",
       errorMessage: "invalid postal code",

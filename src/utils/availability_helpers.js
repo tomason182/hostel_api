@@ -42,8 +42,6 @@ exports.checkAvailability = async (
       .find(filter, options)
       .toArray();
 
-    console.log(reservationsList);
-
     // obtenemos rangos de rates and availability
     const ratesAndAvailabilityList = roomType.rates_and_availability.filter(
       item => item.start_date < checkOut && item.end_date >= checkIn

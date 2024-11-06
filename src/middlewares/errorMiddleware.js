@@ -1,8 +1,15 @@
+const logger = require("../utils/logger");
+
 // Error middleware for not found URL's
 const notFound = (req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
   res.status(404);
   next(error);
+};
+
+const errorLog = (req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
 };
 
 const errorHandler = (err, req, res, next) => {
@@ -17,5 +24,6 @@ const errorHandler = (err, req, res, next) => {
 
 module.exports = {
   notFound,
+  errorLog,
   errorHandler,
 };

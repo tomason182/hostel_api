@@ -16,7 +16,10 @@ router.get("/:id", auth, property_controller.property_details_get);
 // Update a property details
 router.put("/:id", auth, property_controller.property_details_update);
 
+<<<<<<< HEAD
 // Delete a property
 router.delete("/:id_property", auth, property_controller.property_delete);
 
+=======
+>>>>>>> logger
 module.exports = router;

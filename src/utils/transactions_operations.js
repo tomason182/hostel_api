@@ -4,13 +4,8 @@ exports.createUser = async (client, dbname, user, property) => {
     session.startTransaction();
 
     const userColl = client.db(dbname).collection("users");
-    // Check if the user exist in the db
-    const query = { username: user.username };
-    const userExist = await userColl.findOne(query, { session });
 
-    if (userExist !== null) {
-      throw new Error("User already exists");
-    }
+    /// IMPORTANTE: Se necesita comprobar que el usuario no existe antes de llamar createUser ///
 
     // If the user doesn't  exist we insert it
     const userResult = await userColl.insertOne(user, { session });
@@ -28,7 +23,6 @@ exports.createUser = async (client, dbname, user, property) => {
       userId,
     };
   } catch (err) {
-    console.error("transaction error", err.message);
     await session.abortTransaction();
     throw new Error(err.message);
   } finally {
