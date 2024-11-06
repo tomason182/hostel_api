@@ -53,6 +53,13 @@ exports.user_register = [
         return res.status(400).json(errors.array());
       }
 
+      if (process.env.NEW_USERS !== "accept") {
+        res.status(503);
+        throw new Error(
+          "User registration is currently closed. Please check back soon!"
+        );
+      }
+
       // Extract req values
       const { username, password, firstName, propertyName, acceptTerms } =
         matchedData(req);
