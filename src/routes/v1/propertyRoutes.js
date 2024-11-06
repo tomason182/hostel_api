@@ -19,7 +19,4 @@ router.put(
   property_controller.property_details_update
 );
 
-// Delete a property
-router.delete("/", authMiddleware, property_controller.property_delete);
-
 module.exports = router;

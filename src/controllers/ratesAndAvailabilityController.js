@@ -55,6 +55,10 @@ exports.rates_and_availability_new_post = [
       const startDate = parseDataHelper.parseDateWithHyphen(start_date);
       const endDate = parseDataHelper.parseDateWithHyphen(end_date);
 
+      if (startDate > endDate) {
+        throw new Error("Start date can not be greater than end date");
+      }
+
       // Set up availability. If custom availability is provided availability is equal to custom_availability if not the data provided by roomTypeData
       let availability = roomTypeData.max_occupancy * roomTypeData.inventory;
 

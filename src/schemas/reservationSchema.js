@@ -108,9 +108,9 @@ const reservationSchema = {
     escape: true,
     isLength: {
       options: {
-        max: 50,
+        max: 150,
       },
-      errorMessage: "Special request maximum length is 50 characters",
+      errorMessage: "Special request maximum length is 150 characters",
     },
   },
 };
@@ -185,9 +185,9 @@ const updateReservationInfo = {
     escape: true,
     isLength: {
       options: {
-        max: 50,
+        max: 150,
       },
-      errorMessage: "Special request maximum length is 50 characters",
+      errorMessage: "Special request maximum length is 150 characters",
     },
   },
 };

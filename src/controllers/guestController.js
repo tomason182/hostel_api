@@ -7,7 +7,6 @@ const {
   matchedData,
   query,
   param,
-  body,
 } = require("express-validator");
 const { ObjectId } = require("mongodb");
 const conn = require("../config/db_config");
@@ -237,8 +236,6 @@ exports.guest_delete_one = [
         res.status(400);
         throw new Error("Unable to delete guess. Deleted 0 documents");
       }
-
-      console.log(guestId);
     } catch (err) {
       next(err);
     }
