@@ -39,6 +39,23 @@ const stream = {
 
 const app = express();
 
+require("./config/passport")(passport);
+
+const corsOptions = {
+  origin:
+    process.env.NODE_ENV === "production"
+      ? ["https://simplehostel.net", "https://www.simplehostel.net"]
+      : "http://localhost:4173",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.use(morgan("combined", { stream }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser(process.env.JWT_SECRET));
+app.use(express.static(path.join(__dirname, "public")));
+
 // Compress all response
 app.use(compression());
 
@@ -53,20 +70,6 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-
-require("./config/passport")(passport);
-
-const corsOptions = {
-  origin: "http://localhost:4173",
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.use(morgan("combined", { stream }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser(process.env.JWT_SECRET));
-app.use(express.static(path.join(__dirname, "public")));
 
 // Use routes
 app.use("/api/v1/users", userRoutes);
