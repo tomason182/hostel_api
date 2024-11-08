@@ -5,7 +5,7 @@ require("dotenv").config();
 const transporter = nodemailer.createTransport({
   host:
     process.env.NODE_ENV === "production"
-      ? "support@simplehostel.net"
+      ? "smtp.hostinger.com"
       : "smtp.ethereal.email",
   port: process.env.NODE_ENV === "production" ? 465 : 587,
   secure: process.env.NODE_ENV === "production" ? true : false,
