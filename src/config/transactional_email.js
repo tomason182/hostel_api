@@ -3,15 +3,18 @@ const logger = require("../utils/logger");
 require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
-  secure: false,
+  host:
+    process.env.NODE_ENV === "production"
+      ? "support@simplehostel.net"
+      : "smtp.ethereal.email",
+  port: process.env.NODE_ENV === "production" ? 465 : 587,
+  secure: process.env.NODE_ENV === "production" ? true : false,
   auth: {
     user: process.env.ACCOUNT_USER,
     pass: process.env.ACCOUNT_PASS,
   },
   tls: {
-    rejectUnauthorized: false,
+    rejectUnauthorized: process.env.NODE_ENV === "production" ? true : false,
   },
 });
 

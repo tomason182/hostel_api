@@ -22,7 +22,7 @@ class MongoConnect {
       this.isConnected = true;
       logger.info("Connected to MongoDb");
     } catch (err) {
-      logger.error("Connection error:", err.message);
+      logger.error(err.message);
       if (retries > 0) {
         console.log("Retrying connection");
         setTimeout(() => this.connectClient(), 5000);
