@@ -1,3 +1,5 @@
+import reservationHelpers from "../utils/reservationHelpers";
+
 exports.checkAvailability = async (
   client,
   dbname,
@@ -189,29 +191,24 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
     // Usamos flatMap para obtener todas las camas pertenecientes al tipo de cuarto.
     const totalBeds = roomType.products.flatMap(product => product.beds);
 
-    const checkIn = reservation.check_in;
-    const checkOut = reservation.check_out;
-
-    const availableBeds = await getAvailableBeds();
+    const availableBeds = await getAvailableBeds(
+      client,
+      dbname,
+      roomType._id,
+      totalBeds,
+      reservation
+    );
 
     // Septimo paso comprobar si hay conflicto
 
-    if (availableBeds.length === 0) {
-      resolveConflict();
-    } else if (
-      roomType.type === "dorm" &&
-      availableBeds.length < reservation.number_of_guest
+    if (
+      availableBeds.length === 0 ||
+      (roomType.type === "dorm" &&
+        availableBeds.length < reservation.number_of_guest)
     ) {
       resolveConflict();
-    } else if (roomType.type === "dorm") {
-      for (let i; i < reservation.number_of_guest; i++) {
-        reservation.assigned_beds = availableBeds.slice(
-          0,
-          reservation.number_of_guest
-        );
-      }
     } else {
-      reservation.assigned_beds = availableBeds.slice(0, 1);
+      assignBeds();
     }
 
     // Update reservation
@@ -219,6 +216,22 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
     throw new Error(err);
   }
 };
+
+async function assignBeds(availableBeds, roomType, reservation) {
+  if (roomType.type === "dorm") {
+    for (let i; i < reservation.number_of_guest; i++) {
+      reservation.assigned_beds = availableBeds.slice(
+        0,
+        reservation.number_of_guest
+      );
+    }
+  } else {
+    reservation.assigned_beds = availableBeds.slice(0, 1);
+  }
+
+  // Update reservation beds
+  const result = await reservationHelpers.updateOne;
+}
 
 async function getAvailableBeds(
   client,

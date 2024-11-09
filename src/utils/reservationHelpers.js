@@ -458,18 +458,24 @@ exports.updateReservationDatesAndGuest = async (
 };
 
 exports.updateReservationBeds = async (client, dbname, reservation) => {
-  const db = client.db(dbname);
-  const reservationColl = db.collection("reservations");
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
 
-  const filter = { _id: reservation._id };
-  const updateDoc = {
-    $set: {
-      assigned_beds: reservation.assigned_beds,
-    },
-  };
-  const options = {
-    upsert: false,
-  };
+    const filter = { _id: reservation._id };
+    const updateDoc = {
+      $set: {
+        assigned_beds: reservation.assigned_beds,
+      },
+    };
+    const options = {
+      upsert: false,
+    };
 
-  const result = await reservationColl.updateOne(filter, updateDoc, options);
+    const result = await reservationColl.updateOne(filter, updateDoc, options);
+
+    return result;
+  } catch (err) {
+    throw new Error(err.message);
+  }
 };
