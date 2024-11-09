@@ -175,13 +175,12 @@ exports.pullOverlappingElementsFromArray = async (
   }
 };
 
-exports.bedsAssignment = async (client, dbname, typeRoomId, reservation) => {
+exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
   try {
     const db = client.db(dbname);
     const roomTypeColl = db.collection("room_types");
-    const reservationsColl = db.collection("reservations");
 
-    const roomType = await roomTypeColl.findOne({ _id: typeRoomId });
+    const roomType = await roomTypeColl.findOne({ _id: roomTypeId });
 
     if (!roomType) {
       throw new Error("Room type not found");
@@ -193,108 +192,112 @@ exports.bedsAssignment = async (client, dbname, typeRoomId, reservation) => {
     const checkIn = reservation.check_in;
     const checkOut = reservation.check_out;
 
-    // Filtramos las reservas para obtener solo las que caen dentro del rango check in - check out
+    const availableBeds = await getAvailableBeds();
 
-    const filter = {
-      room_type_id: { $eq: typeRoomId },
-      reservation_status: { $nin: ["canceled", "no_show"] },
-      check_in: { $lt: checkOut },
-      check_out: { $gt: checkIn },
-    };
+    // Septimo paso comprobar si hay conflicto
 
-    const options = {
-      projection: {
-        check_in: 1,
-        check_out: 1,
-        number_of_guest: 1,
-        assigned_beds: 1,
-      },
-    };
-
-    const reservationsList = await reservationsColl
-      .find(filter, options)
-      .toArray();
-
-    // Segundo paso: Obtener las reservas que se solapan, pero del lado izquierdo de rango.
-    const overlappingReservationsBeforeCurrent = reservationsList.filter(
-      r =>
-        new Date(r.check_out) > new Date(checkIn) &&
-        new Date(r.check_in) < new Date(checkOut) &&
-        new Date(r.check_in) <= new Date(checkIn)
-    );
-
-    // Tercer paso: Obtener las camas ocupadas del lado izquierdo.
-    const occupiedBedsBefore = overlappingReservationsBeforeCurrent.flatMap(
-      r => r.assigned_beds
-    );
-
-    // Cuarto paso: Obtener las camas disponibles antes
-    const availableBedsBefore = totalBeds.filter(
-      bed => !occupiedBedsBefore.some(occupied => occupied.equals(bed))
-    );
-
-    // Quinto paso: Obtener las camas disponibles despues
-    const overlappingReservationsAfterCurrent = reservationsList.filter(
-      r =>
-        new Date(r.check_out) > new Date(checkIn) &&
-        new Date(r.check_in) < new Date(checkOut) &&
-        new Date(r.check_in) > new Date(checkIn)
-    );
-
-    const occupiedBedsAfter = overlappingReservationsAfterCurrent.flatMap(
-      r => r.assigned_beds
-    );
-
-    const availableBedsAfter = totalBeds.filter(
-      bed => !occupiedBedsAfter.some(occupied => occupied.equals(bed))
-    );
-
-    //Sexto paso: Obtener las camas disponibles en ambos lados
-    const availableBeds = availableBedsBefore.filter(bed =>
-      availableBedsAfter.some(available => available.equals(bed))
-    );
-
-    // Septimo paso: Si hay camas disponibles en ambos lados se asignan. Sino hay que reacomodar todas las reservas de adelante.
-    const numberOfGuest = reservation.number_of_guest;
-
-    let assignedBeds = [];
-    if (roomType.type === "dorm" && availableBeds.length >= numberOfGuest) {
-      for (let i = 0; i < numberOfGuest; i++) {
-        assignedBeds.push(availableBeds[i]);
-      }
-    } else if (roomType.type === "private" && availableBeds.length >= 1) {
-      assignedBeds.push(availableBeds[0]);
-    }
-
-    if (assignedBeds.length > 0) {
-      reservation.setAssignedBeds(assignedBeds);
-      return { reservationToAdd: reservation, reservationsToUpdate: [] };
-    }
-
-    // Si ninguna cama fue agregada seleccionamos las camas libres del primer tramo y las asignamos
-    if (roomType.type === "dorm") {
-      for (let i = 0; i < numberOfGuest; i++) {
-        assignedBeds.push(availableBedsBefore[i]);
+    if (availableBeds.length === 0) {
+      resolveConflict();
+    } else if (
+      roomType.type === "dorm" &&
+      availableBeds.length < reservation.number_of_guest
+    ) {
+      resolveConflict();
+    } else if (roomType.type === "dorm") {
+      for (let i; i < reservation.number_of_guest; i++) {
+        reservation.assigned_beds = availableBeds.slice(
+          0,
+          reservation.number_of_guest
+        );
       }
     } else {
-      assignedBeds.push(availableBedsBefore[0]);
+      reservation.assigned_beds = availableBeds.slice(0, 1);
     }
 
-    reservation.setAssignedBeds(assignedBeds);
-
-    // Incorporamos la nueva reserva a la lista de reservas traidas de la base de datos
-
-    let reservationsToUpdate = [];
-
-    for (let bed in assignedBeds) {
-      const duplicateReservation = reservationsList.filter(
-        r => r.assigned_beds === bed
-      );
-      reservationsToUpdate.push(...duplicateReservation);
-    }
-
-    return { reservationToAdd: reservation, reservationsToUpdate };
+    // Update reservation
   } catch (err) {
     throw new Error(err);
   }
 };
+
+async function getAvailableBeds(
+  client,
+  dbname,
+  roomTypeId,
+  totalBeds,
+  reservation
+) {
+  // Filtramos las reservas para obtener solo las que caen dentro del rango check in - check out
+
+  const db = client.db(dbname);
+  const reservationsColl = db.collection("reservations");
+
+  const checkIn = reservation.check_in;
+  const checkOut = reservation.check_out;
+
+  const filter = {
+    room_type_id: { $eq: roomTypeId },
+    reservation_status: { $nin: ["canceled", "no_show"] },
+    check_in: { $lt: checkOut },
+    check_out: { $gt: checkIn },
+  };
+
+  const options = {
+    projection: {
+      check_in: 1,
+      check_out: 1,
+      number_of_guest: 1,
+      assigned_beds: 1,
+    },
+  };
+
+  const reservationsList = await reservationsColl
+    .find(filter, options)
+    .toArray();
+
+  // Obtener las reservas que se solapan, pero del lado izquierdo de rango.
+  const overlappingReservationsBeforeCurrent = reservationsList.filter(
+    r => new Date(r.check_in) <= new Date(checkIn)
+  );
+
+  // Obtener las camas ocupadas del lado izquierdo.
+  const occupiedBedsBefore = overlappingReservationsBeforeCurrent.flatMap(
+    r => r.assigned_beds
+  );
+
+  // Obtener las camas disponibles del lado izquierdo
+  const availableBedsBefore = totalBeds.filter(
+    bed => !occupiedBedsBefore.some(occupied => occupied.equals(bed))
+  );
+
+  // Obtener las camas disponibles del lado derecho
+  const overlappingReservationsAfterCurrent = reservationsList.filter(
+    r => new Date(r.check_in) > new Date(checkIn)
+  );
+
+  const occupiedBedsAfter = overlappingReservationsAfterCurrent.flatMap(
+    r => r.assigned_beds
+  );
+
+  const availableBedsAfter = totalBeds.filter(
+    bed => !occupiedBedsAfter.some(occupied => occupied.equals(bed))
+  );
+
+  // Obtener las camas disponibles en ambos lados
+  const availableBeds = availableBedsBefore.filter(bed =>
+    availableBedsAfter.some(available => available.equals(bed))
+  );
+
+  return availableBeds;
+}
+
+function resolveConflict(
+  client,
+  dbname,
+  roomType,
+  reservation,
+  availableBedsBefore,
+  reservationsAfterCurrent
+) {
+  // asigno a la reserva las camas disponibles antes.
+}
