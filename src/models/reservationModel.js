@@ -3,6 +3,7 @@ const parseDateHelper = require("../utils/parseDateHelper");
 
 class Reservation {
   constructor(
+    _id = new ObjectId(),
     guest_id = null,
     property_id,
     room_type_id = null,
