@@ -1,4 +1,4 @@
-const reservationHelpers = required("../utils/reservationHelpers");
+const reservationHelpers = require("../utils/reservationHelpers");
 
 exports.checkAvailability = async (
   client,
