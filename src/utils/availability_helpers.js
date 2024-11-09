@@ -1,4 +1,4 @@
-import reservationHelpers from "../utils/reservationHelpers";
+const reservationHelpers = required("../utils/reservationHelpers");
 
 exports.checkAvailability = async (
   client,
@@ -217,20 +217,35 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
   }
 };
 
-async function assignBeds(availableBeds, roomType, reservation) {
-  if (roomType.type === "dorm") {
-    for (let i; i < reservation.number_of_guest; i++) {
-      reservation.assigned_beds = availableBeds.slice(
-        0,
-        reservation.number_of_guest
-      );
+async function assignBeds(
+  client,
+  dbname,
+  availableBeds,
+  roomType,
+  reservation
+) {
+  try {
+    if (roomType.type === "dorm") {
+      for (let i; i < reservation.number_of_guest; i++) {
+        reservation.assigned_beds = availableBeds.slice(
+          0,
+          reservation.number_of_guest
+        );
+      }
+    } else {
+      reservation.assigned_beds = availableBeds.slice(0, 1);
     }
-  } else {
-    reservation.assigned_beds = availableBeds.slice(0, 1);
-  }
 
-  // Update reservation beds
-  const result = await reservationHelpers.updateOne;
+    // Update reservation beds
+    const result = await reservationHelpers.updateReservationBeds(
+      client,
+      dbname,
+      reservation
+    );
+    return result;
+  } catch (err) {
+    throw new Error(err.message);
+  }
 }
 
 async function getAvailableBeds(
