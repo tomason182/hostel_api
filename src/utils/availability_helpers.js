@@ -316,7 +316,7 @@ async function assignBeds(
       dbname,
       reservation
     );
-    return result;
+    return { result, bedsAssigned: reservation.assigned_beds };
   } catch (err) {
     throw new Error(err.message);
   }
