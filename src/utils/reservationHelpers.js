@@ -470,6 +470,7 @@ exports.updateReservationBeds = async (reservation, reservationsColl) => {
     };
 
     const result = await reservationsColl.updateOne(filter, updateDoc, options);
+    console.log(result);
 
     return result;
   } catch (err) {

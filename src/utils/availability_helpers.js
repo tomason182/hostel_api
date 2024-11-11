@@ -192,9 +192,6 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
     // Usamos flatMap para obtener todas las camas pertenecientes al tipo de cuarto.
     const totalBeds = roomType.products.flatMap(product => product.beds);
 
-    /// Hasta esta linea es el mismo codigo para todas las reservas en conflicto ///
-    /// Mas adelante usaremos esta misma funcion bedsAssigment como funcion recursiva para solucionar conflictos ///
-
     async function handleBedsAssignment(
       reservation,
       reservationsColl,
@@ -276,6 +273,8 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
         availableBeds
       );
 
+      console.log(assignBeds);
+
       if (assignBeds) {
         console.log(
           "Greedy assignemt successful for reservation:",
@@ -284,8 +283,8 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
         reservation.assigned_beds = assignBeds;
 
         await reservationHelpers.updateReservationBeds(
-          reservationsColl,
-          reservation
+          reservation,
+          reservationsColl
         );
         return assignBeds;
       } else {
@@ -298,7 +297,7 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
           reservation,
           reservationsColl,
           availableBedsBefore,
-          reservationsAfterCurrent,
+          overlappingReservationsAfterCurrent,
           handleBedsAssignment,
           depth
         );
@@ -311,19 +310,14 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
   }
 };
 
-async function greedyBedAssignment(reservation, roomType, availableBeds) {
-  try {
-    const bedsNeeded =
-      roomType.type === "dorm" ? reservation.number_of_guest : 1; // Si cuarto es privado solo se requiere 1 cama (cuarto)
+function greedyBedAssignment(reservation, roomType, availableBeds) {
+  const bedsNeeded = roomType.type === "dorm" ? reservation.number_of_guest : 1; // Si cuarto es privado solo se requiere 1 cama (cuarto)
 
-    if (availableBeds.length >= bedsNeeded) {
-      return availableBeds.slice(0, bedsNeeded);
-    }
-
-    return null;
-  } catch (err) {
-    throw new Error(err.message);
+  if (availableBeds.length >= bedsNeeded) {
+    return availableBeds.slice(0, bedsNeeded);
   }
+
+  return null;
 }
 
 async function resolveConflictWithBacktracking(
@@ -350,14 +344,21 @@ async function resolveConflictWithBacktracking(
     availableBedsBefore
   );
 
+  console.log("Cama asignada con conflicto: ", assignBeds);
+
   if (!assignBeds) {
     return null;
   }
 
+  console.log("Greedy assignemt successful for reservation:", reservation._id);
+  reservation.assigned_beds = assignBeds;
+
+  await reservationHelpers.updateReservationBeds(reservation, reservationsColl);
+
   // Obtener las reservas que entraron en conflicto
   const reservationsWithConflict = new Set();
 
-  bedsAssigned.forEach(bedId => {
+  assignBeds.forEach(bedId => {
     reservationsAfterCurrent.forEach(reserv => {
       if (reserv.assigned_beds.some(bed => bed.equals(bedId))) {
         reservationsWithConflict.add(reserv);
