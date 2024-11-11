@@ -457,11 +457,8 @@ exports.updateReservationDatesAndGuest = async (
   }
 };
 
-exports.updateReservationBeds = async (client, dbname, reservation) => {
+exports.updateReservationBeds = async (reservation, reservationsColl) => {
   try {
-    const db = client.db(dbname);
-    const reservationColl = db.collection("reservations");
-
     const filter = { _id: reservation._id };
     const updateDoc = {
       $set: {
@@ -472,7 +469,7 @@ exports.updateReservationBeds = async (client, dbname, reservation) => {
       upsert: false,
     };
 
-    const result = await reservationColl.updateOne(filter, updateDoc, options);
+    const result = await reservationsColl.updateOne(filter, updateDoc, options);
 
     return result;
   } catch (err) {
@@ -480,11 +477,8 @@ exports.updateReservationBeds = async (client, dbname, reservation) => {
   }
 };
 
-exports.removeBedsAssigned = async (client, dbname, reservationList) => {
+exports.removeBedsAssigned = async (reservationList, reservationsColl) => {
   try {
-    const db = client.db(dbname);
-    const reservationColl = db.collection("reservations");
-
     const ids = reservationList.map(r => r._id);
 
     const filter = { _id: { $in: ids } };
@@ -497,7 +491,11 @@ exports.removeBedsAssigned = async (client, dbname, reservationList) => {
       upsert: false,
     };
 
-    const result = await reservationColl.updateMany(filter, updateDoc, options);
+    const result = await reservationsColl.updateMany(
+      filter,
+      updateDoc,
+      options
+    );
     console.log(result);
     return result;
   } catch (err) {
