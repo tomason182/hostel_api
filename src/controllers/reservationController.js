@@ -97,9 +97,12 @@ exports.reservation_create = [
         newReservation
       );
 
-      const reservationId = result._id;
-
-      await availability_helpers.bedsAssignment();
+      await availability_helpers.bedsAssignment(
+        client,
+        dbname,
+        roomTypeId,
+        newReservation
+      );
 
       return res.status(200).json(result);
     } catch (err) {

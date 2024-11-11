@@ -230,6 +230,8 @@ exports.bedsAssignment = async (
       r => r._id !== reservation._id
     );
 
+    console.log("reservation id:", reservation._id);
+
     // Obtener las reservas que se solapan, pero del lado izquierdo de rango.
     const overlappingReservationsBeforeCurrent =
       reservationsListFiltered.filter(
@@ -279,7 +281,7 @@ exports.bedsAssignment = async (
         depth
       );
     } else {
-      const result = assignBeds(
+      const result = await assignBeds(
         client,
         dbname,
         availableBeds,

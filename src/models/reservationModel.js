@@ -2,8 +2,8 @@ const { ObjectId } = require("mongodb");
 const parseDateHelper = require("../utils/parseDateHelper");
 
 class Reservation {
+  _id = new ObjectId();
   constructor(
-    _id = new ObjectId(),
     guest_id = null,
     property_id,
     room_type_id = null,
