@@ -479,3 +479,25 @@ exports.updateReservationBeds = async (client, dbname, reservation) => {
     throw new Error(err.message);
   }
 };
+
+exports.removeBedsAssigned = async (client, dbname, reservationList) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const filter = { _id: { $in: reservationList } };
+    const updateDoc = {
+      $set: {
+        assigned_beds: [],
+      },
+    };
+    const options = {
+      upsert: false,
+    };
+
+    const result = await reservationColl.updateMany(filter, updateDoc, options);
+    return result;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};

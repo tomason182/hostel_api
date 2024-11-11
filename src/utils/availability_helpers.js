@@ -230,8 +230,6 @@ exports.bedsAssignment = async (
       r => r._id !== reservation._id
     );
 
-    console.log("reservation id:", reservation._id);
-
     // Obtener las reservas que se solapan, pero del lado izquierdo de rango.
     const overlappingReservationsBeforeCurrent =
       reservationsListFiltered.filter(
@@ -248,6 +246,8 @@ exports.bedsAssignment = async (
       bed => !occupiedBedsBefore.some(occupied => occupied.equals(bed))
     );
 
+    console.log("beds available before", availableBedsBefore);
+
     // Obtener las camas disponibles del lado derecho
     const overlappingReservationsAfterCurrent = reservationsListFiltered.filter(
       r => new Date(r.check_in) > new Date(checkIn)
@@ -261,10 +261,14 @@ exports.bedsAssignment = async (
       bed => !occupiedBedsAfter.some(occupied => occupied.equals(bed))
     );
 
+    console.log("beds available after: ", availableBedsAfter);
+
     // Obtener las camas disponibles en ambos lados
     const availableBeds = availableBedsBefore.filter(bed =>
       availableBedsAfter.some(available => available.equals(bed))
     );
+
+    console.log("beds available total: ", availableBeds);
 
     if (
       availableBeds.length === 0 ||
@@ -364,6 +368,8 @@ async function resolveConflict(
   });
 
   const conflictingReservations = Array.from(reservationsWithConflict);
+
+  console.log(conflictingReservations);
 
   for (const conflictingReservation of conflictingReservations) {
     await exports.bedsAssignment(
