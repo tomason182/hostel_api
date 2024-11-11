@@ -485,7 +485,9 @@ exports.removeBedsAssigned = async (client, dbname, reservationList) => {
     const db = client.db(dbname);
     const reservationColl = db.collection("reservations");
 
-    const filter = { _id: { $in: reservationList } };
+    const ids = reservationList.map(r => r._id);
+
+    const filter = { _id: { $in: ids } };
     const updateDoc = {
       $set: {
         assigned_beds: [],
@@ -496,6 +498,7 @@ exports.removeBedsAssigned = async (client, dbname, reservationList) => {
     };
 
     const result = await reservationColl.updateMany(filter, updateDoc, options);
+    console.log(result);
     return result;
   } catch (err) {
     throw new Error(err.message);

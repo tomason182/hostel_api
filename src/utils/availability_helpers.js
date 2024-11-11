@@ -227,7 +227,7 @@ exports.bedsAssignment = async (
 
     // Quitar de la lista de reservas la reserva actual
     const reservationsListFiltered = reservationsList.filter(
-      r => r._id !== reservation._id
+      r => !r._id.equals(reservation._id)
     );
 
     // Obtener las reservas que se solapan, pero del lado izquierdo de rango.
@@ -369,7 +369,7 @@ async function resolveConflict(
 
   const conflictingReservations = Array.from(reservationsWithConflict);
 
-  console.log(conflictingReservations);
+  console.log("reservations with conflict: ", conflictingReservations);
   // Remover las camas asignadas a las reservas en conflicto;
   await reservationHelpers.removeBedsAssigned(
     client,
