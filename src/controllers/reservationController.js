@@ -303,6 +303,13 @@ exports.reservation_dates_and_numberOfGuest_update = [
           previousStatus
         );
 
+      await availability_helpers.bedsAssignment(
+        client,
+        dbname,
+        roomTypeId,
+        reservationResult
+      );
+
       return res.status(200).json(UpdatedReservationResult);
     } catch (err) {
       next(err);
