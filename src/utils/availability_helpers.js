@@ -370,6 +370,12 @@ async function resolveConflict(
   const conflictingReservations = Array.from(reservationsWithConflict);
 
   console.log(conflictingReservations);
+  // Remover las camas asignadas a las reservas en conflicto;
+  await reservationHelpers.removeBedsAssigned(
+    client,
+    dbname,
+    conflictingReservations
+  );
 
   for (const conflictingReservation of conflictingReservations) {
     await exports.bedsAssignment(
