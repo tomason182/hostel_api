@@ -1,8 +1,20 @@
 const http = require("node:http");
+const https = require("node:https");
+const { URL } = require("node:url");
 
-function fetchDataHelper(options) {
+function fetchDataHelper(url, options = {}, bodyData = null) {
   return new Promise((resolve, reject) => {
-    const req = http.request(options, res => {
+    // Parse the URL
+    const parseUrl = new URL(url);
+    const protocolModule = parseUrl.protocol === "https" ? https : http;
+    const requestOptions = {
+      hostname: parseUrl.hostname,
+      path: parseUrl.pathname + parseUrl.search,
+      port: parseUrl.port || (parseUrl.protocol === "https" ? 443 : 80),
+      ...options, // Headers, methods, etc.
+    };
+
+    const req = protocolModule.request(requestOptions, res => {
       const { statusCode } = res;
       const contentType = res.headers["content-type"];
 
@@ -34,7 +46,11 @@ function fetchDataHelper(options) {
       });
       res.on("end", () => {
         try {
-          const parsedData = JSON.parse(rawData);
+          // Attemp to parse JSON if content-type is JSON, else raw data.
+          const parsedData =
+            contentType && contentType.includes("application/json")
+              ? JSON.parse(rawData)
+              : rawData;
           resolve(parsedData);
         } catch (e) {
           reject(new Error("Failed to parse JSON: " + e.message));
@@ -47,7 +63,13 @@ function fetchDataHelper(options) {
       reject(new Error("Error on fetch: " + e.message));
     });
 
+    if (bodyData) {
+      req.write(bodyData);
+    }
+
     // Send request
     req.end();
   });
 }
+
+module.exports = fetchDataHelper;

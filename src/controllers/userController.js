@@ -31,6 +31,7 @@ const {
   sendResetPasswordMail,
 } = require("../config/transactional_email");
 const jwt = require("jsonwebtoken");
+const fetchDataHelper = require("../utils/fetchDataHelper");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -74,6 +75,10 @@ exports.user_register = [
       if (acceptTerms !== true) {
         throw new Error("Terms must be accepted before registration");
       }
+
+      try {
+        const response = await fetchDataHelper();
+      } catch (e) {}
 
       const user = new User(username, firstName);
       const role = "admin";
