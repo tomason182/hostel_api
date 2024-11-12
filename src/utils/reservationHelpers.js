@@ -431,7 +431,7 @@ exports.updateReservationDatesAndGuest = async (
   status,
   provisionalStatus
 ) => {
-  const session = client.startSession();
+  const session = await client.startSession();
   try {
     session.startTransaction();
 
@@ -444,6 +444,7 @@ exports.updateReservationDatesAndGuest = async (
       property_id: propertyId,
     };
     const options = {
+      session,
       upsert: false,
     };
     const updateDocStatus = {
@@ -455,8 +456,7 @@ exports.updateReservationDatesAndGuest = async (
     const resultStatus = await reservationColl.updateOne(
       query,
       updateDocStatus,
-      options,
-      { session }
+      options
     );
 
     if (resultStatus.modifiedCount === 0) {
@@ -475,7 +475,7 @@ exports.updateReservationDatesAndGuest = async (
 
     if (isAvailable === false) {
       throw new Error(
-        `No beds available for the selected dates. Please, check that reservation status is set up as ${previousStatus}`
+        `No beds available for the selected dates. Please, check that reservation status is set up back to ${status}`
       );
     }
 
@@ -489,15 +489,13 @@ exports.updateReservationDatesAndGuest = async (
       },
     };
 
-    const result = await reservationColl.updateOne(query, updateDoc, options, {
-      session,
-    });
+    const result = await reservationColl.updateOne(query, updateDoc, options);
 
     await session.commitTransaction();
     return result;
   } catch (err) {
     await session.abortTransaction();
-    throw new Error(err);
+    throw err;
   } finally {
     await session.endSession();
   }
@@ -516,15 +514,11 @@ exports.updateReservationBeds = async (
       },
     };
     const options = {
+      session,
       upsert: false,
     };
 
-    const result = await reservationsColl.updateOne(
-      filter,
-      updateDoc,
-      options,
-      { session }
-    );
+    const result = await reservationsColl.updateOne(filter, updateDoc, options);
     console.log(result);
 
     return result;
@@ -548,14 +542,14 @@ exports.removeBedsAssigned = async (
       },
     };
     const options = {
+      session,
       upsert: false,
     };
 
     const result = await reservationsColl.updateMany(
       filter,
       updateDoc,
-      options,
-      { session }
+      options
     );
     console.log(result);
     return result;
