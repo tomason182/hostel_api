@@ -1,3 +1,5 @@
+const availability_helpers = require("./availability_helpers");
+
 exports.insertNewReservation = async (client, dbname, reservation) => {
   try {
     const db = client.db(dbname);
@@ -422,24 +424,62 @@ exports.updateReservationDatesAndGuest = async (
   dbname,
   propertyId,
   reservationId,
+  roomTypeId,
   checkIn,
   checkOut,
   numberOfGuest,
-  status
+  status,
+  provisionalStatus
 ) => {
+  const session = client.startSession();
   try {
+    session.startTransaction();
+
     const db = client.db(dbname);
     const reservationColl = db.collection("reservations");
 
+    // Modificar el estado de la reserva a cancelado, para realizar checkeo de disponibilidad
     const query = {
       _id: reservationId,
       property_id: propertyId,
     };
-
     const options = {
       upsert: false,
     };
+    const updateDocStatus = {
+      $set: {
+        reservation_status: provisionalStatus,
+      },
+    };
 
+    const resultStatus = await reservationColl.updateOne(
+      query,
+      updateDocStatus,
+      options,
+      { session }
+    );
+
+    if (resultStatus.modifiedCount === 0) {
+      throw new Error("Unable to make the update");
+    }
+
+    // Checkear dispponibilidad.
+    const isAvailable = await availability_helpers.checkAvailability(
+      client,
+      dbname,
+      roomTypeId,
+      checkIn,
+      checkOut,
+      numberOfGuest
+    );
+
+    if (isAvailable === false) {
+      throw new Error(
+        `No beds available for the selected dates. Please, check that reservation status is set up as ${previousStatus}`
+      );
+    }
+
+    // Modificar la reserva.
     const updateDoc = {
       $set: {
         check_in: checkIn,
@@ -449,11 +489,17 @@ exports.updateReservationDatesAndGuest = async (
       },
     };
 
-    const result = await reservationColl.updateOne(query, updateDoc, options);
+    const result = await reservationColl.updateOne(query, updateDoc, options, {
+      session,
+    });
 
+    await session.commitTransaction();
     return result;
   } catch (err) {
+    await session.abortTransaction();
     throw new Error(err);
+  } finally {
+    await session.endSession();
   }
 };
 
