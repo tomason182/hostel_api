@@ -1,3 +1,5 @@
+const availability_helpers = require("./availability_helpers");
+
 exports.insertNewReservation = async (client, dbname, reservation) => {
   try {
     const db = client.db(dbname);
@@ -422,37 +424,108 @@ exports.updateReservationDatesAndGuest = async (
   dbname,
   propertyId,
   reservationId,
+  roomTypeId,
   checkIn,
   checkOut,
-  numberOfGuest,
-  status
+  numberOfGuest
 ) => {
   try {
     const db = client.db(dbname);
     const reservationColl = db.collection("reservations");
 
+    // Modificar el estado de la reserva a cancelado, para realizar checkeo de disponibilidad
     const query = {
       _id: reservationId,
       property_id: propertyId,
     };
-
     const options = {
       upsert: false,
     };
 
+    // Checkear dispponibilidad.
+    const isAvailable = await availability_helpers.checkAvailability(
+      client,
+      dbname,
+      roomTypeId,
+      checkIn,
+      checkOut,
+      numberOfGuest,
+      reservationId
+    );
+
+    if (isAvailable === false) {
+      throw new Error(`No beds available for the selected dates.`);
+    }
+
+    // Modificar la reserva.
     const updateDoc = {
       $set: {
         check_in: checkIn,
         check_out: checkOut,
         number_of_guest: numberOfGuest,
-        reservation_status: status,
       },
     };
 
     const result = await reservationColl.updateOne(query, updateDoc, options);
+    return result;
+  } catch (err) {
+    throw err;
+  }
+};
+
+exports.updateReservationBeds = async (
+  reservation,
+  reservationsColl,
+  session
+) => {
+  try {
+    const filter = { _id: reservation._id };
+    const updateDoc = {
+      $set: {
+        assigned_beds: reservation.assigned_beds,
+      },
+    };
+    const options = {
+      session,
+      upsert: false,
+    };
+
+    const result = await reservationsColl.updateOne(filter, updateDoc, options);
+    console.log(result);
 
     return result;
   } catch (err) {
-    throw new Error(err);
+    throw new Error(err.message);
+  }
+};
+
+exports.removeBedsAssigned = async (
+  reservationList,
+  reservationsColl,
+  session
+) => {
+  try {
+    const ids = reservationList.map(r => r._id);
+
+    const filter = { _id: { $in: ids } };
+    const updateDoc = {
+      $set: {
+        assigned_beds: [],
+      },
+    };
+    const options = {
+      session,
+      upsert: false,
+    };
+
+    const result = await reservationsColl.updateMany(
+      filter,
+      updateDoc,
+      options
+    );
+    console.log(result);
+    return result;
+  } catch (err) {
+    throw new Error(err.message);
   }
 };
