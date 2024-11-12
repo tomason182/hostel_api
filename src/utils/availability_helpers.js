@@ -308,10 +308,13 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
         );
       }
     }
-
-    await handleBedsAssignment(reservation, reservationsColl);
+    await handleBedsAssignment(reservation, reservationsColl, session);
+    await session.commitTransaction();
   } catch (err) {
+    await session.abortTransaction();
     throw new Error(err);
+  } finally {
+    await session.endSession();
   }
 };
 
