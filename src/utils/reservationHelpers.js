@@ -457,7 +457,11 @@ exports.updateReservationDatesAndGuest = async (
   }
 };
 
-exports.updateReservationBeds = async (reservation, reservationsColl) => {
+exports.updateReservationBeds = async (
+  reservation,
+  reservationsColl,
+  session
+) => {
   try {
     const filter = { _id: reservation._id };
     const updateDoc = {
@@ -469,7 +473,12 @@ exports.updateReservationBeds = async (reservation, reservationsColl) => {
       upsert: false,
     };
 
-    const result = await reservationsColl.updateOne(filter, updateDoc, options);
+    const result = await reservationsColl.updateOne(
+      filter,
+      updateDoc,
+      options,
+      { session }
+    );
     console.log(result);
 
     return result;
@@ -478,7 +487,11 @@ exports.updateReservationBeds = async (reservation, reservationsColl) => {
   }
 };
 
-exports.removeBedsAssigned = async (reservationList, reservationsColl) => {
+exports.removeBedsAssigned = async (
+  reservationList,
+  reservationsColl,
+  session
+) => {
   try {
     const ids = reservationList.map(r => r._id);
 
@@ -495,7 +508,8 @@ exports.removeBedsAssigned = async (reservationList, reservationsColl) => {
     const result = await reservationsColl.updateMany(
       filter,
       updateDoc,
-      options
+      options,
+      { session }
     );
     console.log(result);
     return result;

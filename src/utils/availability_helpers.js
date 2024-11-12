@@ -178,7 +178,9 @@ exports.pullOverlappingElementsFromArray = async (
 };
 
 exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
+  const session = client.startSession();
   try {
+    session.startTransaction();
     const db = client.db(dbname);
     const roomTypeColl = db.collection("room_types");
     const reservationsColl = db.collection("reservations");
@@ -195,6 +197,7 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
     async function handleBedsAssignment(
       reservation,
       reservationsColl,
+      session,
       depth = 0
     ) {
       // Obtenemos las camas disponibles
@@ -284,7 +287,8 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
 
         await reservationHelpers.updateReservationBeds(
           reservation,
-          reservationsColl
+          reservationsColl,
+          session
         );
         return assignBeds;
       } else {
@@ -299,6 +303,7 @@ exports.bedsAssignment = async (client, dbname, roomTypeId, reservation) => {
           availableBedsBefore,
           overlappingReservationsAfterCurrent,
           handleBedsAssignment,
+          session,
           depth
         );
       }
@@ -327,6 +332,7 @@ async function resolveConflictWithBacktracking(
   availableBedsBefore,
   reservationsAfterCurrent,
   callBackHandleBedAssign,
+  session,
   depth
 ) {
   // Limite de maximo de recursividad
@@ -353,7 +359,11 @@ async function resolveConflictWithBacktracking(
   console.log("Greedy assignemt successful for reservation:", reservation._id);
   reservation.assigned_beds = assignBeds;
 
-  await reservationHelpers.updateReservationBeds(reservation, reservationsColl);
+  await reservationHelpers.updateReservationBeds(
+    reservation,
+    reservationsColl,
+    session
+  );
 
   // Obtener las reservas que entraron en conflicto
   const reservationsWithConflict = new Set();
@@ -372,13 +382,15 @@ async function resolveConflictWithBacktracking(
   // Remover las camas asignadas a las reservas en conflicto;
   await reservationHelpers.removeBedsAssigned(
     conflictingReservations,
-    reservationsColl
+    reservationsColl,
+    session
   );
 
   for (const conflictingReservation of conflictingReservations) {
     await callBackHandleBedAssign(
       conflictingReservation,
       reservationsColl,
+      session,
       depth + 1
     );
   }
