@@ -253,9 +253,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
         throw new Error("Reservation id not found");
       }
 
-      const previousStatus = reservationResult.reservation_status;
       const roomTypeId = reservationResult.room_type_id;
-      const provisionalStatus = "canceled";
 
       const UpdatedReservationResult =
         await reservationHelper.updateReservationDatesAndGuest(
@@ -266,9 +264,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
           roomTypeId,
           checkIn,
           checkOut,
-          number_of_guest,
-          previousStatus,
-          provisionalStatus
+          number_of_guest
         );
 
       await availability_helpers.bedsAssignment(

@@ -427,14 +427,9 @@ exports.updateReservationDatesAndGuest = async (
   roomTypeId,
   checkIn,
   checkOut,
-  numberOfGuest,
-  status,
-  provisionalStatus
+  numberOfGuest
 ) => {
-  const session = await client.startSession();
   try {
-    session.startTransaction();
-
     const db = client.db(dbname);
     const reservationColl = db.collection("reservations");
 
@@ -444,30 +439,8 @@ exports.updateReservationDatesAndGuest = async (
       property_id: propertyId,
     };
     const options = {
-      session,
       upsert: false,
     };
-    const updateDocStatus = {
-      $set: {
-        reservation_status: provisionalStatus,
-      },
-    };
-
-    const resultStatus = await reservationColl.updateOne(
-      query,
-      updateDocStatus,
-      options
-    );
-
-    if (resultStatus.modifiedCount === 0) {
-      throw new Error("Unable to make the update");
-    }
-
-    const newReservation = await reservationColl.findOne({
-      _id: reservationId,
-    });
-
-    console.log(newReservation);
 
     // Checkear dispponibilidad.
     const isAvailable = await availability_helpers.checkAvailability(
@@ -481,9 +454,7 @@ exports.updateReservationDatesAndGuest = async (
     );
 
     if (isAvailable === false) {
-      throw new Error(
-        `No beds available for the selected dates. Please, check that reservation status is set up back to ${status}`
-      );
+      throw new Error(`No beds available for the selected dates.`);
     }
 
     // Modificar la reserva.
@@ -492,19 +463,13 @@ exports.updateReservationDatesAndGuest = async (
         check_in: checkIn,
         check_out: checkOut,
         number_of_guest: numberOfGuest,
-        reservation_status: status,
       },
     };
 
     const result = await reservationColl.updateOne(query, updateDoc, options);
-
-    await session.commitTransaction();
-    return resultStatus;
+    return result;
   } catch (err) {
-    await session.abortTransaction();
     throw err;
-  } finally {
-    await session.endSession();
   }
 };
 
