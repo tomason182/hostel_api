@@ -267,11 +267,21 @@ exports.reservation_dates_and_numberOfGuest_update = [
           number_of_guest
         );
 
+      const updatedReservation =
+        await reservationHelper.findReservationByIdSimple(
+          client,
+          dbname,
+          propertyId,
+          reservationId
+        );
+
+      console.log(updatedReservation);
+
       await availability_helpers.bedsAssignment(
         client,
         dbname,
         roomTypeId,
-        reservationResult
+        updatedReservation
       );
 
       return res.status(200).json(UpdatedReservationResult);
