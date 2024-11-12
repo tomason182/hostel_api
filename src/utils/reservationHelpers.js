@@ -463,6 +463,12 @@ exports.updateReservationDatesAndGuest = async (
       throw new Error("Unable to make the update");
     }
 
+    const newReservation = await reservationColl.findOne({
+      _id: reservationId,
+    });
+
+    console.log(newReservation);
+
     // Checkear dispponibilidad.
     const isAvailable = await availability_helpers.checkAvailability(
       client,
@@ -470,7 +476,8 @@ exports.updateReservationDatesAndGuest = async (
       roomTypeId,
       checkIn,
       checkOut,
-      numberOfGuest
+      numberOfGuest,
+      reservationId
     );
 
     if (isAvailable === false) {
@@ -492,7 +499,7 @@ exports.updateReservationDatesAndGuest = async (
     const result = await reservationColl.updateOne(query, updateDoc, options);
 
     await session.commitTransaction();
-    return result;
+    return resultStatus;
   } catch (err) {
     await session.abortTransaction();
     throw err;

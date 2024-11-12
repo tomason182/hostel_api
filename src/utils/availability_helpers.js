@@ -6,7 +6,8 @@ exports.checkAvailability = async (
   typeRoomId,
   checkIn,
   checkOut,
-  numberOfGuest
+  numberOfGuest,
+  reservationId = null
 ) => {
   try {
     const db = client.db(dbname);
@@ -37,12 +38,21 @@ exports.checkAvailability = async (
         check_out: 1,
         number_of_guest: 1,
         assigned_beds: 1,
+        reservation_status: 1,
       },
     };
 
-    const reservationsList = await reservationsColl
+    let reservationsList = await reservationsColl
       .find(filter, options)
       .toArray();
+
+    if (reservationId) {
+      reservationsList = reservationsList.filter(
+        r => !r._id.equals(reservationId)
+      );
+    }
+
+    console.log(reservationsList);
 
     // obtenemos rangos de rates and availability
     const ratesAndAvailabilityList = roomType.rates_and_availability.filter(
