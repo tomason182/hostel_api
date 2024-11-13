@@ -6,11 +6,11 @@ function fetchDataHelper(url, options = {}, bodyData = null) {
   return new Promise((resolve, reject) => {
     // Parse the URL
     const parseUrl = new URL(url);
-    const protocolModule = parseUrl.protocol === "https" ? https : http;
+    const protocolModule = parseUrl.protocol === "https:" ? https : http;
     const requestOptions = {
       hostname: parseUrl.hostname,
       path: parseUrl.pathname + parseUrl.search,
-      port: parseUrl.port || (parseUrl.protocol === "https" ? 443 : 80),
+      port: parseUrl.port || (parseUrl.protocol === "https:" ? 443 : 80),
       ...options, // Headers, methods, etc.
     };
 

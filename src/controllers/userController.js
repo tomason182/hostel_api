@@ -75,7 +75,6 @@ exports.user_register = [
       if (acceptTerms !== true) {
         throw new Error("Terms must be accepted before registration");
       }
-      console.log(captchaToken);
 
       const IsCaptchaTokenValid = await verifyCaptcha(captchaToken);
 
