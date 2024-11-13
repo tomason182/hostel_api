@@ -96,6 +96,14 @@ exports.reservation_create = [
         dbname,
         newReservation
       );
+
+      await availability_helpers.bedsAssignment(
+        client,
+        dbname,
+        roomTypeId,
+        newReservation
+      );
+
       return res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -210,8 +218,6 @@ exports.reservation_get_date_range = [
 // @desc      Update reservation dates & guest
 // @route     PUT /api/v1/reservations/dates-and-guest/:id
 // @access    Private
-
-/// ESTE CONTROLADOR ESTA MAL, DEBERIA MANEJAR UNA TRANSACCION ///
 exports.reservation_dates_and_numberOfGuest_update = [
   checkSchema(updateDateAndGuestSchema),
   async (req, res, next) => {
@@ -247,41 +253,7 @@ exports.reservation_dates_and_numberOfGuest_update = [
         throw new Error("Reservation id not found");
       }
 
-      // set reservation status to cancelled for check availability purpose
-      const previousStatus = reservationResult.reservation_status;
       const roomTypeId = reservationResult.room_type_id;
-      const reservationStatus = "canceled";
-      const result = await reservationHelper.handleReservationStatus(
-        client,
-        dbname,
-        propertyId,
-        reservationId,
-        reservationStatus
-      );
-
-      // Check availability for the new data
-
-      const isAvailable = await availability_helpers.checkAvailability(
-        client,
-        dbname,
-        roomTypeId,
-        checkIn,
-        checkOut,
-        number_of_guest
-      );
-
-      if (isAvailable === false) {
-        await reservationHelper.handleReservationStatus(
-          client,
-          dbname,
-          propertyId,
-          reservationId,
-          previousStatus
-        );
-        throw new Error(
-          `No beds available for the selected dates. Please, check that reservation status is set up as ${previousStatus}`
-        );
-      }
 
       const UpdatedReservationResult =
         await reservationHelper.updateReservationDatesAndGuest(
@@ -289,11 +261,28 @@ exports.reservation_dates_and_numberOfGuest_update = [
           dbname,
           propertyId,
           reservationId,
+          roomTypeId,
           checkIn,
           checkOut,
-          number_of_guest,
-          previousStatus
+          number_of_guest
         );
+
+      const updatedReservation =
+        await reservationHelper.findReservationByIdSimple(
+          client,
+          dbname,
+          propertyId,
+          reservationId
+        );
+
+      console.log(updatedReservation);
+
+      await availability_helpers.bedsAssignment(
+        client,
+        dbname,
+        roomTypeId,
+        updatedReservation
+      );
 
       return res.status(200).json(UpdatedReservationResult);
     } catch (err) {

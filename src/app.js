@@ -45,7 +45,7 @@ const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
       ? ["https://simplehostel.net", "https://www.simplehostel.net"]
-      : "http://localhost:4173",
+      : "http://localhost:5173",
   credentials: true,
 };
 
