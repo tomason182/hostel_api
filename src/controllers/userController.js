@@ -31,6 +31,7 @@ const {
   sendResetPasswordMail,
 } = require("../config/transactional_email");
 const jwt = require("jsonwebtoken");
+const verifyCaptcha = require("../utils/verifyCaptcha");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
@@ -75,6 +76,12 @@ exports.user_register = [
         throw new Error("Terms must be accepted before registration");
       }
       console.log(captchaToken);
+
+      const IsCaptchaTokenValid = await verifyCaptcha(captchaToken);
+
+      if (IsCaptchaTokenValid === false) {
+        throw new Error("Unable to verify reCAPTCHA");
+      }
 
       const user = new User(username, firstName);
       const role = "admin";

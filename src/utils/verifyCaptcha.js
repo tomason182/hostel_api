@@ -29,3 +29,5 @@ async function verifyCaptcha(captchaToken) {
     return false;
   }
 }
+
+module.exports = verifyCaptcha;
