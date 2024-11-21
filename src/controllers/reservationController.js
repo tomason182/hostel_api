@@ -155,7 +155,7 @@ exports.reservations_get_date_range_simple = [
           toDate
         );
 
-      return res.status(200).json({ msg: reservationList });
+      return res.status(200).json(reservationList);
     } catch (err) {
       next(err);
     }
