@@ -32,9 +32,94 @@ const {
 } = require("../config/transactional_email");
 const jwt = require("jsonwebtoken");
 const verifyCaptcha = require("../utils/verifyCaptcha");
+const { OAuth2Client } = require("google-auth-library");
 
 // Enviroment variables
 const dbname = process.env.DB_NAME;
+
+// @desc    Google OAuth
+// @route   POST /api/v1/users/auth/google/create
+// @public
+exports.user_auth_google = [
+  body("token").isJWT().withMessage("Invalid JWT token"),
+  body("propertyName")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Property name maximum length is 100 characters"),
+  body("acceptTerms").isBoolean().withMessage("Accept terms must be boolean"),
+  body("captchaToken").trim().escape(),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const { token, propertyName, acceptTerms, captchaToken } =
+        matchedData(req);
+
+      if (acceptTerms !== true) {
+        throw new Error("Terms must be accepted before registration");
+      }
+
+      const IsCaptchaTokenValid = await verifyCaptcha(captchaToken);
+
+      if (IsCaptchaTokenValid === false) {
+        throw new Error("Unable to verify reCAPTCHA");
+      }
+
+      const googleClient = new OAuth2Client();
+
+      const ticket = googleClient.verifyIdToken({
+        idToken: token,
+        audience: process.env.CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+
+      const client = conn.getClient();
+
+      const property = new Property(propertyName);
+      let user = await crudOperations.findUserByGoogleId(
+        client,
+        dbname,
+        payload.sub
+      );
+
+      if (user) {
+        throw new Error("User already exists. Please sign in");
+      }
+
+      user = await crudOperations.findOneUserByUsername(
+        client,
+        dbname,
+        payload.email
+      );
+
+      if (user) {
+        throw new Error("User already exists. Please sign in");
+      }
+
+      user = new User(payload.email, payload.firstName, payload.lastName);
+      const role = "admin";
+      user.setRole(role);
+      user.setGoogleId(payload.sub);
+      user.setPictureProfile(payload.picture);
+      user.setIsValidEmail("true");
+
+      const result = await transactionsOperations.createUser(
+        client,
+        dbname,
+        user,
+        property
+      );
+
+      return res.status(200).json(result);
+    } catch (e) {
+      next(e);
+    }
+  },
+];
 
 // @desc    Register new User
 // @route   POST /api/v1/users/register
