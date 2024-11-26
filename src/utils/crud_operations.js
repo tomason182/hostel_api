@@ -26,6 +26,20 @@ exports.findOneUserById = async (client, dbname, userId) => {
   }
 };
 
+exports.findUserByGoogleId = async (client, dbname, googleId) => {
+  try {
+    const db = client.db(dbname);
+    const userColl = db.collection("users");
+
+    const query = { sub: googleId };
+    const result = userColl.findOne(query);
+
+    return result;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
 exports.validateUserEmail = async (client, dbname, userId) => {
   try {
     const db = client.db(dbname);
