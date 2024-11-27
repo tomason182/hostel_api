@@ -77,6 +77,8 @@ exports.user_auth_google = [
       });
       const payload = ticket.getPayload();
 
+      console.log(payload);
+
       const client = conn.getClient();
 
       const property = new Property(propertyName);
