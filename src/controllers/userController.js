@@ -21,6 +21,7 @@ const {
   jwtTokenGenerator,
   jwtTokenValidation,
   jwtTokenGeneratorCE,
+  jwtTokenGeneratorUserRegister,
 } = require("../utils/tokenGenerator");
 const User = require("../models/userModel");
 const Property = require("../models/propertyModel");
@@ -43,11 +44,6 @@ const dbname = process.env.DB_NAME;
 // @public
 exports.user_auth_google = [
   body("token").isJWT().withMessage("Invalid JWT token"),
-  body("propertyName")
-    .trim()
-    .escape()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Property name maximum length is 100 characters"),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -77,7 +73,8 @@ exports.user_auth_google = [
 
       if (user) {
         // Log the user and return JWT token for login
-        throw new Error("User already exists. Please sign in");
+        console.log(user);
+        return res.status(200).json({ msg: "ok" });
       }
 
       user = await crudOperations.findOneUserByUsername(
@@ -89,18 +86,30 @@ exports.user_auth_google = [
       if (user) {
         // Update the user adding the google id and picture
         // Log the user and return JWT token for login
-        throw new Error("User already exists. Please sign in");
+        console.log(user);
+        return res.status(200).json({ msg: "ok" });
       }
 
-      // If user is not created return an 404
+      // If user is not created return an 409 with user data and a verification token
+      const verificationToken = jwtTokenGeneratorUserRegister(
+        payload.sub,
+        payload.email,
+        payload.firstName,
+        payload.lastName,
+        payload.picture
+      );
 
-      return res.status(409).json({
-        sub: payload.sub,
-        email: payload.email,
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        picture: payload.picture,
-      });
+      return res
+        .cookie("vrf", verificationToken, {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          signed: true,
+          sameSite: "strict",
+          maxAge: 900000,
+        })
+        .status(409)
+        .json({ msg: "complete registration require" });
     } catch (e) {
       next(e);
     }
@@ -111,7 +120,6 @@ exports.user_auth_google = [
 // @route   POST /api/v1/users/auth/google/create
 // @access  Public
 exports.user_auth_google_create = [
-  checkSchema(userRegistrationWithGoogle),
   body("propertyName")
     .trim()
     .escape()
@@ -124,16 +132,30 @@ exports.user_auth_google_create = [
         return res.status(400).json(errors.array());
       }
 
-      const { token, propertyName } = matchedData(req);
+      let vrfToken = null;
+
+      if (req.signedCookies) {
+        vrfToken = req.signedCookies["vrf"];
+        console.log(vrfToken);
+      }
+
+      const decoded = jwtTokenValidation(vrfToken);
+      if (decoded === false) {
+        throw new Error("Invalid token");
+      }
+
+      const { propertyName } = matchedData(req);
 
       const property = new Property(propertyName);
 
-      const user = new User(payload.email, payload.firstName, payload.lastName);
+      const user = new User(decoded.email, decoded.firstName, decoded.lastName);
       const role = "admin";
       user.setRole(role);
-      user.setGoogleId(payload.sub);
-      user.setProfilePicture(payload.picture);
+      user.setGoogleId(decoded.sub);
+      user.setProfilePicture(decoded.picture);
       user.setValidEmail("true");
+
+      const client = conn.getClient();
 
       const result = await transactionsOperations.createUser(
         client,
@@ -144,7 +166,7 @@ exports.user_auth_google_create = [
 
       const userId = result.userId.toString();
 
-      return res.status(200).json(result);
+      jwtTokenGenerator(res, userId);
     } catch (e) {
       next(e);
     }

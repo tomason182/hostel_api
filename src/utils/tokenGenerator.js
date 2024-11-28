@@ -41,3 +41,22 @@ exports.jwtTokenGeneratorCE = function (userId) {
 
   return token;
 };
+
+exports.jwtTokenGeneratorUserRegister = function (
+  sub,
+  email,
+  firstName,
+  lastName,
+  picture
+) {
+  const payload = {
+    sub,
+    email,
+    firstName,
+    lastName,
+    picture,
+  };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "900000",
+  });
+};

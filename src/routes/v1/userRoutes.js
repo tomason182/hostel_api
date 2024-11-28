@@ -16,6 +16,9 @@ router.get("/confirm-email/:token", user_controller.finish_user_register);
 // Register user with google account
 router.post("/auth/google/create", user_controller.user_auth_google);
 
+// Login with google account
+router.post("/auth/google/signin", user_controller.user_auth_google);
+
 // Resend email
 router.post(
   "/resend-email-verification",
