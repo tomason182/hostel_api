@@ -1,3 +1,56 @@
+const userRegistrationWithGoogle = {
+  googleId: {
+    in: ["body"],
+    trim: true,
+    escape: true,
+  },
+  username: {
+    in: ["body"],
+    isEmail: {
+      bail: true,
+      errorMessage: "invalid user email",
+    },
+    normalizeEmail: true,
+    trim: true,
+  },
+  firstName: {
+    in: ["body"],
+    notEmpty: {
+      bail: true,
+      errorMessage: "First name must not be empty",
+    },
+    trim: true,
+    escape: true,
+  },
+  lastName: {
+    in: ["body"],
+    optional: true,
+    trim: true,
+    escape: true,
+  },
+  picture: {
+    in: ["body"],
+    trim: true,
+    isUrl: {
+      options: {
+        protocols: ["https"],
+        require_protocol: true,
+        validate_length: true,
+      },
+      errorMessage: "Invalid URL format picture.",
+    },
+    custom: {
+      options: value => {
+        const parsedUrl = new URL(value);
+        if (parsedUrl.hostname !== "lh3.googleusercontent.com") {
+          throw new Error("URL must be a valid Google profile picture");
+        }
+        return true;
+      },
+    },
+  },
+};
+
 const userRegisterSchema = {
   username: {
     in: ["body"],
@@ -352,6 +405,7 @@ const sanitizeUpdateBody = function (req, res, next) {
 };
 
 module.exports = {
+  userRegistrationWithGoogle,
   userRegisterSchema,
   userLoginSchema,
   userUpdateSchema,
