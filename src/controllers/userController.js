@@ -7,6 +7,7 @@ const {
   matchedData,
 } = require("express-validator");
 const {
+  userRegistrationWithGoogle,
   userRegisterSchema,
   userLoginSchema,
   userUpdateSchema,
@@ -38,7 +39,7 @@ const { OAuth2Client } = require("google-auth-library");
 const dbname = process.env.DB_NAME;
 
 // @desc    Google OAuth
-// @route   POST /api/v1/users/auth/google/create
+// @route   POST /api/v1/users/auth/google/
 // @public
 exports.user_auth_google = [
   body("token").isJWT().withMessage("Invalid JWT token"),
@@ -47,8 +48,6 @@ exports.user_auth_google = [
     .escape()
     .isLength({ min: 1, max: 100 })
     .withMessage("Property name maximum length is 100 characters"),
-  body("acceptTerms").isBoolean().withMessage("Accept terms must be boolean"),
-  body("captchaToken").trim().escape(),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -56,32 +55,20 @@ exports.user_auth_google = [
         return res.status(400).json(errors.array());
       }
 
-      const { token, propertyName, acceptTerms, captchaToken } =
-        matchedData(req);
-
-      if (acceptTerms !== true) {
-        throw new Error("Terms must be accepted before registration");
-      }
-
-      const IsCaptchaTokenValid = await verifyCaptcha(captchaToken);
-
-      if (IsCaptchaTokenValid === false) {
-        throw new Error("Unable to verify reCAPTCHA");
-      }
+      const { token } = matchedData(req);
 
       const googleClient = new OAuth2Client();
-
-      const ticket = googleClient.verifyIdToken({
+      const ticket = await googleClient.verifyIdToken({
         idToken: token,
         audience: process.env.CLIENT_ID,
       });
+
       const payload = ticket.getPayload();
 
-      console.log(payload);
+      console.log("the payload: ", payload);
 
       const client = conn.getClient();
 
-      const property = new Property(propertyName);
       let user = await crudOperations.findUserByGoogleId(
         client,
         dbname,
@@ -89,6 +76,7 @@ exports.user_auth_google = [
       );
 
       if (user) {
+        // Log the user and return JWT token for login
         throw new Error("User already exists. Please sign in");
       }
 
@@ -99,15 +87,53 @@ exports.user_auth_google = [
       );
 
       if (user) {
+        // Update the user adding the google id and picture
+        // Log the user and return JWT token for login
         throw new Error("User already exists. Please sign in");
       }
 
-      user = new User(payload.email, payload.firstName, payload.lastName);
+      // If user is not created return an 404
+
+      return res.status(409).json({
+        sub: payload.sub,
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        picture: payload.picture,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+];
+
+// @desc    Create new User with Google auth
+// @route   POST /api/v1/users/auth/google/create
+// @access  Public
+exports.user_auth_google_create = [
+  checkSchema(userRegistrationWithGoogle),
+  body("propertyName")
+    .trim()
+    .escape()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Property name maximum length is 100 characters"),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json(errors.array());
+      }
+
+      const { token, propertyName } = matchedData(req);
+
+      const property = new Property(propertyName);
+
+      const user = new User(payload.email, payload.firstName, payload.lastName);
       const role = "admin";
       user.setRole(role);
       user.setGoogleId(payload.sub);
-      user.setPictureProfile(payload.picture);
-      user.setIsValidEmail("true");
+      user.setProfilePicture(payload.picture);
+      user.setValidEmail("true");
 
       const result = await transactionsOperations.createUser(
         client,
@@ -115,6 +141,8 @@ exports.user_auth_google = [
         user,
         property
       );
+
+      const userId = result.userId.toString();
 
       return res.status(200).json(result);
     } catch (e) {
