@@ -570,6 +570,7 @@ exports.findLast10Reservations = async (
           _id: 1,
           guest_id: 1,
           number_of_guest: 1,
+          reservation_status: 1,
           check_in: 1,
           check_out: 1,
           updated_At: 1,
