@@ -93,4 +93,12 @@ router.get(
   reservationController.reservations_assign_beds_put
 );
 
+// @desc      Find the latest 10 reservations
+// @route     GET /api/v1/reservations/last-10-reservations
+router.get(
+  "/last-10-reservations",
+  authMiddleware,
+  reservationController.last_10_reservations
+);
+
 module.exports = router;

@@ -207,6 +207,7 @@ exports.reservation_get_date_range = [
           toDate,
           fullName
         );
+        console.log(reservationsList);
 
       return res.status(200).json(reservationsList);
     } catch (err) {
@@ -468,6 +469,29 @@ exports.reservations_assign_beds_put = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc      Get the latest 10 reservations
+// @route     GET /api/v1/reservations/last-10-reservations
+// @access    Private
+exports.last_10_reservations = async (req, res, next) => {
+    try {
+      const propertyId = req.user._id;
+
+      const client = conn.getClient();
+      const result = await reservationHelper.findLast10Reservations(
+        client,
+        dbname,
+        propertyId
+      );
+
+      console.log(result);
+
+      return res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
 
 // @desc      Get reservations by guest name
 // @route     GET /api/v1/reservations/?name=value

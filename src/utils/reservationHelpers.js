@@ -529,3 +529,64 @@ exports.removeBedsAssigned = async (
     throw new Error(err.message);
   }
 };
+
+
+exports.findLast10Reservations = async (
+  client,
+  dbname,
+  propertyId
+) => {
+  try {
+    const db = client.db(dbname);
+    const reservationColl = db.collection("reservations");
+
+    const query = {
+      property_id: propertyId
+    };
+
+    const aggregation = [
+      {
+        $match: query,
+      },
+      {
+        $sort: {updated_At: -1},
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $lookup: {
+          from: "guests",
+          localField: "guest_id",
+          foreignField: "_id",
+          as: "data_guest",
+          }
+      },
+      {
+        $unwind: "$data_guest",
+      },
+      {
+        $project: {
+          _id: 1,
+          guest_id: 1,
+          number_of_guest: 1,
+          check_in: 1,
+          check_out: 1,
+          updated_At: 1,
+          "data_guest.first_name": 1,
+          "data_guest.last_name": 1,
+        },
+      },
+    ];
+
+    const result = await reservationColl.aggregate(aggregation).toArray();
+
+    if (!result) {
+      throw new Error("Reservations not found");
+    }
+
+    return result;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
