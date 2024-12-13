@@ -559,11 +559,11 @@ exports.findLast10Reservations = async (
           from: "guests",
           localField: "guest_id",
           foreignField: "_id",
-          as: "data_guest",
+          as: "guest_info",
           }
       },
       {
-        $unwind: "$data_guest",
+        $unwind: "$guest_info",
       },
       {
         $project: {
@@ -574,8 +574,9 @@ exports.findLast10Reservations = async (
           check_in: 1,
           check_out: 1,
           updated_At: 1,
-          "data_guest.first_name": 1,
-          "data_guest.last_name": 1,
+          "guest_info.full_name": {
+            $concat: ["$guest_info.first_name", " ", "$guest_info.last_name"],
+          },
         },
       },
     ];
